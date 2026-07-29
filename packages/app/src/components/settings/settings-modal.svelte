@@ -62,10 +62,15 @@
 			<Icon name="settings" class="w-[18px] h-[18px]" />
 		</Button>
 	</Dialog.Trigger>
+	<!-- Size only — the primitive centres itself with top/left 1/2 plus a -50%
+	     translate, so overriding the insets instead knocks it off screen. -->
 	<Dialog.Content
-		class="flex items-center justify-center !w-[90%] !h-[90%] !top-[5%] !right-[5%] !bottom-[5%] !left-[5%] pt-16"
+		class="flex items-center justify-center w-[90vw] max-w-5xl sm:max-w-5xl h-[85vh] pt-16"
 	>
+		<!-- Vertical orientation is what puts the tab list beside the panel instead of
+		     above it, and it stops the list being clamped to the horizontal h-9. -->
 		<Tabs.Root
+			orientation="vertical"
 			value={activePage}
 			onValueChange={(value) => {
 				settingsStore.update((store) => {
@@ -73,7 +78,7 @@
 					return store;
 				});
 			}}
-			class="flex items-center justify-center h-full w-full gap-10"
+			class="flex items-stretch justify-start h-full w-full gap-10"
 		>
 			<!-- Categories as label, rest as tabtrigger & corresponding content -->
 			<div class="flex flex-col items-center gap-4 h-full justify-start min-w-[160px]">
@@ -101,7 +106,7 @@
 					{/if}
 				{/each}
 			</div>
-			<div class="flex flex-col items-center justify-center gap-2 h-full w-2/4">
+			<div class="flex flex-col items-center justify-start gap-2 h-full flex-1 min-w-0">
 				{#each Object.keys(settings) as setting}
 					{#each settings[setting] as tab}
 						<Tabs.Content
