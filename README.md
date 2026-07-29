@@ -20,15 +20,15 @@
     <a href="https://haptic.md"><strong>Learn more »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/chroxify/haptic/tree/main#introduction">Introduction</a>
+    <a href="#introduction">Introduction</a>
     ·
-    <a href="https://github.com/chroxify/haptic/tree/main#tech-stack">Tech Stack</a>
+    <a href="#tech-stack">Tech Stack</a>
     ·
-    <a href="https://github.com/chroxify/haptic/tree/main#deploy-your-own">Deploy Your Own</a>
+    <a href="#where-your-notes-live">Storage</a>
     ·
-    <a href="https://github.com/chroxify/haptic/tree/main#roadmap">Roadmap</a>
+    <a href="#development">Development</a>
     ·
-    <a href="https://github.com/chroxify/haptic/tree/main#contributing">Contributing</a>
+    <a href="#roadmap">Roadmap</a>
   </p>
 </p>
 
@@ -53,63 +53,59 @@ If you'd like to learn more about Haptic, why it's being built, what its goals a
 
 ## Tech Stack
 
-- [Tauri](https://tauri.app/) – Desktop App
-- [PGlite](https://pglite.dev/) – Local Database
-- [Svelte](https://kit.svelte.dev/) – Framework
-- [Tailwind](https://tailwindcss.com/) – CSS
-- [Shadcn/ui](https://www.shadcn-svelte.com/) – Component Library
-- [Vercel](https://vercel.com/) – Hosting
+- [Svelte 5](https://svelte.dev/) + [SvelteKit](https://kit.svelte.dev/) – Framework
+- [Tauri 2](https://tauri.app/) – Desktop app
+- [PGlite](https://pglite.dev/) + [Drizzle](https://orm.drizzle.team/) – Local database (web)
+- [TipTap](https://tiptap.dev/) – Markdown editor
+- [Tailwind CSS 4](https://tailwindcss.com/) + [shadcn-svelte](https://www.shadcn-svelte.com/) – Styling & components
+- [Oxc](https://oxc.rs/) (oxlint + oxfmt) – Linting & formatting
+- [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) – Tests
 
-## Deploy Your Own
+## Where your notes live
 
-If you're interested in self-hosting your own web instance of Haptic, you can do so with these two options:
+- **Desktop** — plain `.md` files in the folder you open ("collection"), with a `.haptic/` metadata folder inside it for daily notes, trash, and per-collection settings. Nothing is locked away; point any other editor at the same folder.
+- **Web** — in your browser only, in a Postgres database (PGlite) persisted to IndexedDB. Clearing site data clears your notes, and nothing syncs to the desktop app yet.
 
-### Vercel
+## Development
 
-You can one-click deploy your own instance of Haptic on Vercel. Just click the button below and follow the instructions:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/chroxify/haptic&project-name=haptic-web&repository-name=haptic-web&root-directory=apps/web)
-
-### Docker
-
-1. Pull the image from the docker hub
+Requires Node >= 22 and [pnpm](https://pnpm.io/). For the desktop app you also need the [Tauri prerequisites](https://tauri.app/start/prerequisites/) (Rust toolchain).
 
 ```bash
-docker pull chroxify/haptic-web:latest
+pnpm install
+
+pnpm --filter=web dev          # web app on http://localhost:5173
+pnpm --filter=desktop dev:tauri # desktop app
+
+pnpm check                     # typecheck (svelte-check)
+pnpm test                      # unit + storage-adapter contract tests
+pnpm --filter=web test:e2e     # Playwright smoke tests
+pnpm build                     # build everything
 ```
 
-2. Run the container
+The repo is a pnpm + Turborepo workspace: `apps/{web,desktop,homepage}` and `packages/{core,editor,app,ui}`. The two apps share all logic and UI and differ only in their storage adapter — see [`CLAUDE.md`](./CLAUDE.md) for the architecture and [`docs/quality.md`](./docs/quality.md) for tooling policy.
 
-```bash
-docker run -d -p 3000:80 chroxify/haptic-web:latest
-```
+## Self-hosting the web app
 
-3. Visit `http://localhost:3000` in your browser
+`apps/web` builds to a static SPA (`@sveltejs/adapter-static`) — run `pnpm build --filter=web` and serve `apps/web/build` from any static host. All data stays in the visitor's browser, so there is no backend to run.
+
+> The upstream Vercel one-click deploy and the `chroxify/haptic-web` Docker image belong to the original project and are not published from this fork.
 
 ## Roadmap
 
-Haptic is currently still in active development. Here are some of the features planned for the future:
-
-- [ ] Haptic Sync - Sync your notes across devices
-- [ ] Note sharing - Share single notes or entire collections via link
-- [ ] Mobile support for the web app - Currently dependent on PGlite support for mobile
+- [ ] Haptic Sync — sync notes across devices (the settings pane exists but is a non-functional stub today)
+- [ ] Import notes from pre-0.3 web databases (old data is preserved, importer pending)
+- [ ] Note sharing — share single notes or entire collections via link
+- [ ] Mobile support for the web app — dependent on PGlite mobile support
 - [ ] Native mobile apps for iOS & Android
 - [ ] Windows & Linux support for the desktop app
-
-and much much more, so stay tuned!
+- [ ] App updater — removed during the Tauri 2 migration, pending our own release endpoint
 
 ## Contributing
 
-We would love to have your help in making haptic better!
-
-Here's how you can contribute:
-
-- [Report a bug](https://github.com/chroxify/haptic/issues/new?labels=bug) you found while using Haptic
-- [Request a feature](https://github.com/chroxify/haptic/issues/new?labels=enhancement) that you think will be useful
-- [Submit a pull request](https://github.com/chroxify/haptic/pulls) if you want to contribute with new features or bug fixes
+Issues and pull requests are welcome. Please run `pnpm check`, `pnpm test`, and `pnpm build` before opening a PR, and use [conventional commits](https://www.conventionalcommits.org/).
 
 ## License
 
-Haptic is licensed under the [GNU Affero General Public License Version 3 (AGPLv3)](https://github.com/chroxify/haptic/blob/main/LICENSE).
+Haptic is licensed under the [GNU Affero General Public License Version 3 (AGPLv3)](./LICENSE), as is the original project it forks.
 
 ---

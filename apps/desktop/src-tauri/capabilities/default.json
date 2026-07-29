@@ -18,11 +18,7 @@
     "fs:allow-unwatch",
     {
       "identifier": "fs:scope",
-      "allow": [
-        { "path": "$HOME/**" },
-        { "path": "$APPDATA" },
-        { "path": "$APPDATA/**" }
-      ]
+      "allow": [{ "path": "$HOME/**" }, { "path": "$APPDATA" }, { "path": "$APPDATA/**" }]
     },
     "fs:allow-read-dir",
     "fs:allow-read-text-file",

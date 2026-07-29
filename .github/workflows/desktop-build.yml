@@ -4,10 +4,10 @@ on:
   pull_request:
     branches: [main, revival]
     paths:
-      - "apps/desktop/**"
-      - "packages/**"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/desktop-build.yml"
+      - 'apps/desktop/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/desktop-build.yml'
 
 concurrency:
   group: desktop-build-${{ github.ref }}

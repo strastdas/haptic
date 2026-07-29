@@ -7,10 +7,11 @@ This repository follows the [`@strastdas/oxc-config` QUALITY.md](https://www.npm
 - **Lint**: `pnpm lint:oxc` — oxlint with the `@strastdas/oxc-config/base` profile (this is a Svelte/Tauri monorepo, not Next.js).
 - **Format**: `pnpm format` / `pnpm format:check:oxc` — oxfmt, config migrated from the repo's previous `.prettierrc` (single quotes, no trailing commas, print width 100).
 - **Typecheck**: `pnpm check` — `svelte-check` per app via Turbo.
+- **Rust** (`apps/desktop/src-tauri`): `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`, enforced by the `rust-lint` job in `desktop-build.yml`. Unlike the JS baseline, Rust lint is **blocking** — it is already clean.
 
 ## Local scope
 
-- `apps/homepage` is excluded from oxlint (out of scope for the modernization; it keeps its own self-contained ESLint 9 setup until it is either adopted or retired).
+- `apps/homepage` is excluded from oxlint (out of scope for the modernization; it keeps its own self-contained ESLint 9 setup until it is either adopted or retired). It is the only place ESLint/Prettier still exist — everywhere else they are removed, and the former `@haptic/eslint-config` package is deleted.
 - `.svelte` files are **not formatted** — oxfmt does not support Svelte templates. Per policy, no second formatter is reintroduced; `svelte-check` + oxlint cover Svelte correctness.
 - Generated/vendor paths ignored: `.svelte-kit`, `build`, `dist`, `src-tauri/target`, lockfiles.
 
