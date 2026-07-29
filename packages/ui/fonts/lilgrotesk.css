@@ -1,0 +1,62 @@
+/*
+ * LilGrotesk, self-hosted.
+ *
+ * Mirrors https://cdn.strast.dev/fonts/lilgrotesk.full.css, which the web app
+ * links directly. The desktop app has to work offline, so it imports this
+ * instead and Vite bundles the woff2 files into the Tauri binary.
+ * Keep the two in sync when the CDN stylesheet changes.
+ */
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Thin.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 200;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Light.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Regular.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Medium.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Bold.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'lilgrotesk';
+  src: url('./lilgrotesk/LilGrotesk-Black.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: normal;
+}

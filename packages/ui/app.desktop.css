@@ -1,5 +1,7 @@
 @import './theme.css';
 @import './haptic.css';
+/* Bundled rather than linked from the CDN — the desktop app must work offline. */
+@import './fonts/lilgrotesk.css';
 @plugin '@tailwindcss/typography';
 @source '../../apps/desktop/src';
 

@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn-svelte/tailwind.css';
-@import '@fontsource-variable/inter';
 
 /* This file is resolved through node_modules (workspace symlink), so Tailwind's
    automatic source detection finds nothing. Every directory whose markup uses
@@ -38,7 +37,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* The face itself is loaded per platform: the web app links the CDN
+     stylesheet from app.html, the desktop app bundles ./fonts/lilgrotesk.css. */
+  --font-sans: 'lilgrotesk', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
