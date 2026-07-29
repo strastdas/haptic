@@ -12,9 +12,9 @@ import SubContent from './context-menu-sub-content.svelte';
 import SubTrigger from './context-menu-sub-trigger.svelte';
 import CheckboxItem from './context-menu-checkbox-item.svelte';
 
-const Sub = ContextMenuPrimitive.Sub;
-const Trigger = ContextMenuPrimitive.Trigger;
-const Group = ContextMenuPrimitive.Group;
+const { Sub } = ContextMenuPrimitive;
+const { Trigger } = ContextMenuPrimitive;
+const { Group } = ContextMenuPrimitive;
 
 export {
   Sub,

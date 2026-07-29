@@ -9,11 +9,10 @@
 	import { cn } from '@haptic/ui/lib/utils';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
 	import { shortcutToString, toggleTheme } from '@/utils';
-	import { activeFile, appTheme } from '@/store';
+	import { activeFile, appTheme,settingsStore } from '@/store';
 	import { SHORTCUTS } from '@/constants';
 	import Shortcut from '../shared/shortcut.svelte';
-	import { settingsStore } from '@/store';
-
+	
 	let open = false;
 	let searchValue = '';
 	let collapsedCategories: string[] = [];

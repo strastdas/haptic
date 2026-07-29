@@ -1,16 +1,18 @@
-import { type ClassValue, clsx } from 'clsx';
+import { clsx } from 'clsx';
+import type { ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-type FlyAndScaleParams = {
+interface FlyAndScaleParams {
   y?: number;
   x?: number;
   start?: number;
   duration?: number;
-};
+}
 export const flyAndScale = (
   node: Element,
   params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }
@@ -24,12 +26,11 @@ export const flyAndScale = (
     const valueB = percentage * (maxB - minB) + minB;
     return valueB;
   };
-  const styleToString = (style: Record<string, number | string | undefined>): string => {
-    return Object.keys(style).reduce((str, key) => {
+  const styleToString = (style: Record<string, number | string | undefined>): string =>
+    Object.keys(style).reduce((str, key) => {
       if (style[key] === undefined) return str;
       return str + key + ':' + style[key] + ';';
     }, '');
-  };
   return {
     duration: params.duration ?? 200,
     delay: 0,
@@ -38,7 +39,7 @@ export const flyAndScale = (
       const x = scaleConversion(t, [0, 1], [params.x ?? 0, 0]);
       const scale = scaleConversion(t, [0, 1], [params.start ?? 0.95, 1]);
       return styleToString({
-        transform: transform + 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')',
+        transform: `${transform}translate3d(${x}px, ${y}px, 0) scale(${scale})`,
         opacity: t
       });
     },

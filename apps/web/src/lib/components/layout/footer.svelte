@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SHORTCUTS } from '@/constants';
-	import { activeFile } from '@/store';
+	import { activeFile,settingsStore } from '@/store';
 	import { shortcutToString, toggleTheme } from '@/utils';
 	import { Button } from '@haptic/ui/components/button';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
@@ -13,8 +13,7 @@
 	import Icon from '../shared/icon.svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
-	import { settingsStore } from '@/store';
-	import Shortcut from '../shared/shortcut.svelte';
+		import Shortcut from '../shared/shortcut.svelte';
 
 	let open = false;
 	let searchValue = '';

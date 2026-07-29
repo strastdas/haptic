@@ -37,15 +37,18 @@ export const deleteFolder = async (path: string, recursive = false) => {
   }
 
   switch (get(collectionSettings).notes.trash_dir) {
-    case 'system':
+    case 'system': {
       await renameFile(path, `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${folderName}`);
       break;
-    case 'haptic':
+    }
+    case 'haptic': {
       await renameFile(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
       break;
-    case 'delete':
+    }
+    case 'delete': {
       await removeFile(path);
       break;
+    }
   }
 };
 

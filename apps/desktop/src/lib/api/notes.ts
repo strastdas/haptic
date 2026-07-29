@@ -31,7 +31,7 @@ export async function openNote(path: string, skipHistory = false) {
   activeFile.set(path);
   if (!skipHistory) {
     noteHistory.update((history) => {
-      if (history[history.length - 1] !== path) {
+      if (history.at(-1) !== path) {
         return [...history, path];
       }
       return history;
@@ -42,18 +42,21 @@ export async function openNote(path: string, skipHistory = false) {
 // Delete a note
 export const deleteNote = async (path: string) => {
   switch (get(collectionSettings).notes.trash_dir) {
-    case 'system':
+    case 'system': {
       await renameFile(
         path,
         `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${path.split('/').pop()!}`
       );
       break;
-    case 'haptic':
+    }
+    case 'haptic': {
       await renameFile(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
       break;
-    case 'delete':
+    }
+    case 'delete': {
       await removeFile(path);
       break;
+    }
   }
   activeFile.set(null);
 };
@@ -66,7 +69,7 @@ export const renameNote = async (path: string, name: string) => {
   }
 
   // Remove breaking characters
-  name = name.replace(/[/\\?%*:|"<>]/g, '');
+  name = name.replaceAll(/[/\\?%*:|"<>]/g, '');
 
   // Read the directory
   const files = await readDir(path.split('/').slice(0, -1).join('/'));
@@ -107,8 +110,8 @@ export const moveNote = async (source: string, target: string) => {
     throw new Error('Name conflict');
   }
 
-  await renameFile(source, target + '/' + noteName);
-  openNote(target + '/' + noteName);
+  await renameFile(source, `${target}/${noteName}`);
+  openNote(`${target}/${noteName}`);
 };
 
 // Duplicate a note (format: "<name> (<number>).<ext>") - <number> is incremented if there are any existing notes with the same name
@@ -153,7 +156,7 @@ export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataP
     editorMetadata: {
       words: editorWordCount,
       characters: editorCharacterCount,
-      avgReadingTime: avgReadingTime
+      avgReadingTime
     }
   };
 };

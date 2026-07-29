@@ -1,5 +1,6 @@
 <script lang="ts">
-	import shortcut, { type ShortcutParams } from '@/actions/shortcut';
+	import shortcut from '@/actions/shortcut';
+import type { ShortcutParams } from '@/actions/shortcut';
 	export let options: ShortcutParams;
 	export let callback: (() => void) | undefined = undefined;
 </script>

@@ -25,8 +25,9 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
       (shortcut.key.toLowerCase() !== e.key.toLowerCase() &&
         !(shortcut.code && shortcut.code === e.code)) ||
       (shortcut.hover && !(shortcut.node?.parentNode as Element)?.matches(':hover'))
-    )
+    ) {
       continue;
+    }
 
     e.preventDefault();
     shortcut.callback ? shortcut.callback() : shortcut.node?.click();
@@ -55,7 +56,7 @@ const handleShortcut = (
   // Remove shortcut from registry on destroy
   onDestroy(() => {
     const index = shortcuts.indexOf(params);
-    if (index > -1) {
+    if (index !== -1) {
       shortcuts.splice(index, 1);
     }
   });
@@ -63,7 +64,7 @@ const handleShortcut = (
   return {
     destroy: () => {
       const index = shortcuts.indexOf(params);
-      if (index > -1) {
+      if (index !== -1) {
         shortcuts.splice(index, 1);
       }
     }

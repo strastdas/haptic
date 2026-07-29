@@ -13,7 +13,9 @@ export const fetchCollectionEntries = async (
   showDotfiles = false
 ): Promise<FileEntry[]> => {
   dirPath = dirPath || get(collection);
-  if (!dirPath) throw new Error('No directory path provided');
+  if (!dirPath) {
+    throw new Error('No directory path provided');
+  }
 
   // Get collection by path
   const collectionObj = await db
@@ -21,7 +23,9 @@ export const fetchCollectionEntries = async (
     .from(collectionTable)
     .where(eq(collectionTable.path, get(collection)));
 
-  if (collectionObj.length === 0) throw new Error('Collection not found');
+  if (collectionObj.length === 0) {
+    throw new Error('Collection not found');
+  }
 
   // Read all entries linked to the collection
   const entries = await db
@@ -30,7 +34,7 @@ export const fetchCollectionEntries = async (
     .where(
       and(
         eq(entryTable.collectionPath, get(collection)),
-        dirPath !== get(collection) ? eq(entryTable.parentPath, dirPath) : undefined
+        dirPath === get(collection) ? undefined : eq(entryTable.parentPath, dirPath)
       )
     );
 
@@ -58,8 +62,8 @@ export const fetchCollectionEntries = async (
   sortEntries(fileEntries);
 
   // Hide dotfiles recursively
-  const filterDotfiles = (entries: FileEntry[]): FileEntry[] => {
-    return entries.filter((entry) => {
+  const filterDotfiles = (entries: FileEntry[]): FileEntry[] =>
+    entries.filter((entry) => {
       if (!showDotfiles && entry.name?.startsWith('.')) {
         return false;
       }
@@ -68,7 +72,6 @@ export const fetchCollectionEntries = async (
       }
       return true;
     });
-  };
 
   // Set collectionEntries if length is different
   collectionEntries.set(showDotfiles ? fileEntries : filterDotfiles(fileEntries));
@@ -78,7 +81,9 @@ export const fetchCollectionEntries = async (
 
 export const loadCollection = async (path?: string | undefined) => {
   // Return if no path is provided
-  if (!path) return;
+  if (!path) {
+    return;
+  }
 
   // Set collection path
   collection.set(path);
@@ -89,7 +94,7 @@ export const loadCollection = async (path?: string | undefined) => {
 
   // Add collection to collections data
   const collectionObj = {
-    path: path,
+    path,
     name: path.split('/').pop()!,
     lastOpened: new Date()
   };

@@ -66,7 +66,7 @@
 		}
 
 		if (value) {
-			if (stopWatching) stopWatching();
+			if (stopWatching) {stopWatching();}
 			stopWatching = await watchCollection();
 		}
 	});
@@ -88,7 +88,7 @@
 	const handleMouseMove = (e: MouseEvent) => {
 		resizingPageSidebar.set(true);
 
-		const x = e.x;
+		const {x} = e;
 
 		// Set collapsing bounds
 		if (x < 100) {
@@ -167,7 +167,7 @@
 	}
 
 	onDestroy(() => {
-		if (stopWatching) stopWatching();
+		if (stopWatching) {stopWatching();}
 		stopWatchingStore();
 		stopWatchingCollectionStore();
 	});

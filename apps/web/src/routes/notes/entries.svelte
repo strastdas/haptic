@@ -61,7 +61,7 @@
 			get(editor).commands.blur();
 
 			// Get the inline title input (#inline-title-input)
-			const inlineTitleInput = document.getElementById('inline-title-input') as HTMLInputElement;
+			const inlineTitleInput = document.querySelector('#inline-title-input') as HTMLInputElement;
 
 			// Focus the input and select all text
 			window.setTimeout(() => {
@@ -157,7 +157,7 @@
 		dragPreviewItem = document.createElement('div');
 		dragPreviewItem.classList.add('drag-item');
 		dragPreviewItem.textContent = filename;
-		document.body.appendChild(dragPreviewItem);
+		document.body.append(dragPreviewItem);
 
 		// Set the opacity of the original element
 		(event.currentTarget as HTMLElement).style.opacity = '0.5';
@@ -187,7 +187,7 @@
 				// Loop through the parent elements until finding a root collapsible parent
 				while (parentElement) {
 					if (parentElement !== dragItem?.closest('[data-collapsible-root]')) {
-						if (parentElement.hasAttribute('data-collection-root')) {
+						if (Object.hasOwn(parentElement.dataset, "collectionRoot")) {
 							highlightElement = parentElement;
 						} else {
 							highlightElement = parentElement.parentElement as HTMLElement;
@@ -209,16 +209,16 @@
 			// If any parent or ancestor of the current element has the attribute data-collapsible-root or data-collection-root
 			if (previousHighlightedElement && previousHighlightedElement !== highlightElement) {
 				// Reset the background color of the previously highlighted element
-				previousHighlightedElement.removeAttribute('data-highlighted');
+				delete previousHighlightedElement.dataset.highlighted;
 			}
 			// Highlight the element by setting a custom attribute
-			highlightElement.setAttribute('data-highlighted', 'true');
+			highlightElement.dataset.highlighted = 'true';
 			// Update the previousHighlightedElement variable
 			previousHighlightedElement = highlightElement;
 		} else {
 			// If no element with the attribute data-collapsible-root or data-collection-root is found, reset the background color & previousHighlightedElement
 			if (previousHighlightedElement) {
-				previousHighlightedElement.removeAttribute('data-highlighted');
+				delete previousHighlightedElement.dataset.highlighted;
 				previousHighlightedElement = null;
 			}
 		}
@@ -241,33 +241,33 @@
 		if (previousHighlightedElement) {
 			// Check if the note is not being dropped in the same folder it's currently in
 			const isSameFolder =
-				previousHighlightedElement.getAttribute('data-path') ===
+				previousHighlightedElement.dataset.path ===
 					path.split('/').slice(0, -1).join('/') ||
-				previousHighlightedElement.firstElementChild?.getAttribute('data-path') ===
+				previousHighlightedElement.firstElementChild?.dataset.path ===
 					path.split('/').slice(0, -1).join('/');
 
 			if (!isSameFolder) {
 				// Move the note to the folder
-				if (previousHighlightedElement.hasAttribute('data-collection-root')) {
+				if (Object.hasOwn(previousHighlightedElement.dataset, "collectionRoot")) {
 					if (isFolder) {
-						moveFolder(path, previousHighlightedElement.getAttribute('data-path')!);
+						moveFolder(path, previousHighlightedElement.dataset.path!);
 					} else {
-						moveNote(path, previousHighlightedElement.getAttribute('data-path')!);
+						moveNote(path, previousHighlightedElement.dataset.path!);
 					}
-				} else if (previousHighlightedElement.firstElementChild?.getAttribute('data-path')) {
+				} else if (previousHighlightedElement.firstElementChild?.dataset.path) {
 					if (isFolder) {
 						moveFolder(
 							path,
-							previousHighlightedElement.firstElementChild.getAttribute('data-path')!
+							previousHighlightedElement.firstElementChild.dataset.path!
 						);
 					} else {
-						moveNote(path, previousHighlightedElement.firstElementChild.getAttribute('data-path')!);
+						moveNote(path, previousHighlightedElement.firstElementChild.dataset.path!);
 					}
 				}
 			}
 
 			// Reset background color & previousHighlightedElement
-			previousHighlightedElement.removeAttribute('data-highlighted');
+			delete previousHighlightedElement.dataset.highlighted;
 			previousHighlightedElement = null;
 		}
 

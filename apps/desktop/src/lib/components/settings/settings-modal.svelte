@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon, { type IconKey } from '$lib/components/shared/icon.svelte';
+	import Icon from '$lib/components/shared/icon.svelte';
+import type { IconKey } from '$lib/components/shared/icon.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import { settingsStore } from '@/store';
 	import { Button } from '@haptic/ui/components/button';

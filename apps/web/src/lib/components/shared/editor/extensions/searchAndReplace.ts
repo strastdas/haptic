@@ -20,10 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { Extension, type Range, type Dispatch } from '@tiptap/core';
+import { Extension } from '@tiptap/core';
+import type { Range, Dispatch } from '@tiptap/core';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { Plugin, PluginKey, type EditorState, type Transaction } from '@tiptap/pm/state';
-import { Node as PMNode } from '@tiptap/pm/model';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { EditorState, Transaction } from '@tiptap/pm/state';
+import type { Node as PMNode } from '@tiptap/pm/model';
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -73,12 +75,8 @@ interface TextNodesWithPosition {
   pos: number;
 }
 
-const getRegex = (s: string, disableRegex: boolean, caseSensitive: boolean): RegExp => {
-  return RegExp(
-    disableRegex ? s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : s,
-    caseSensitive ? 'gu' : 'gui'
-  );
-};
+const getRegex = (s: string, disableRegex: boolean, caseSensitive: boolean): RegExp =>
+  RegExp(disableRegex ? s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : s, caseSensitive ? 'gu' : 'gui');
 
 interface ProcessedSearches {
   decorationsToReturn: DecorationSet;
@@ -126,10 +124,12 @@ function processSearches(
 
   for (const element of textNodesWithPosition) {
     const { text, pos } = element;
-    const matches = Array.from(text.matchAll(searchTerm)).filter(([matchText]) => matchText.trim());
+    const matches = [...text.matchAll(searchTerm)].filter(([matchText]) => matchText.trim());
 
     for (const m of matches) {
-      if (m[0] === '') break;
+      if (m[0] === '') {
+        break;
+      }
 
       if (m.index !== undefined) {
         results.push({
@@ -164,11 +164,15 @@ const replace = (
 ) => {
   const firstResult = results[0];
 
-  if (!firstResult) return;
+  if (!firstResult) {
+    return;
+  }
 
   const { from, to } = results[0];
 
-  if (dispatch) dispatch(state.tr.insertText(replaceTerm, from, to));
+  if (dispatch) {
+    dispatch(state.tr.insertText(replaceTerm, from, to));
+  }
 };
 
 const rebaseNextResult = (
@@ -179,7 +183,9 @@ const rebaseNextResult = (
 ): [number, Range[]] | null => {
   const nextIndex = index + 1;
 
-  if (!results[nextIndex]) return null;
+  if (!results[nextIndex]) {
+    return null;
+  }
 
   const { from: currentFrom, to: currentTo } = results[index];
 
@@ -202,9 +208,11 @@ const replaceAll = (
 ) => {
   let offset = 0;
 
-  let resultsCopy = results.slice();
+  let resultsCopy = [...results];
 
-  if (!resultsCopy.length) return;
+  if (!resultsCopy.length) {
+    return;
+  }
 
   for (let i = 0; i < resultsCopy.length; i += 1) {
     const { from, to } = resultsCopy[i];
@@ -213,7 +221,9 @@ const replaceAll = (
 
     const rebaseNextResultResponse = rebaseNextResult(replaceTerm, i, offset, resultsCopy);
 
-    if (!rebaseNextResultResponse) continue;
+    if (!rebaseNextResultResponse) {
+      continue;
+    }
 
     offset = rebaseNextResultResponse[0];
     resultsCopy = rebaseNextResultResponse[1];
@@ -362,7 +372,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
   },
 
   addProseMirrorPlugins() {
-    const editor = this.editor;
+    const { editor } = this;
     const { searchResultClass, disableRegex } = this.options;
 
     const setLastSearchTerm = (t: string) => (editor.storage.searchAndReplace.lastSearchTerm = t);
@@ -390,8 +400,9 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions, Search
               lastSearchTerm === searchTerm &&
               lastCaseSensitive === caseSensitive &&
               lastResultIndex === resultIndex
-            )
+            ) {
               return oldState;
+            }
 
             setLastSearchTerm(searchTerm);
             setLastCaseSensitive(caseSensitive);

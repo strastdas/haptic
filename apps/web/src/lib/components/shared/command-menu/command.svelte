@@ -34,10 +34,7 @@
 
 	// If a page is provided, it opens that page, otherwise it closes the menu
 	function handlePageState(newPage: string | undefined) {
-		if (!newPage) {
-			open = false;
-			openedWithShortcut = '';
-		} else {
+		if (newPage) {
 			// Add bounce animation for page change
 			const dialog = document.querySelector('[data-dialog-content]');
 
@@ -54,6 +51,9 @@
 					}
 				);
 			}
+		} else {
+			open = false;
+			openedWithShortcut = '';
 		}
 
 		page = newPage;
@@ -116,11 +116,11 @@
 
 		for (let i = 0; i < files.length; i++) {
 			const file = files[i];
-			if (!file) continue;
+			if (!file) {continue;}
 
 			const filePath = `/${file.webkitRelativePath}`;
 			const pathParts = file.webkitRelativePath.split('/');
-			const fileName = pathParts[pathParts.length - 1];
+			const fileName = pathParts.at(-1);
 
 			// Log progress
 			let progress = Math.round(((i + 1) / files.length) * 100);
@@ -129,7 +129,7 @@
 			// Create folder entries
 			let currentPath = '';
 			for (let j = 0; j < pathParts.length - 1; j++) {
-				currentPath += '/' + pathParts[j];
+				currentPath += `/${  pathParts[j]}`;
 				if (!processedPaths.has(currentPath)) {
 					await createFolderEntry(currentPath, collectionName);
 					processedPaths.add(currentPath);
@@ -168,15 +168,15 @@
 
 	async function createFolderEntry(path: string, collectionName: string) {
 		const pathParts = path.split('/').filter(Boolean);
-		const folderName = pathParts[pathParts.length - 1];
-		const parentPath = '/' + pathParts.slice(0, -1).join('/');
+		const folderName = pathParts.at(-1);
+		const parentPath = `/${  pathParts.slice(0, -1).join('/')}`;
 
 		try {
 			await db.insert(entryTable).values({
 				name: folderName,
-				path: path,
+				path,
 				content: undefined,
-				parentPath: parentPath,
+				parentPath,
 				collectionPath: `/${collectionName}`,
 				isFolder: true
 			});

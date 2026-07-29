@@ -42,7 +42,7 @@
 	let startWidth: number;
 
 	const handleMouseMove = (e: MouseEvent) => {
-		if (startX === null) return;
+		if (startX === null) {return;}
 		resizingPageSidebar.set(true);
 
 		const x = e.clientX;
@@ -121,7 +121,7 @@
 		}
 
 		if (value) {
-			if (stopWatching) stopWatching();
+			if (stopWatching) {stopWatching();}
 			stopWatching = await watchCollection();
 		}
 	});
@@ -152,7 +152,7 @@
 			results = (await invoke('search_files', {
 				dirPath: $collection,
 				query: searchValue,
-				caseSensitive: caseSensitive,
+				caseSensitive,
 				matchWord: wholeWord,
 				recursive: true
 			})) as { path: string; context_preview: string }[];

@@ -3,6 +3,7 @@
 	import * as Tooltip from '@haptic/ui/components/tooltip';
 	import type { ShortcutParams } from '@/types';
 	import { shortcutToString } from '@/utils';
+
 	export let text = 'Tooltip';
 	export let shortcut: ShortcutParams | undefined = undefined;
 

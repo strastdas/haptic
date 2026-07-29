@@ -22,7 +22,7 @@
 
 	onMount(() => {
 		tiptapEditor = new Editor({
-			element: element,
+			element,
 			extensions: [
 				StarterKit.configure({
 					document: false,

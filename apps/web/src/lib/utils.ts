@@ -1,7 +1,8 @@
 import { browser } from '$app/environment';
-import { entry as entryTable } from '@/database/schema';
+import type { entry as entryTable } from '@/database/schema';
 import { EditorState } from '@tiptap/pm/state';
-import { clsx, type ClassValue } from 'clsx';
+import { clsx } from 'clsx';
+import type { ClassValue } from 'clsx';
 import { setMode, userPrefersMode } from 'mode-watcher';
 import { cubicOut } from 'svelte/easing';
 import { get, readable } from 'svelte/store';
@@ -15,12 +16,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-type FlyAndScaleParams = {
+interface FlyAndScaleParams {
   y?: number;
   x?: number;
   start?: number;
   duration?: number;
-};
+}
 
 export const flyAndScale = (
   node: Element,
@@ -39,12 +40,11 @@ export const flyAndScale = (
     return valueB;
   };
 
-  const styleToString = (style: Record<string, number | string | undefined>): string => {
-    return Object.keys(style).reduce((str, key) => {
+  const styleToString = (style: Record<string, number | string | undefined>): string =>
+    Object.keys(style).reduce((str, key) => {
       if (style[key] === undefined) return str;
       return str + `${key}:${style[key]};`;
     }, '');
-  };
 
   return {
     duration: params.duration ?? 200,
@@ -102,41 +102,57 @@ export function setEditorContent(content: string) {
 export function shortcutToString(shortcut: ShortcutParams) {
   const keys = [];
 
-  if (shortcut.command) keys.push('⌘');
-  if (shortcut.alt) keys.push('⌥');
-  if (shortcut.shift) keys.push('⇧');
+  if (shortcut.command) {
+    keys.push('⌘');
+  }
+  if (shortcut.alt) {
+    keys.push('⌥');
+  }
+  if (shortcut.shift) {
+    keys.push('⇧');
+  }
 
   switch (shortcut.key) {
-    case 'Backspace':
+    case 'Backspace': {
       keys.push('⌫');
       break;
-    case 'Enter':
+    }
+    case 'Enter': {
       keys.push('⏎');
       break;
-    case 'Tab':
+    }
+    case 'Tab': {
       keys.push('⇥');
       break;
-    case 'Delete':
+    }
+    case 'Delete': {
       keys.push('⌦');
       break;
-    case 'Escape':
+    }
+    case 'Escape': {
       keys.push('⎋');
       break;
-    case 'ArrowUp':
+    }
+    case 'ArrowUp': {
       keys.push('↑');
       break;
-    case 'ArrowDown':
+    }
+    case 'ArrowDown': {
       keys.push('↓');
       break;
-    case 'ArrowLeft':
+    }
+    case 'ArrowLeft': {
       keys.push('←');
       break;
-    case 'ArrowRight':
+    }
+    case 'ArrowRight': {
       keys.push('→');
       break;
-    default:
+    }
+    default: {
       keys.push(shortcut.key.toUpperCase());
       break;
+    }
   }
 
   return keys.join('');
@@ -152,13 +168,14 @@ export function calculateReadingTime(wordCount: number): string {
 
   if (minutes > 0) {
     return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
-  } else {
-    return `${seconds}s`;
   }
+  return `${seconds}s`;
 }
 
 export function formatTimeAgo(date: Date | undefined) {
-  if (!date) return '';
+  if (!date) {
+    return '';
+  }
 
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -173,13 +190,14 @@ export function formatTimeAgo(date: Date | undefined) {
     return `${hours} hour${hours > 1 ? 's' : ''} ago`;
   } else if (minutes > 0) {
     return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  } else {
-    return `${seconds} second${seconds > 1 ? 's' : ''} ago`;
   }
+  return `${seconds} second${seconds > 1 ? 's' : ''} ago`;
 }
 
 export function formatFileSize(bytes: number) {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
 
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -187,15 +205,14 @@ export function formatFileSize(bytes: number) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   // Adjust to start from 'Bytes'
-  const sizeInUnit = bytes / Math.pow(k, i);
+  const sizeInUnit = bytes / k ** i;
 
   if (i >= 3) {
     // Display with decimal places for GB or bigger
-    return Math.ceil(sizeInUnit) + ' ' + sizes[i];
-  } else {
-    // Display without decimal places for Bytes, KB, and MB
-    return Math.ceil(sizeInUnit) + ' ' + sizes[i];
+    return `${Math.ceil(sizeInUnit)} ${sizes[i]}`;
   }
+  // Display without decimal places for Bytes, KB, and MB
+  return Math.ceil(sizeInUnit) + ' ' + sizes[i];
 }
 
 export function toggleTheme() {
@@ -255,7 +272,7 @@ export async function searchEntries(
   caseSensitive: boolean = false,
   matchWord: boolean = false
 ): Promise<SearchResultParams[]> {
-  const escapedQuery = query.replace(/'/g, "''");
+  const escapedQuery = query.replaceAll(/'/g, "''");
   const likeOperator = caseSensitive ? 'LIKE' : 'ILIKE';
   const wordBoundary = matchWord ? ' ' : '';
   const searchPattern = `%${wordBoundary}${escapedQuery}${wordBoundary}%`;
@@ -333,7 +350,7 @@ export const getNextUntitledName = (
   untitledItems.forEach((name) => {
     const match = name.match(numberPattern);
     if (match) {
-      const num = match[1] ? parseInt(match[1]) : 0;
+      const num = match[1] ? Number.parseInt(match[1]) : 0;
       maxNumber = Math.max(maxNumber, num);
     }
   });
@@ -361,7 +378,9 @@ export function createDeviceDetector() {
       isMobileOrTablet: false
     },
     (set) => {
-      if (!browser) return;
+      if (!browser) {
+        return;
+      }
 
       const detectDevice = () => {
         // Check for touch capability
@@ -388,17 +407,15 @@ export function createDeviceDetector() {
             // Additional checks for touchscreen laptops
             if (hasMouseEvents && hasKeyboard) {
               return false; // Likely a touchscreen laptop
-            } else {
-              return true; // Likely mobile or tablet
             }
-          } else {
-            return false; // Likely not mobile or tablet
+            return true; // Likely mobile or tablet
           }
+          return false; // Likely not mobile or tablet
         })();
 
         set({
           isDesktop: !isMobileOrTablet,
-          isMobileOrTablet: isMobileOrTablet
+          isMobileOrTablet
         });
       };
 
@@ -424,12 +441,15 @@ export const sortFileEntry = (a: FileEntry, b: FileEntry): number => {
   if (isDirectory(a) && isDirectory(b)) {
     return naturalSort(a.name!, b.name!);
   }
-  if (isDirectory(a)) return -1;
-  if (isDirectory(b)) return 1;
+  if (isDirectory(a)) {
+    return -1;
+  }
+  if (isDirectory(b)) {
+    return 1;
+  }
 
   return naturalSort(a.name!, b.name!);
 };
 
-const naturalSort = (a: string, b: string): number => {
-  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-};
+const naturalSort = (a: string, b: string): number =>
+  a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });

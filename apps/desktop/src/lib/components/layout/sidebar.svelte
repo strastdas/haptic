@@ -12,11 +12,11 @@
 	let selected: 'notes' | 'daily' | 'tasks' | null = null;
 
 	function navigateTo(path: string) {
-		if (!$collection) {
-			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true }));
-		} else {
+		if ($collection) {
 			goto(path);
 			selected = path.slice(1) as 'notes' | 'daily' | 'tasks';
+		} else {
+			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true }));
 		}
 	}
 

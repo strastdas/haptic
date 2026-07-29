@@ -7,7 +7,7 @@
 	function handleClick(event: MouseEvent) {
 		if (event.button === 0 || event.button === 2) {
 			// If event target has data-menu-content attribute, ignore
-			if ((event.target as HTMLElement).closest('[data-menu-content]')) return;
+			if ((event.target as HTMLElement).closest('[data-menu-content]')) {return;}
 
 			open = false;
 		}

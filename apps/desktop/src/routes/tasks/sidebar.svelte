@@ -14,7 +14,7 @@
 	let startWidth: number;
 
 	const handleMouseMove = (e: MouseEvent) => {
-		if (startX === null) return;
+		if (startX === null) {return;}
 		resizingPageSidebar.set(true);
 
 		const x = e.clientX;

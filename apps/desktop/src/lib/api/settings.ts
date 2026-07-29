@@ -10,20 +10,20 @@ export const loadSettings = async (loadApp: boolean, loadCollection: boolean) =>
       dir: BaseDirectory.AppData
     }).catch(() => null);
 
-    if (!appSettingsText) {
-      setSettings('app');
-    } else {
+    if (appSettingsText) {
       appSettings.set(JSON.parse(appSettingsText));
+    } else {
+      setSettings('app');
     }
   }
 
   if (loadCollection) {
     const collectionSettingsPath = `${get(collection)}/.haptic/settings.json`;
     const collectionSettingsText = await readTextFile(collectionSettingsPath).catch(() => null);
-    if (!collectionSettingsText) {
-      setSettings('collection');
-    } else {
+    if (collectionSettingsText) {
       collectionSettings.set(JSON.parse(collectionSettingsText));
+    } else {
+      setSettings('collection');
     }
   }
 };

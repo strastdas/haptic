@@ -30,10 +30,7 @@
 
 	// If a page is provided, it opens that page, otherwise it closes the menu
 	function handlePageState(newPage: string | undefined) {
-		if (!newPage) {
-			open = false;
-			openedWithShortcut = '';
-		} else {
+		if (newPage) {
 			// Add bounce animation for page change
 			const dialog = document.querySelector('[data-dialog-content]');
 
@@ -50,6 +47,9 @@
 					}
 				);
 			}
+		} else {
+			open = false;
+			openedWithShortcut = '';
 		}
 
 		page = newPage;

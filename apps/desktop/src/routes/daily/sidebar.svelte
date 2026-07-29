@@ -13,7 +13,8 @@
 	import { Calendar } from '@haptic/ui/components/calendar';
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { CalendarDate, getLocalTimeZone, today, type DateValue } from '@internationalized/date';
+	import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
+import type { DateValue } from '@internationalized/date';
 	import type { UnlistenFn } from '@tauri-apps/api/event';
 	import type { FileEntry } from '@tauri-apps/api/fs';
 	import { watchImmediate } from 'tauri-plugin-fs-watch-api';
@@ -26,9 +27,9 @@
 	// Watch for changes in the collection
 	async function watchCollection() {
 		const stopWatching = await watchImmediate(
-			$collection + '/.haptic/daily',
+			`${$collection  }/.haptic/daily`,
 			async () => {
-				entries = await fetchCollectionEntries($collection + '/.haptic/daily');
+				entries = await fetchCollectionEntries(`${$collection  }/.haptic/daily`);
 			},
 			{ recursive: true }
 		);
@@ -37,21 +38,21 @@
 	}
 
 	collection.subscribe(async (value) => {
-		entries = await fetchCollectionEntries(value + '/.haptic/daily');
+		entries = await fetchCollectionEntries(`${value  }/.haptic/daily`);
 
 		// Validate if there is a note for today
 		const today = new Date().toISOString().split('T')[0];
 		const dailyExists = entries.some((entry) => entry.path.includes(today));
 
 		if (!dailyExists) {
-			await createNote(value + '/.haptic/daily', today + '.md');
+			await createNote(`${value  }/.haptic/daily`, `${today  }.md`);
 		}
 
 		// Open today's note
-		openNote(value + '/.haptic/daily/' + today + '.md', true);
+		openNote(`${value  }/.haptic/daily/${  today  }.md`, true);
 
 		if (value) {
-			if (stopWatching) stopWatching();
+			if (stopWatching) {stopWatching();}
 			stopWatching = await watchCollection();
 		}
 	});
@@ -60,7 +61,7 @@
 	let startWidth: number;
 
 	const handleMouseMove = (e: MouseEvent) => {
-		if (startX === null) return;
+		if (startX === null) {return;}
 		resizingPageSidebar.set(true);
 
 		const x = e.clientX;
@@ -114,7 +115,7 @@
 
 	// handle open calendar day
 	const handleOpenCalendarDay = async (e: DateValue | undefined) => {
-		if (!e) return;
+		if (!e) {return;}
 
 		// Pad the month and day with a leading zero if they're single digits
 		const paddedMonth = e.month.toString().padStart(2, '0');
@@ -124,10 +125,10 @@
 		const noteName = `${e.year}-${paddedMonth}-${paddedDay}.md`;
 
 		// Check if note exists, if not create it - else open it
-		if (!entries.some((entry) => entry.path.includes(noteName))) {
-			createNote($collection + '/.haptic/daily', noteName);
-		} else {
+		if (entries.some((entry) => entry.path.includes(noteName))) {
 			openNote($collection + '/.haptic/daily/' + noteName, true);
+		} else {
+			createNote($collection + '/.haptic/daily', noteName);
 		}
 
 		// Get note element by data-path
@@ -160,11 +161,11 @@
 	activeFile.subscribe((value) => {
 		// Extract date string from active file path
 		const dateString = value?.split('/').pop()?.split('.')[0];
-		if (!dateString) return;
+		if (!dateString) {return;}
 
 		// Parse date string
 		const [year, month, day] = dateString.split('-').map(Number);
-		if (!year || !month || !day) return;
+		if (!year || !month || !day) {return;}
 
 		// Update calendar value
 		calValue = new CalendarDate(year, month, day);

@@ -31,7 +31,7 @@
 	}
 
 	const goToSelection = () => {
-		if (!$editor) return;
+		if (!$editor) {return;}
 
 		const { results, resultIndex } = $editor.storage.searchAndReplace;
 		const position: {
@@ -39,7 +39,7 @@
 			to: number;
 		} = results[resultIndex];
 
-		if (!position) return;
+		if (!position) {return;}
 
 		$editor.commands.setTextSelection(position);
 
@@ -58,7 +58,7 @@
 	};
 
 	const getCurrentTextSelection = () => {
-		if (!$editor) return;
+		if (!$editor) {return;}
 
 		const { from, to } = $editor.state.selection;
 		return $editor.state.doc.textBetween(from, to);
@@ -88,7 +88,7 @@
 		if ($editor) {
 			// Filter out regex special characters
 			// TODO: Find a fix for this, for some reason regex characters throw an error and makes app unresponsive
-			const filteredValue = value.replace(/[.*+?^${}()|[\]\\]/g, '');
+			const filteredValue = value.replaceAll(/[.*+?^${}()|[\]\\]/g, '');
 
 			if (wholeWord) {
 				$editor.commands.setSearchTerm(`\\b${filteredValue}\\b`);

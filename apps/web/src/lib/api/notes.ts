@@ -51,7 +51,7 @@ export async function openNote(path: string, skipHistory = false) {
   activeFile.set(path);
   if (!skipHistory) {
     noteHistory.update((history) => {
-      if (history[history.length - 1] !== path) {
+      if (history.at(-1) !== path) {
         return [...history, path];
       }
       return history;
@@ -73,7 +73,7 @@ export const renameNote = async (path: string, name: string) => {
   }
 
   // Remove breaking characters
-  name = name.replace(/[/\\?%*:|"<>]/g, '');
+  name = name.replaceAll(/[/\\?%*:|"<>]/g, '');
 
   // Get the note
   const entry = await db.select().from(entryTable).where(eq(entryTable.path, path));
@@ -146,7 +146,7 @@ export const moveNote = async (source: string, target: string) => {
     .where(eq(entryTable.path, source));
 
   // Open the note
-  openNote(target + '/' + noteName);
+  openNote(`${target}/${noteName}`);
 };
 
 // Duplicate a note (format: "<name> (<number>).<ext>") - <number> is incremented if there are any existing notes with the same name
@@ -198,7 +198,7 @@ export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataP
     editorMetadata: {
       words: editorWordCount,
       characters: editorCharacterCount,
-      avgReadingTime: avgReadingTime
+      avgReadingTime
     }
   };
 };

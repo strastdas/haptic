@@ -16,7 +16,7 @@
 
 	// Rename handler on input blur
 	async function handleBlur() {
-		if (!$activeFile) return;
+		if (!$activeFile) {return;}
 
 		// Make sure file name is in date format year-month-day, else return
 		if (preCheckRegex && !preCheckRegex.test(value)) {
@@ -45,7 +45,7 @@
 		}
 
 		// Remove invalid characters
-		value = value.replace(/[/\\?%*:|"<>]/g, '');
+		value = value.replaceAll(/[/\\?%*:|"<>]/g, '');
 	}
 
 	activeFile.subscribe((notePath) => {

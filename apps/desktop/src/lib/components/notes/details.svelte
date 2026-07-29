@@ -10,7 +10,7 @@
 		platform,
 		resizingNoteDetailSidebar
 	} from '@/store';
-	import { type NoteMetadataParams } from '@/types';
+	import type { NoteMetadataParams } from '@/types';
 	import { formatFileSize, formatTimeAgo } from '@/utils';
 	import { Button } from '@haptic/ui/components/button';
 	import Label from '@haptic/ui/components/label/label.svelte';
@@ -31,11 +31,11 @@
 	let startWidth: number;
 
 	const handleMouseMove = (e: MouseEvent) => {
-		if (startX === null) return;
+		if (startX === null) {return;}
 		resizingNoteDetailSidebar.set(true);
 
 		const x = e.clientX;
-		const clientWidth = document.body.clientWidth;
+		const {clientWidth} = document.body;
 
 		// Set collapsing bounds
 		if (clientWidth - x < 100) {

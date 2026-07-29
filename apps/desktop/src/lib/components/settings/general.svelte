@@ -14,9 +14,9 @@
 		label:
 			$collectionSettings.notes.trash_dir === 'system'
 				? 'System trash'
-				: $collectionSettings.notes.trash_dir === 'haptic'
+				: ($collectionSettings.notes.trash_dir === 'haptic'
 					? 'Haptic trash'
-					: 'Permanently delete'
+					: 'Permanently delete')
 	};
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

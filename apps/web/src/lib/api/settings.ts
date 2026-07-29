@@ -9,10 +9,10 @@ export const loadSettings = async (loadApp: boolean, loadCollection: boolean) =>
   if (loadApp) {
     // Load app settings from local storage
     const appSettingsData = window.localStorage.getItem('appSettings');
-    if (!appSettingsData) {
-      setSettings('app');
-    } else {
+    if (appSettingsData) {
       appSettings.set(JSON.parse(appSettingsData));
+    } else {
+      setSettings('app');
     }
   }
 

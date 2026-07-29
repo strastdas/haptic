@@ -25,7 +25,7 @@
 
 			// Seed database
 			await pgClient.exec(seed);
-		} catch (error) {
+		} catch {
 			console.log('Table already exists');
 		}
 	}
@@ -34,7 +34,7 @@
 	async function loadLatestCollection() {
 		const collections = await db.select().from(collectionTable);
 
-		if (!collections || collections.length === 0) return;
+		if (!collections || collections.length === 0) {return;}
 
 		// Get collection with latest lastOpened date
 		const latestCollection = collections.reduce((prev, current) =>

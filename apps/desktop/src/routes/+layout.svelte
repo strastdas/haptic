@@ -24,13 +24,13 @@
 			dir: BaseDirectory.AppData
 		}).catch(() => null);
 
-		if (!collections) return;
+		if (!collections) {return;}
 
 		// Get collection with latest lastOpened date
 		const latestCollection = JSON.parse(collections).sort(
-			(a: { lastOpened: string | number | Date }, b: { lastOpened: string | number | Date }) => {
-				return new Date(b.lastOpened).getTime() - new Date(a.lastOpened).getTime();
-			}
+			(a: { lastOpened: string | number | Date }, b: { lastOpened: string | number | Date }) => 
+				new Date(b.lastOpened).getTime() - new Date(a.lastOpened).getTime()
+			
 		)[0];
 
 		collection.set(latestCollection.path);

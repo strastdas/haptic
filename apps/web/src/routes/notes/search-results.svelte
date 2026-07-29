@@ -22,8 +22,8 @@
 		const grouped: Record<string, { context_preview: string }[]> = {};
 
 		results.forEach((result) => {
-			const path = result.path;
-			const context_preview = result.context_preview;
+			const {path} = result;
+			const {context_preview} = result;
 
 			if (!grouped[path]) {
 				grouped[path] = [];
@@ -50,7 +50,7 @@
 	}
 
 	const goToResult = (index: number) => {
-		if (!$editor) return;
+		if (!$editor) {return;}
 
 		const { results } = $editor.storage.searchAndReplace;
 		const position: {
@@ -58,7 +58,7 @@
 			to: number;
 		} = results[index];
 
-		if (!position) return;
+		if (!position) {return;}
 
 		$editor.commands.setTextSelection(position);
 
