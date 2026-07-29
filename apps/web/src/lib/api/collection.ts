@@ -1,4 +1,4 @@
-import { db } from '@/database/client';
+import { getDb } from '@/database/client';
 import { collection as collectionTable, entry as entryTable } from '@/database/schema';
 import { activeFile, collection, collectionEntries, noteHistory } from '@/store';
 import type { FileEntry } from '@/types';
@@ -12,6 +12,7 @@ export const fetchCollectionEntries = async (
   sort: 'name' | 'date' = 'name',
   showDotfiles = false
 ): Promise<FileEntry[]> => {
+  const db = getDb();
   dirPath = dirPath || get(collection);
   if (!dirPath) {
     throw new Error('No directory path provided');
@@ -92,6 +93,8 @@ export const loadCollection = async (path?: string | undefined) => {
   noteHistory.set([]);
   activeFile.set(null);
 
+  const db = getDb();
+
   // Add collection to collections data
   const collectionObj = {
     path,
@@ -116,7 +119,7 @@ export const loadCollection = async (path?: string | undefined) => {
 
 // Get all collections
 export const getCollections = async (): Promise<(typeof collectionTable.$inferSelect)[]> => {
-  const collections = await db.select().from(collectionTable);
+  const collections = await getDb().select().from(collectionTable);
 
   return collections;
 };

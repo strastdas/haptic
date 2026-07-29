@@ -1,7 +1,5 @@
 <script lang="ts">
 	import '@/adapter';
-	import migrations from '$lib/database/migrations/migrations.sql?raw';
-	import seed from '$lib/database/migrations/seed.sql?raw';
 	import { loadSettings } from '@/api/settings';
 	import Footer from '@haptic/app/components/layout/footer.svelte';
 	import Header from '@haptic/app/components/layout/header.svelte';
@@ -9,7 +7,9 @@
 	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { importCollection } from '@/import-collection';
 	import Icon from '@haptic/app/components/shared/icon.svelte';
-	import { db, pgClient } from '@/database/client';
+	import { getDb, initDatabase, legacyDatabaseExists } from '@/database/client';
+	import { runMigrations } from '@/database/migrations';
+	import { seedIfFresh } from '@/database/seed';
 	import { collection as collectionTable } from '@/database/schema';
 	import { collection } from '@/store';
 	import { createDeviceDetector } from '@/utils';
@@ -25,21 +25,23 @@
 	// Device detector
 	const device = createDeviceDetector();
 
-	// Migrate database
-	async function migrateDatabase() {
-		try {
-			await pgClient.exec(migrations);
+	// Storage boot gate: children may query the database synchronously via
+	// getDb(), so nothing that touches storage renders before init + migrations
+	// finished. Migration failures surface (no catch-and-ignore).
+	let storageReady = $state(false);
 
-			// Seed database
-			await pgClient.exec(seed);
-		} catch {
-			console.log('Table already exists');
-		}
+	// Upgrade notice for pre-0.3 PGlite data (lives under the old idb name).
+	const LEGACY_NOTICE_KEY = 'haptic-legacy-notice-dismissed';
+	let showLegacyNotice = $state(false);
+
+	function dismissLegacyNotice() {
+		window.localStorage.setItem(LEGACY_NOTICE_KEY, 'true');
+		showLegacyNotice = false;
 	}
 
 	// Load latest collection
 	async function loadLatestCollection() {
-		const collections = await db.select().from(collectionTable);
+		const collections = await getDb().select().from(collectionTable);
 
 		if (!collections || collections.length === 0) {return;}
 
@@ -52,15 +54,28 @@
 	}
 
 	onMount(async () => {
-		// Migrate database
-		await migrateDatabase();
+		// Boot the database and bring the schema up to date
+		const client = await initDatabase();
+		const migration = await runMigrations(client);
 
-		console.log(await db.select().from(collectionTable));
+		// Seed the demo collection only on a genuinely fresh database
+		await seedIfFresh(client, migration);
+
+		// Offer the upgrade notice if a pre-0.3 database exists under the old idb name
+		if (
+			window.localStorage.getItem(LEGACY_NOTICE_KEY) !== 'true' &&
+			(await legacyDatabaseExists())
+		) {
+			showLegacyNotice = true;
+		}
+
 		// Load latest collection on mount
 		await loadLatestCollection();
 
 		// Load app & collection settings
 		loadSettings(true, true);
+
+		storageReady = true;
 	});
 </script>
 
@@ -116,14 +131,33 @@
 </svelte:head>
 
 {#if $device.isDesktop}
-	<Command {importCollection} />
 	<ModeWatcher />
-	<Header />
-	<Sidebar />
-	<main class="flex min-h-screen w-full items-center justify-center">
-		{@render children?.()}
-	</main>
-	<Footer />
+	{#if storageReady}
+		{#if showLegacyNotice}
+			<div
+				class="fixed bottom-12 left-1/2 z-50 flex w-fit max-w-[90vw] -translate-x-1/2 items-center gap-3 rounded-md border bg-secondary px-4 py-2.5 text-sm text-secondary-foreground shadow-md"
+				role="status"
+			>
+				<p>
+					Notes from a previous version were found. Import support is coming — your old data is
+					untouched.
+				</p>
+				<button
+					class="shrink-0 rounded-sm px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+					onclick={dismissLegacyNotice}
+				>
+					Dismiss
+				</button>
+			</div>
+		{/if}
+		<Command {importCollection} />
+		<Header />
+		<Sidebar />
+		<main class="flex min-h-screen w-full items-center justify-center">
+			{@render children?.()}
+		</main>
+		<Footer />
+	{/if}
 {:else}
 	<main class="flex min-h-[100dvh] w-full flex-col items-center justify-center gap-5">
 		<Icon name="phoneOff" class="w-9 h-9 fill-none text-secondary-foreground" />

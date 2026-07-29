@@ -1,8 +1,12 @@
 <script lang="ts">
-	import { Button } from '@haptic/ui/components/button';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	// Static-adapter fallback for the prerendered server redirect in
+	// +page.server.ts: when this shell is served directly, forward to /notes.
+	onMount(() => {
+		goto('/notes', { replaceState: true });
+	});
 </script>
 
-<h1 class="bg-blue-500">Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
-
-<Button>CLick me</Button>
+<noscript><a href="/notes">Continue to your notes</a></noscript>

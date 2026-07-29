@@ -1,4 +1,4 @@
-import { db } from '@/database/client';
+import { getDb } from '@/database/client';
 import { entry as entryTable } from '@/database/schema';
 import { activeFile, collection, editor, noteHistory } from '@/store';
 import type { NoteMetadataParams } from '@/types';
@@ -8,6 +8,8 @@ import { get } from 'svelte/store';
 
 // Create a new note
 export const createNote = async (dirPath: string, name?: string) => {
+  const db = getDb();
+
   // Read the directory
   const dirEntry = await db.select().from(entryTable).where(eq(entryTable.path, dirPath));
 
@@ -46,7 +48,7 @@ export const createNote = async (dirPath: string, name?: string) => {
 
 // Open a note
 export async function openNote(path: string, skipHistory = false) {
-  const file = await db.select().from(entryTable).where(eq(entryTable.path, path));
+  const file = await getDb().select().from(entryTable).where(eq(entryTable.path, path));
   setEditorContent(file[0].content ?? '');
   activeFile.set(path);
   if (!skipHistory) {
@@ -61,12 +63,14 @@ export async function openNote(path: string, skipHistory = false) {
 
 // Delete a note
 export const deleteNote = async (path: string) => {
-  await db.delete(entryTable).where(eq(entryTable.path, path));
+  await getDb().delete(entryTable).where(eq(entryTable.path, path));
   activeFile.set(null);
 };
 
 // Rename a note
 export const renameNote = async (path: string, name: string) => {
+  const db = getDb();
+
   // Make sure file extension is included
   if (!name.endsWith('.md')) {
     name += '.md';
@@ -99,6 +103,8 @@ export const renameNote = async (path: string, name: string) => {
 
 // Save active note
 export const saveNote = async (path: string) => {
+  const db = getDb();
+
   // Get note content
   let content = get(editor).storage.markdown.getMarkdown();
 
@@ -115,6 +121,8 @@ export const saveNote = async (path: string) => {
 };
 
 export const moveNote = async (source: string, target: string) => {
+  const db = getDb();
+
   // Get target directory
   const targetDir = await db.select().from(entryTable).where(eq(entryTable.path, target));
 
@@ -151,6 +159,8 @@ export const moveNote = async (source: string, target: string) => {
 
 // Duplicate a note (format: "<name> (<number>).<ext>") - <number> is incremented if there are any existing notes with the same name
 export const duplicateNote = async (path: string) => {
+  const db = getDb();
+
   // Fetch the content of the note
   const entry = await db.select().from(entryTable).where(eq(entryTable.path, path));
 
@@ -180,6 +190,7 @@ export const duplicateNote = async (path: string) => {
 
 export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataParams> => {
   // General file metadata
+  const db = getDb();
   const fileMetadata = await db.select().from(entryTable).where(eq(entryTable.path, path));
 
   // Get editor metadata

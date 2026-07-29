@@ -1,5 +1,5 @@
 import { loadCollection } from '@haptic/core/adapter';
-import { db } from '@/database/client';
+import { getDb } from '@/database/client';
 import { entry as entryTable } from '@/database/schema';
 
 /**
@@ -49,15 +49,17 @@ export async function importCollection(
     if (file.name.toLowerCase().endsWith('.md')) {
       try {
         const fileText = await file.text();
-        await db.insert(entryTable).values({
-          name: fileName,
-          path: filePath,
-          content: fileText,
-          parentPath: currentPath,
-          collectionPath: `/${collectionName}`,
-          size: file.size,
-          isFolder: false
-        });
+        await getDb()
+          .insert(entryTable)
+          .values({
+            name: fileName,
+            path: filePath,
+            content: fileText,
+            parentPath: currentPath,
+            collectionPath: `/${collectionName}`,
+            size: file.size,
+            isFolder: false
+          });
         console.log('Inserted file:', fileName);
       } catch (error) {
         console.error('Error processing file:', fileName, error);
@@ -74,14 +76,16 @@ async function createFolderEntry(path: string, collectionName: string) {
   const parentPath = `/${pathParts.slice(0, -1).join('/')}`;
 
   try {
-    await db.insert(entryTable).values({
-      name: folderName,
-      path,
-      content: undefined,
-      parentPath,
-      collectionPath: `/${collectionName}`,
-      isFolder: true
-    });
+    await getDb()
+      .insert(entryTable)
+      .values({
+        name: folderName,
+        path,
+        content: undefined,
+        parentPath,
+        collectionPath: `/${collectionName}`,
+        isFolder: true
+      });
     console.log('Created folder entry:', path);
   } catch (error) {
     console.error('Error creating folder entry:', path, error);

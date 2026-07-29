@@ -1,4 +1,4 @@
-import { db } from '@/database/client';
+import { getDb } from '@/database/client';
 import { collectionSettings as collectionSettingsTable } from '@/database/schema';
 import { appSettings, collection, collectionSettings } from '@/store';
 import type { AppSettingsParams, CollectionSettingsParams } from '@/types';
@@ -17,7 +17,7 @@ export const loadSettings = async (loadApp: boolean, loadCollection: boolean) =>
   }
 
   if (loadCollection) {
-    const collectionSettingsData = await db
+    const collectionSettingsData = await getDb()
       .select()
       .from(collectionSettingsTable)
       .where(eq(collectionSettingsTable.collectionPath, get(collection)));
@@ -42,7 +42,7 @@ export const setSettings = async (
   }
   if (settingsType === 'collection') {
     collectionSettings.set((value ?? get(collectionSettings)) as CollectionSettingsParams);
-    await db
+    await getDb()
       .insert(collectionSettingsTable)
       .values({
         collectionPath: get(collection),
