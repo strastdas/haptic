@@ -33,6 +33,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@haptic/core": "workspace:^",
+    "@haptic/editor": "workspace:^",
     "@haptic/ui": "workspace:^",
     "@internationalized/date": "^3.5.4",
     "@tauri-apps/api": "^1.5.3",

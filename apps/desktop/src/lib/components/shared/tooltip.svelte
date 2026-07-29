@@ -3,25 +3,53 @@
 	import * as Tooltip from '@haptic/ui/components/tooltip';
 	import type { ShortcutParams } from '@/types';
 	import { shortcutToString } from '@/utils';
+	import { onDestroy } from 'svelte';
 
 	export let text = 'Tooltip';
 	export let shortcut: ShortcutParams | undefined = undefined;
 
-	// TODO: Find out why sometimes it needs refresh to work properly again after a while #BUG
+	// Track this instance's contribution to the global open-counter so it can
+	// always be undone. Previously, destroying a component while its tooltip was
+	// open (or during the 500ms close grace period) leaked an increment, leaving
+	// every tooltip in instant-open mode until a full refresh.
+	let counted = false;
+	let pendingClose: ReturnType<typeof setTimeout> | null = null;
+
+	function handleOpenChange(open: boolean) {
+		if (open) {
+			if (pendingClose) {
+				clearTimeout(pendingClose);
+				pendingClose = null;
+			}
+			if (!counted) {
+				counted = true;
+				tooltipsOpen.update((value) => value + 1);
+			}
+		} else if (counted && !pendingClose) {
+			pendingClose = setTimeout(() => {
+				pendingClose = null;
+				counted = false;
+				tooltipsOpen.update((value) => Math.max(0, value - 1));
+			}, 500);
+		}
+	}
+
+	onDestroy(() => {
+		if (pendingClose) {
+			clearTimeout(pendingClose);
+			pendingClose = null;
+		}
+		if (counted) {
+			counted = false;
+			tooltipsOpen.update((value) => Math.max(0, value - 1));
+		}
+	});
 </script>
 
 <Tooltip.Root
 	openDelay={$tooltipsOpen >= 1 ? 0 : 300}
 	closeDelay={$tooltipsOpen >= 1 ? 0 : 50}
-	onOpenChange={(open) => {
-		if (open) {
-			tooltipsOpen.update((value) => value + 1);
-		} else {
-			setTimeout(() => {
-				tooltipsOpen.update((value) => value - 1);
-			}, 500);
-		}
-	}}
+	onOpenChange={handleOpenChange}
 >
 	<Tooltip.Trigger><slot /></Tooltip.Trigger>
 	<Tooltip.Content {...$$props} transitionConfig={{ duration: $tooltipsOpen > 1 ? 125 : 175 }}>

@@ -32,6 +32,12 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@haptic/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@haptic/editor':
+        specifier: workspace:^
+        version: link:../../packages/editor
       '@haptic/ui':
         specifier: workspace:^
         version: link:../../packages/ui
@@ -229,6 +235,12 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.2.0
         version: 0.2.17
+      '@haptic/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@haptic/editor':
+        specifier: workspace:^
+        version: link:../../packages/editor
       '@haptic/ui':
         specifier: workspace:^
         version: link:../../packages/ui
@@ -356,6 +368,30 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.19(yaml@2.9.0))
+
+  packages/core:
+    dependencies:
+      clsx:
+        specifier: ^2.1.0
+        version: 2.1.1
+      svelte:
+        specifier: ^4.2.7
+        version: 4.2.20
+      tailwind-merge:
+        specifier: ^2.2.1
+        version: 2.6.1
+
+  packages/editor:
+    dependencies:
+      '@tiptap/core':
+        specifier: ^2.2.1
+        version: 2.27.2(@tiptap/pm@2.27.2)
+      '@tiptap/pm':
+        specifier: ^2.2.1
+        version: 2.27.2
+      svelte:
+        specifier: ^4.2.7
+        version: 4.2.20
 
   packages/ui:
     dependencies:

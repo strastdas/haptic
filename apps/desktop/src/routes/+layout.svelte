@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '@/adapter';
 	import { loadSettings } from '@/api/settings';
 	import Footer from '@/components/layout/footer.svelte';
 	import Header from '@/components/layout/header.svelte';

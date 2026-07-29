@@ -26,10 +26,9 @@ export const deleteFolder = async (path: string, recursive = false) => {
   if (!recursive) {
     let children = await readDir(path);
 
-    // Remove .DS_Store files from the children
-    children = children.filter((child) => child.name !== '.DS_Store');
-
-    // TODO: implement empty children check
+    // Ignore hidden files (.DS_Store etc.): the tree hides dotfiles, so a
+    // folder that looks empty to the user must be deletable.
+    children = children.filter((child) => !child.name?.startsWith('.'));
 
     if (children.length > 0) {
       throw new Error('Folder is not empty');

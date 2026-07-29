@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '@/adapter';
 	import migrations from '$lib/database/migrations/migrations.sql?raw';
 	import seed from '$lib/database/migrations/seed.sql?raw';
 	import { loadSettings } from '@/api/settings';

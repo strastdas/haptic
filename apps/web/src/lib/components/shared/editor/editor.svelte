@@ -11,7 +11,7 @@
 	import { TaskItem } from '@tiptap/extension-task-item';
 	import { Link } from '@tiptap/extension-link';
 	import CharacterCount from '@tiptap/extension-character-count';
-	import SearchAndReplace from './extensions';
+	import { SearchAndReplace } from '@haptic/editor';
 	import Shortcut from '../shortcut.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import { get } from 'svelte/store';

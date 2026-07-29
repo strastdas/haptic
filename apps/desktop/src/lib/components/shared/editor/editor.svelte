@@ -14,7 +14,7 @@
 	import { get } from 'svelte/store';
 	import { Markdown } from 'tiptap-markdown';
 	import Shortcut from '../shortcut.svelte';
-	import SearchAndReplace from './extensions';
+	import { SearchAndReplace } from '@haptic/editor';
 
 	let element: HTMLDivElement;
 	let tiptapEditor: Editor;

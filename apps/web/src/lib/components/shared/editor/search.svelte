@@ -15,6 +15,7 @@
 	import { cn } from '@haptic/ui/lib/utils';
 	import Shortcut from '@/components/shared/shortcut.svelte';
 	import { SHORTCUTS } from '@/constants';
+	import { escapeRegExp } from '@/utils';
 	import Tooltip from '@/components/shared/tooltip.svelte';
 
 	let replaceValue = '';
@@ -85,9 +86,9 @@
 
 	editorSearchValue.subscribe((value) => {
 		if ($editor) {
-			// Filter out regex special characters
-			// TODO: Find a fix for this, for some reason regex characters throw an error and makes app unresponsive
-			const filteredValue = value.replaceAll(/[.*+?^${}()|[\]\\]/g, '');
+			// Escape regex special characters so literal input (e.g. "(", "[") searches
+			// correctly instead of crashing the search plugin or being stripped.
+			const filteredValue = escapeRegExp(value);
 
 			if (wholeWord) {
 				$editor.commands.setSearchTerm(`\\b${filteredValue}\\b`);
