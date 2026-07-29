@@ -16,6 +16,7 @@
 	import '@haptic/ui/app.web.css';
 	import { ModeWatcher } from 'mode-watcher';
 	import { onMount } from 'svelte';
+
 	interface Props {
 		children?: import('svelte').Snippet;
 	}

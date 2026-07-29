@@ -19,15 +19,15 @@ export default defineConfig({
   ],
   overrides: [
     {
-      // Svelte 4 compiler idioms that generic JS rules misidentify (QUALITY.md: valid
-      // narrow exception — framework patterns). `export let` props are mutable by
-      // design, `$:` is a reactive label, `= undefined` marks optional props, and
-      // reassignments often happen in the template, invisible to oxlint's script view.
-      // Revisit when Phase 3 migrates components to Svelte 5 runes.
+      // Svelte compiler idioms that generic JS rules misidentify (QUALITY.md: valid
+      // narrow exception — framework patterns). Re-evaluated 2026-07-29 after the
+      // Svelte 5 runes migration: `import/no-mutable-exports` and `eslint/no-labels`
+      // no longer fire (no `export let` props or `$:` labels left) and were removed.
+      // `prefer-const` (455 hits) stays: `$state` variables are reassigned from the
+      // template/bindings, invisible to oxlint's script view. `no-useless-undefined`
+      // (10 hits) stays for `= $state(undefined)`-style optional props.
       files: ['**/*.svelte'],
       rules: {
-        'import/no-mutable-exports': 'off',
-        'eslint/no-labels': 'off',
         'eslint/prefer-const': 'off',
         'unicorn/no-useless-undefined': 'off'
       }

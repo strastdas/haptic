@@ -34,7 +34,7 @@ export async function runMigrations(client: PGlite): Promise<MigrationResult> {
 
   const migrations = Object.entries(migrationFiles)
     .map(([path, sql]) => ({ id: path.replace('./', '').replace(/\.sql$/, ''), sql }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .toSorted((a, b) => a.id.localeCompare(b.id));
 
   const appliedNow: string[] = [];
   for (const { id, sql } of migrations) {
@@ -42,10 +42,12 @@ export async function runMigrations(client: PGlite): Promise<MigrationResult> {
       continue;
     }
     try {
+      // oxlint-disable-next-line no-await-in-loop -- migrations must apply strictly in order
       await client.transaction(async (tx) => {
         for (const statement of sql.split('--> statement-breakpoint')) {
           const trimmed = statement.trim();
           if (trimmed) {
+            // oxlint-disable-next-line no-await-in-loop -- statements run sequentially inside the transaction
             await tx.exec(trimmed);
           }
         }

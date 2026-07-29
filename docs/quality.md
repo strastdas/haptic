@@ -16,9 +16,16 @@ This repository follows the [`@strastdas/oxc-config` QUALITY.md](https://www.npm
 
 ## Approved exceptions
 
-- `**/*.svelte` override in `oxlint.config.mjs` disables `import/no-mutable-exports`, `eslint/no-labels`, `eslint/prefer-const`, `unicorn/no-useless-undefined`: Svelte 4 compiler idioms (`export let` props, `$:` reactive labels, `= undefined` optional props, template-side reassignment invisible to oxlint). **Revisit when components migrate to Svelte 5 runes.**
+- `**/*.svelte` override in `oxlint.config.mjs` disables `eslint/prefer-const` and `unicorn/no-useless-undefined`. Re-evaluated 2026-07-29 after the Svelte 5 runes migration: `import/no-mutable-exports` and `eslint/no-labels` no longer fire (no `export let` props or `$:` labels remain) and were **removed** from the override. The two kept rules are still structural false positives: `$state` variables are reassigned from templates/bindings (invisible to oxlint's script extraction, 455 hits) and `= $state(undefined)` marks optional props (10 hits).
+- `apps/web/src/lib/database/migrations/index.ts` carries two inline `no-await-in-loop` disables: migrations (and the statements within each) must apply strictly sequentially.
+
+## Testing
+
+- **Unit/contract**: `pnpm test` — Vitest workspace with a `core` project (pure utils + StorageAdapter contract vs. an in-memory mock) and a `web` project (the same contract vs. the real adapter on in-memory PGlite, plus migrations-runner and search tests).
+- **E2E**: `pnpm --filter=web test:e2e` — Playwright smoke specs against a production build served by `vite preview` (see `apps/web/playwright.config.ts`); run `pnpm --filter=web exec playwright install chromium` once first.
+- CI (`.github/workflows/ci.yml`): `lint` (advisory), `check`, `test`, `build-web`, `e2e`; plus the required Tauri build in `desktop-build.yml` on desktop-affecting PRs. Renovate (`renovate.json`) runs monthly with grouped tauri/tiptap updates.
 
 ## Migration status
 
-- Baseline recorded 2026-07-29: ~460 advisory oxlint findings remain after the safe `--fix` pass (mostly `no-non-null-assertion`, `prefer-destructuring`, `no-use-before-define`, DOM-idiom rules). Burn down in focused commits; do not weaken shared rules to hide them.
+- Baseline re-recorded 2026-07-29 (post Phase 5/6): 583 advisory oxlint findings (mostly `no-non-null-assertion`, `prefer-destructuring`, `no-use-before-define`, `no-await-in-loop`, DOM-idiom rules; the count rose vs. the initial ~460 because the `.svelte` override list was tightened — see above). Burn down in focused commits; do not weaken shared rules to hide them.
 - Because the baseline is not clean, `lint-staged` runs **oxfmt only** and the CI lint job is **advisory** (`continue-on-error`). Both become blocking once the baseline is clean.
