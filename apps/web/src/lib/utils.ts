@@ -50,10 +50,11 @@ export async function searchEntries(
   caseSensitive = false,
   matchWord = false
 ): Promise<SearchResultParams[]> {
-  const escapedQuery = query.replaceAll(/'/g, "''");
+  // The query is passed as a bound parameter, so no manual quote-escaping:
+  // doubling quotes here would make apostrophe searches silently match nothing.
   const likeOperator = caseSensitive ? 'LIKE' : 'ILIKE';
   const wordBoundary = matchWord ? ' ' : '';
-  const searchPattern = `%${wordBoundary}${escapedQuery}${wordBoundary}%`;
+  const searchPattern = `%${wordBoundary}${query}${wordBoundary}%`;
   const sqlQuery = `
     WITH matched_entries AS (
       SELECT path, content
@@ -70,7 +71,7 @@ export async function searchEntries(
   ]);
   const searchResults: SearchResultParams[] = [];
   results.rows.forEach((row) => {
-    const contexts = extractAllContexts(row.content, escapedQuery, caseSensitive, matchWord);
+    const contexts = extractAllContexts(row.content, query, caseSensitive, matchWord);
     contexts.forEach((context) => {
       searchResults.push({
         path: row.path,

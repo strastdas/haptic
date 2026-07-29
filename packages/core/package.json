@@ -9,7 +9,8 @@
     "./constants": "./src/constants.ts",
     "./store": "./src/store.ts",
     "./utils": "./src/utils.ts",
-    "./adapter": "./src/adapter.ts"
+    "./adapter": "./src/adapter.ts",
+    "./adapter.contract": "./src/adapter.contract.ts"
   },
   "peerDependencies": {
     "svelte": "^5.0.0"
@@ -17,5 +18,8 @@
   "dependencies": {
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }
