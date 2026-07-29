@@ -22,8 +22,10 @@
     "svelte": "^5.0.0"
   },
   "exports": {
+    "./components/*/index.js": "./components/*/index.ts",
     "./components/*": "./components/*/index.ts",
     "./lib/utils": "./lib/utils.ts",
+    "./lib/utils.js": "./lib/utils.ts",
     "./hooks/*": "./hooks/*.ts",
     "./theme.css": "./theme.css",
     "./app.web.css": "./app.web.css",
