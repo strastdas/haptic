@@ -34,10 +34,13 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "dependencies": {
-    "@haptic/ui": "workspace:^",
     "@vercel/analytics": "^1.5.0",
     "@vercel/edge-config": "^1.2.1",
-    "lucide-svelte": "^0.428.0"
+    "bits-ui": "^0.16.0",
+    "clsx": "^2.1.0",
+    "lucide-svelte": "^0.428.0",
+    "tailwind-merge": "^2.2.1",
+    "tailwind-variants": "^0.1.20"
   },
   "type": "module"
 }

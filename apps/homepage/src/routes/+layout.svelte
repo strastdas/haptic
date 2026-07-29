@@ -1,6 +1,6 @@
 <script lang="ts">
-	import '@haptic/ui/app.web.css';
-	import { Button } from '@haptic/ui/components/button';
+	import '$lib/ui/app.css';
+	import { Button } from '$lib/ui/button';
 	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	const currentYear = new Date().getFullYear();
 	injectAnalytics();

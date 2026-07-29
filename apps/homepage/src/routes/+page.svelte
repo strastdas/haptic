@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Tooltip from '$lib/components/tooltip.svelte';
-	import { Button } from '@haptic/ui/components/button';
+	import { Button } from '$lib/ui/button';
 	import banner from '$lib/assets/hero-dark.png';
 
 	import { ArrowUpRight } from 'lucide-svelte';

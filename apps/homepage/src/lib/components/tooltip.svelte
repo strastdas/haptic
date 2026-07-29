@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tooltipsOpen, currentOpenTooltip } from '$lib/store';
-	import * as Tooltip from '@haptic/ui/components/tooltip';
+	import * as Tooltip from '$lib/ui/tooltip';
 	import { Monitor, Smartphone, Tablet, Zap } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 

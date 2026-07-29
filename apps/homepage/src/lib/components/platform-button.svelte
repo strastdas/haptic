@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '@haptic/ui/lib/utils';
+	import { cn } from '$lib/ui/utils';
 
 	export let name;
 	export let active: boolean = false;

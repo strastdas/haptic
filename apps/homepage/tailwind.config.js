@@ -4,5 +4,5 @@ const sharedConfig = require('./tailwind-preset.cjs');
 module.exports = {
   presets: [sharedConfig],
   darkMode: ['class'],
-  content: ['./src/**/*.{html,js,svelte,ts}', '../../packages/ui/**/*.{html,js,svelte,ts}']
+  content: ['./src/**/*.{html,js,svelte,ts}']
 };
