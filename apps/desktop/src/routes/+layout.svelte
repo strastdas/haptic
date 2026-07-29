@@ -89,10 +89,10 @@
 		border: 4px solid rgba(0, 0, 0, 0);
 		background-clip: padding-box;
 		border-radius: 50px;
-		background-color: hsl(var(--border) / 1);
+		background-color: var(--border);
 
 		&:hover {
-			background-color: hsl(var(--foreground) / 0.15);
+			background-color: color-mix(in oklab, var(--foreground) 15%, transparent);
 		}
 	}
 </style>

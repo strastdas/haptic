@@ -125,24 +125,24 @@
 		-webkit-appearance: none;
 		appearance: none;
 		transition: 120ms all ease-in-out;
-		/* background-color: hsl(var(--background) / 1); */
+		/* background-color: var(--background); */
 		margin: 0;
 		cursor: pointer;
 		width: 1.2em;
 		height: 1.2em;
 		position: relative;
 		top: 5px;
-		border: 1px solid hsl(var(--border) / 1);
+		border: 1px solid var(--border);
 		display: grid;
 		place-content: center;
 
 		&:hover {
-			background-color: hsl(var(--accent) / 1);
-			border: 1px solid hsl(var(--foreground) / 0.6);
+			background-color: var(--accent);
+			border: 1px solid color-mix(in oklab, var(--foreground) 60%, transparent);
 		}
 
 		/* &:checked {
-			background-color: hsl(var(--primary) / 1);
+			background-color: var(--primary);
 		} */
 
 		&::before {
@@ -162,7 +162,7 @@
 	}
 
 	div :global(ul[data-type='taskList'] li[data-checked='true'] > div > p) {
-		color: hsl(var(--foreground) / 0.6);
+		color: color-mix(in oklab, var(--foreground) 60%, transparent);
 		text-decoration: line-through;
 		text-decoration-thickness: 1px;
 	}
@@ -173,7 +173,7 @@
 	}
 
 	div :global(.search-result) {
-		background-color: hsl(var(--muted));
+		background-color: var(--muted);
 	}
 
 	div :global(.search-result-current) {

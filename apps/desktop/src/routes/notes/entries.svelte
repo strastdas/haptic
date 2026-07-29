@@ -626,8 +626,8 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		background-color: hsl(var(--secondary));
-		border: 1px solid hsl(var(--border));
+		background-color: var(--secondary);
+		border: 1px solid var(--border);
 		padding-top: 5px;
 		padding-bottom: 3px;
 		padding-right: 10px;
@@ -640,7 +640,7 @@
 	}
 
 	:global([data-highlighted]) {
-		background-color: hsl(var(--accent));
+		background-color: var(--accent);
 	}
 
 	:global([data-collapsible-root]) {
