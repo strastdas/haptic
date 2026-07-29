@@ -38,6 +38,18 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check --filter=web --filter=desktop
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
   build-web:
     runs-on: ubuntu-latest
     steps:
@@ -49,3 +61,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build --filter=web
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter=web exec playwright install --with-deps chromium
+      # playwright.config.ts builds the app and serves it via vite preview
+      - run: pnpm --filter=web test:e2e

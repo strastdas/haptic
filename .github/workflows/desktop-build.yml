@@ -2,7 +2,7 @@ name: Desktop Build
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, revival]
     paths:
       - "apps/desktop/**"
       - "packages/**"

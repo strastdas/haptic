@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "rangeStrategy": "bump",
+  "schedule": ["before 6am on the first day of the month"],
+  "packageRules": [
+    {
+      "groupName": "tauri",
+      "matchPackageNames": ["/^@tauri-apps\\//", "/^tauri$/", "/^tauri-/"]
+    },
+    {
+      "groupName": "tiptap",
+      "matchPackageNames": ["/^@tiptap\\//", "tiptap-markdown"]
+    }
+  ]
+}
