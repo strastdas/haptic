@@ -44,8 +44,10 @@
 				TaskList,
 				TaskItem.configure({
 					HTMLAttributes: {
+						// h-5 matches the paragraph's leading-5 above, so the checkbox centres on
+						// the first text line; my-0 drops the prose margin that offset it.
 						class:
-							'flex items-start pl-1.5 gap-2 [&>div]:mb-0 [&>label]:mt-0 [&>div]:w-full [&>div>p]:inline-block [&>label]:inline-flex [&>label]:items-center [&>label>input]:rounded-md'
+							'flex items-start pl-1.5 gap-2 [&>div]:mb-0 [&>label]:mt-0 [&>div]:w-full [&>div]:leading-5 [&>div>p]:inline-block [&>div>p]:my-0 [&>label]:inline-flex [&>label]:h-5 [&>label]:items-center [&>label>input]:rounded-md'
 					},
 					nested: true
 				}),
@@ -130,8 +132,7 @@
 		cursor: pointer;
 		width: 1.2em;
 		height: 1.2em;
-		position: relative;
-		top: 5px;
+		flex-shrink: 0;
 		border: 1px solid var(--border);
 		display: grid;
 		place-content: center;
