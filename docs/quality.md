@@ -24,7 +24,7 @@ This repository follows the [`@strastdas/oxc-config` QUALITY.md](https://www.npm
 
 - **Unit/contract**: `pnpm test` — Vitest workspace with a `core` project (pure utils + StorageAdapter contract vs. an in-memory mock) and a `web` project (the same contract vs. the real adapter on in-memory PGlite, plus migrations-runner and search tests).
 - **E2E**: `pnpm --filter=web test:e2e` — Playwright smoke specs against a production build served by `vite preview` (see `apps/web/playwright.config.ts`); run `pnpm --filter=web exec playwright install chromium` once first.
-- CI (`.github/workflows/ci.yml`): `lint` (advisory), `check`, `test`, `build-web`, `e2e`; plus the required Tauri build in `desktop-build.yml` on desktop-affecting PRs. Renovate (`renovate.json`) runs monthly with grouped tauri/tiptap updates.
+- CI (`.github/workflows/ci.yml`): `lint` (advisory), `check`, `test`, `build-web`, `e2e`; plus the Tauri build in `desktop-build.yml`. **Both are `workflow_dispatch` only — nothing runs automatically**; the original push/PR triggers are commented at the top of each file, ready to restore. Until then, the local commands above are the gate. Renovate (`renovate.json`) runs monthly with grouped tauri/tiptap updates.
 
 ## Migration status
 

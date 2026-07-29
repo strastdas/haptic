@@ -60,7 +60,7 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 - `tauri.conf.json` has no allowlist — Tauri 2 permissions live in `src-tauri/capabilities/default.json`. Filesystem access is scoped to `$HOME/**` and `$APPDATA`; new fs calls may need a new permission there.
 - Tauri 2's `readDir` is **not recursive**; the desktop adapter rebuilds the tree via `readDirTree` in `apps/desktop/src/lib/api/fs.ts`.
 - Web migrations must never swallow errors — the runner in `lib/database/migrations/index.ts` applies files once, transactionally, tracked in `haptic_migrations`, and rethrows.
-- `.github/workflows/{publish-on-release,dockerize-on-release,test-build-only}.yml` are disabled (manual trigger only): they target upstream's Docker Hub, signing secrets, and a Tauri 1 pipeline.
+- **No CI runs automatically.** `ci.yml` and `desktop-build.yml` are `workflow_dispatch` only (triggers commented at the top of each, ready to restore), so `pnpm check`, `pnpm test`, and the builds are the real gate — run them before you claim a change works. Upstream's release/Docker/Tauri-1 workflows were deleted outright.
 
 ## Not yet built
 
