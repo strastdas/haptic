@@ -1,0 +1,77 @@
+name: Desktop Build
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/desktop/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/desktop-build.yml"
+
+concurrency:
+  group: desktop-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Tauri debug build (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm --filter=desktop check
+
+      - name: Build app (debug, no bundle)
+        run: pnpm --filter=desktop tauri build --debug --no-bundle
+
+  rust-lint:
+    name: Rust fmt + clippy (Linux)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/desktop/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libgtk-3-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: cargo fmt
+        run: cargo fmt --check
+
+      # The tauri context macro requires the frontendDist directory to exist,
+      # but the JS bundle is not built in this lint-only job.
+      - name: Stub frontend dist
+        run: mkdir -p ../build && touch ../build/index.html
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
