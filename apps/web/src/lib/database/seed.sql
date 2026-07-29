@@ -96,25 +96,3 @@ Haptic is all about making writing easier. We''ve left out extra features to kee
 
 **Note**: If you''re looking for a markdown editor with plugin systems, complex setups, or feature-packed interfaces, Haptic might not be for you. But if you want something straightforward that just works, give Haptic a try!
 ', false);
-
--- Insert 10 entries with daily task todos in markdown format
-DO $$
-DECLARE
-    i INT;
-    task_date DATE;
-BEGIN
-    FOR i IN 0..9 LOOP
-        task_date := CURRENT_DATE - i;
-        INSERT INTO entry (path, name, parent_path, collection_path, content, is_folder, size, created_at, updated_at) VALUES
-        (format('%s.md', to_char(task_date, 'YYYY-MM-DD')),
-         to_char(task_date, 'YYYY-MM-DD'), 
-         '/Haptic/.haptic/daily', 
-         '/Haptic', 
-         format('This is just a simple description of what needs to be done today.'||chr(10)||'- [ ] Daily Task for %s',
-            to_char(task_date, 'DDth Mon YYYY')), 
-         false, 
-         NULL, 
-         CURRENT_TIMESTAMP, 
-         CURRENT_TIMESTAMP);
-    END LOOP;
-END $$;
