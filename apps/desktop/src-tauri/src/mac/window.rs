@@ -2,8 +2,8 @@
 // https://github.com/hoppscotch/hoppscotch/blob/286fcd2bb08a84f027b10308d1e18da368f95ebf/packages/hoppscotch-selfhost-desktop/src-tauri/src/mac/window.rs
 
 use hex_color::HexColor;
-use tauri::{App, Manager, Runtime, Window};
-use objc::{msg_send, sel, sel_impl, class};
+use objc::{msg_send, sel, sel_impl};
+use tauri::{App, Emitter, Listener, Manager, Runtime, WebviewWindow};
 
 // If anything breaks on macOS, this should be the place which is broken
 // We have to override Tauri (Tao) 's built-in NSWindowDelegate implementation with a
@@ -41,7 +41,7 @@ unsafe impl Send for UnsafeWindowHandle {}
 unsafe impl Sync for UnsafeWindowHandle {}
 
 #[cfg(target_os = "macos")]
-fn update_window_theme(window: &tauri::Window, color: HexColor) {
+fn update_window_theme(window: &WebviewWindow, color: HexColor) {
     use cocoa::appkit::{
         NSAppearance, NSAppearanceNameVibrantDark, NSAppearanceNameVibrantLight, NSWindow,
     };
@@ -104,7 +104,7 @@ fn set_window_controls_pos(window: cocoa::base::id, x: f64, y: f64) {
     }
 }
 
-impl<R: Runtime> WindowExt for Window<R> {
+impl<R: Runtime> WindowExt for WebviewWindow<R> {
     #[cfg(target_os = "macos")]
     fn set_transparent_titlebar(&self) {
         unsafe {
@@ -120,16 +120,16 @@ impl<R: Runtime> WindowExt for Window<R> {
 #[cfg(target_os = "macos")]
 #[derive(Debug)]
 struct HapticAppState {
-    window: Window,
+    window: WebviewWindow,
 }
 
 #[cfg(target_os = "macos")]
 pub fn setup_mac_window(app: &mut App) {
     use cocoa::appkit::NSWindow;
     use cocoa::base::{id, BOOL};
+    use cocoa::delegate;
     use cocoa::foundation::NSUInteger;
     use objc::runtime::{Object, Sel};
-    use cocoa::delegate;
     use std::ffi::c_void;
 
     fn with_haptic_app<F: FnOnce(&mut HapticAppState) -> T, T>(this: &Object, func: F) {
@@ -140,7 +140,7 @@ pub fn setup_mac_window(app: &mut App) {
         func(ptr);
     }
 
-    let window = app.get_window("main").unwrap();
+    let window = app.get_webview_window("main").unwrap();
 
     unsafe {
         let ns_win = window.ns_window().unwrap() as id;
@@ -161,7 +161,7 @@ pub fn setup_mac_window(app: &mut App) {
         }
         extern "C" fn on_window_did_resize(this: &Object, _cmd: Sel, notification: id) {
             unsafe {
-                with_haptic_app(&*this, |state| {
+                with_haptic_app(this, |state| {
                     let id = state.window.ns_window().unwrap() as id;
 
                     set_window_controls_pos(id, WINDOW_CONTROL_PAD_X, WINDOW_CONTROL_PAD_Y);
@@ -246,7 +246,7 @@ pub fn setup_mac_window(app: &mut App) {
         }
         extern "C" fn on_window_did_enter_full_screen(this: &Object, _cmd: Sel, notification: id) {
             unsafe {
-                with_haptic_app(&*this, |state| {
+                with_haptic_app(this, |state| {
                     state.window.emit("did-enter-fullscreen", ()).unwrap();
                 });
 
@@ -256,7 +256,7 @@ pub fn setup_mac_window(app: &mut App) {
         }
         extern "C" fn on_window_will_enter_full_screen(this: &Object, _cmd: Sel, notification: id) {
             unsafe {
-                with_haptic_app(&*this, |state| {
+                with_haptic_app(this, |state| {
                     state.window.emit("will-enter-fullscreen", ()).unwrap();
                 });
 
@@ -266,7 +266,7 @@ pub fn setup_mac_window(app: &mut App) {
         }
         extern "C" fn on_window_did_exit_full_screen(this: &Object, _cmd: Sel, notification: id) {
             unsafe {
-                with_haptic_app(&*this, |state| {
+                with_haptic_app(this, |state| {
                     state.window.emit("did-exit-fullscreen", ()).unwrap();
 
                     let id = state.window.ns_window().unwrap() as id;
@@ -279,7 +279,7 @@ pub fn setup_mac_window(app: &mut App) {
         }
         extern "C" fn on_window_will_exit_full_screen(this: &Object, _cmd: Sel, notification: id) {
             unsafe {
-                with_haptic_app(&*this, |state| {
+                with_haptic_app(this, |state| {
                     state.window.emit("will-exit-fullscreen", ()).unwrap();
                 });
 
@@ -377,18 +377,22 @@ pub fn setup_mac_window(app: &mut App) {
         }))
     }
 
-    app.get_window("main").unwrap().set_transparent_titlebar();
+    app.get_webview_window("main")
+        .unwrap()
+        .set_transparent_titlebar();
 
-    let window_handle = app.get_window("main").unwrap();
+    let window_handle = app.get_webview_window("main").unwrap();
     update_window_theme(&window_handle, HexColor::WHITE);
 
     // Control window theme based on app update_window
-    app.listen_global("haptic-bg-changed", move |ev| {
-        let payload = serde_json::from_str::<&str>(ev.payload().unwrap())
-            .unwrap()
-            .trim();
+    app.listen_any("haptic-bg-changed", move |ev| {
+        let Ok(payload) = serde_json::from_str::<String>(ev.payload()) else {
+            return;
+        };
 
-        let color = HexColor::parse_rgb(payload).unwrap();
+        let Ok(color) = HexColor::parse_rgb(payload.trim()) else {
+            return;
+        };
 
         update_window_theme(&window_handle, color);
     });

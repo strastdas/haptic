@@ -1,37 +1,33 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "Haptic — local-first markdown notes"
+authors = ["Alejandro (fork of chroxify/haptic)"]
+license = "AGPL-3.0"
+repository = "https://github.com/strastdas/haptic"
 default-run = "app"
 edition = "2021"
-rust-version = "1.67"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+rust-version = "1.77.2"
 
 [build-dependencies]
-tauri-build = { version = "1.5.1", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.5.4", features = ["updater", "api-all"] }
-regex = "1.5"
-objc = "0.2.7"
-hex_color = "3.0.0"
-tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-fs-extra = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-theme = "0.2.0"
+tauri = { version = "2", features = [] }
+regex = "1"
+hex_color = "3"
+tauri-plugin-fs = { version = "2", features = ["watch"] }
+tauri-plugin-window-state = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-os = "2"
 
-# MacOS dependencies
+# MacOS dependencies (window styling in src/mac/window.rs)
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.25.0"
+cocoa = "0.26"
+objc = "0.2.7"
 
 [features]
-# this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
-# If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
-# DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
