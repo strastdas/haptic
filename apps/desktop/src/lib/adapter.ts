@@ -5,7 +5,7 @@ import * as collection from './api/collection';
 import * as folders from './api/folders';
 import * as notes from './api/notes';
 import * as settings from './api/settings';
-import { showInFolder } from './utils';
+import { searchEntries, showInFolder } from './utils';
 
 /**
  * Registers the desktop (Tauri filesystem) implementations behind
@@ -16,7 +16,8 @@ setStorageAdapter({
   ...notes,
   ...collection,
   ...folders,
-  ...settings
+  ...settings,
+  searchEntries
 });
 
 // Mark this runtime as the Tauri desktop shell for shared components.

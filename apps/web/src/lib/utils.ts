@@ -5,6 +5,7 @@ export { setTheme, toggleTheme } from '@haptic/core/adapter';
 export { setEditorContent } from '@haptic/editor/store';
 
 import { collection } from '@haptic/core/store';
+import { escapeRegExp } from '@haptic/core/utils';
 import type { FileEntry, SearchResultParams } from '@haptic/core/types';
 import type { entry as entryTable } from '@/database/schema';
 import { get } from 'svelte/store';
@@ -94,7 +95,12 @@ function extractAllContexts(
     const compareLine = caseSensitive ? line : line.toLowerCase();
     const compareQuery = caseSensitive ? query : query.toLowerCase();
     if (matchWord) {
-      const regex = new RegExp(`(^|\\s)${compareQuery}($|\\s)`, caseSensitive ? '' : 'i');
+      // Escape the query: a whole-word search for "- [ ]" or "c++" would
+      // otherwise build an invalid pattern and throw.
+      const regex = new RegExp(
+        `(^|\\s)${escapeRegExp(compareQuery)}($|\\s)`,
+        caseSensitive ? '' : 'i'
+      );
       if (regex.test(compareLine)) {
         const startLine = Math.max(0, index - 1);
         const endLine = Math.min(lines.length - 1, index + 1);

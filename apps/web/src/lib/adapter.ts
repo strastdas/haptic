@@ -5,6 +5,7 @@ import * as collection from './api/collection';
 import * as folders from './api/folders';
 import * as notes from './api/notes';
 import * as settings from './api/settings';
+import { searchEntries } from './utils';
 
 /**
  * Registers the web (PGlite/drizzle) implementations behind @haptic/core's
@@ -14,7 +15,8 @@ setStorageAdapter({
   ...notes,
   ...collection,
   ...folders,
-  ...settings
+  ...settings,
+  searchEntries
 });
 
 /**

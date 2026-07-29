@@ -7,10 +7,31 @@ export { setEditorContent } from '@haptic/editor/store';
 import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
 import { exists, mkdir } from '@tauri-apps/plugin-fs';
+import type { SearchResultParams } from '@haptic/core/types';
 
 // Show in folder
 export async function showInFolder(path: string) {
   await invoke('show_in_folder', { path });
+}
+
+/**
+ * StorageAdapter.searchEntries for the desktop app: the Rust `search_files`
+ * command walks the vault on disk and returns the same {path, context_preview}
+ * shape the web app builds with SQL.
+ */
+export function searchEntries(
+  collectionPath: string,
+  query: string,
+  caseSensitive = false,
+  matchWord = false
+): Promise<SearchResultParams[]> {
+  return invoke<SearchResultParams[]>('search_files', {
+    dirPath: collectionPath,
+    query,
+    caseSensitive,
+    matchWord,
+    recursive: true
+  });
 }
 
 export async function validateHapticFolder(path: string) {

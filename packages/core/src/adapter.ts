@@ -6,7 +6,8 @@ import type {
   CollectionParams,
   CollectionSettingsParams,
   FileEntry,
-  NoteMetadataParams
+  NoteMetadataParams,
+  SearchResultParams
 } from './types';
 
 /**
@@ -36,6 +37,17 @@ export interface StorageAdapter {
   ): Promise<FileEntry[]>;
   loadCollection(path?: string): Promise<unknown>;
   getCollections(): Promise<CollectionParams[]>;
+  /**
+   * Full-text search across a collection. Web runs SQL over the entry table,
+   * desktop invokes the Rust `search_files` command; both return the same
+   * path + surrounding-context shape.
+   */
+  searchEntries(
+    collectionPath: string,
+    query: string,
+    caseSensitive?: boolean,
+    matchWord?: boolean
+  ): Promise<SearchResultParams[]>;
   // folders
   createFolder(dirPath: string): Promise<unknown>;
   deleteFolder(path: string, recursive?: boolean): Promise<unknown>;
@@ -79,6 +91,8 @@ export const loadCollection: StorageAdapter['loadCollection'] = (...args) =>
   required().loadCollection(...args);
 export const getCollections: StorageAdapter['getCollections'] = (...args) =>
   required().getCollections(...args);
+export const searchEntries: StorageAdapter['searchEntries'] = (...args) =>
+  required().searchEntries(...args);
 export const createFolder: StorageAdapter['createFolder'] = (...args) =>
   required().createFolder(...args);
 export const deleteFolder: StorageAdapter['deleteFolder'] = (...args) =>

@@ -27,12 +27,18 @@ export type ContractAdapter = Pick<
   | 'moveFolder'
   | 'fetchCollectionEntries'
   | 'loadCollection'
->;
+> &
+  Partial<Pick<StorageAdapter, 'searchEntries'>>;
 
 export interface ContractHarness {
   adapter: ContractAdapter;
   /** Path of a freshly loaded, EMPTY collection (also set as the active collection). */
   collectionPath: string;
+  /**
+   * Writes note content directly, bypassing the editor-coupled saveNote.
+   * Harnesses that can't do this simply skip the search tests.
+   */
+  writeContent?(path: string, content: string): Promise<void>;
 }
 
 export function runStorageAdapterContract(
@@ -42,11 +48,13 @@ export function runStorageAdapterContract(
   describe(`StorageAdapter contract (${name})`, () => {
     let adapter: ContractAdapter;
     let root: string;
+    let writeContent: ContractHarness['writeContent'];
 
     beforeEach(async () => {
       const harness = await makeHarness();
       adapter = harness.adapter;
       root = harness.collectionPath;
+      writeContent = harness.writeContent;
     });
 
     const tree = (showDotfiles = false) =>
@@ -179,6 +187,69 @@ export function runStorageAdapterContract(
       expect(folder?.children?.map((e) => e.name)).toEqual(['inner.md']);
       // Notes are leaves; folders always carry a children array
       expect(findEntry(entries, 'b 2.md')?.children).toBeUndefined();
+    });
+
+    describe('searchEntries', () => {
+      // createNote doesn't return the path it created, so derive it the same
+      // way every implementation builds it.
+      const seed = async (name: string, content: string) => {
+        await adapter.createNote(root, name);
+        const path = `${root}/${name}`;
+        await writeContent!(path, content);
+        return path;
+      };
+
+      const paths = async (query: string, caseSensitive?: boolean, matchWord?: boolean) => {
+        const results = await adapter.searchEntries!(root, query, caseSensitive, matchWord);
+        return [...new Set(results.map((r) => r.path))].sort();
+      };
+
+      beforeEach(async (context) => {
+        if (!adapter.searchEntries || !writeContent) {
+          context.skip();
+        }
+      });
+
+      it('finds notes containing the query and ignores the rest', async () => {
+        const hit = await seed('hit.md', 'alpha beta\ngamma');
+        await seed('miss.md', 'nothing here');
+        expect(await paths('beta')).toEqual([hit]);
+      });
+
+      it('returns a context preview for every match', async () => {
+        await seed('hit.md', 'first\nalpha\nlast');
+        const results = await adapter.searchEntries!(root, 'alpha');
+        expect(results.length).toBeGreaterThan(0);
+        expect(results[0].context_preview).toContain('alpha');
+      });
+
+      it('is case insensitive by default and case sensitive on request', async () => {
+        const upper = await seed('upper.md', 'ALPHA');
+        expect(await paths('alpha')).toEqual([upper]);
+        expect(await paths('alpha', true)).toEqual([]);
+        expect(await paths('ALPHA', true)).toEqual([upper]);
+      });
+
+      it('matches whole words only when asked', async () => {
+        const whole = await seed('whole.md', 'an alpha here');
+        await seed('partial.md', 'alphabet');
+        expect((await paths('alpha')).length).toBe(2);
+        expect(await paths('alpha', false, true)).toEqual([whole]);
+      });
+
+      // Regression: the query was once quote-doubled before binding, so any
+      // apostrophe silently matched nothing.
+      it('matches queries containing an apostrophe', async () => {
+        const hit = await seed('quote.md', "it's here");
+        expect(await paths("it's")).toEqual([hit]);
+      });
+
+      // Regression: an unescaped query was interpolated into a RegExp, so a
+      // whole-word search for markdown syntax threw instead of returning.
+      it('handles regex metacharacters in a whole-word query', async () => {
+        const hit = await seed('task.md', 'a - [ ] b');
+        expect(await paths('- [ ]', false, true)).toEqual([hit]);
+      });
     });
   });
 }

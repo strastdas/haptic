@@ -20,6 +20,7 @@ import * as foldersApi from '@/api/folders';
 import * as notesApi from '@/api/notes';
 import { initDatabase } from '@/database/client';
 import { runMigrations } from '@/database/migrations';
+import { searchEntries } from '@/utils';
 
 const COLLECTION_PATH = '/Contract';
 
@@ -34,7 +35,10 @@ runStorageAdapterContract('web adapter (in-memory PGlite)', async () => {
   await client.exec('DELETE FROM entry; DELETE FROM collection_settings; DELETE FROM collection;');
   await collectionApi.loadCollection(COLLECTION_PATH);
   return {
-    adapter: { ...notesApi, ...foldersApi, ...collectionApi },
-    collectionPath: COLLECTION_PATH
+    adapter: { ...notesApi, ...foldersApi, ...collectionApi, searchEntries },
+    collectionPath: COLLECTION_PATH,
+    writeContent: async (path: string, content: string) => {
+      await client.query('UPDATE entry SET content = $2 WHERE path = $1', [path, content]);
+    }
   };
 });
