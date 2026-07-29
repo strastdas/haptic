@@ -32,6 +32,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@haptic/app':
+        specifier: workspace:^
+        version: link:../../packages/app
       '@haptic/core':
         specifier: workspace:^
         version: link:../../packages/core
@@ -220,6 +223,9 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.2.0
         version: 0.2.17
+      '@haptic/app':
+        specifier: workspace:^
+        version: link:../../packages/app
       '@haptic/core':
         specifier: workspace:^
         version: link:../../packages/core
@@ -323,6 +329,52 @@ importers:
       vite:
         specifier: ^8.1.5
         version: 8.1.5(@types/node@22.20.1)(esbuild@0.19.12)(jiti@2.7.0)(yaml@2.9.0)
+
+  packages/app:
+    dependencies:
+      '@haptic/core':
+        specifier: workspace:^
+        version: link:../core
+      '@haptic/editor':
+        specifier: workspace:^
+        version: link:../editor
+      '@haptic/ui':
+        specifier: workspace:^
+        version: link:../ui
+      '@lucide/svelte':
+        specifier: ^1.27.0
+        version: 1.27.0(svelte@5.56.8(@typescript-eslint/types@8.65.0))
+      '@tiptap/core':
+        specifier: ^2.2.1
+        version: 2.27.2(@tiptap/pm@2.27.2)
+      '@tiptap/extension-character-count':
+        specifier: ^2.5.0
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)
+      '@tiptap/extension-document':
+        specifier: ^2.2.2
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
+      '@tiptap/extension-link':
+        specifier: ^2.2.2
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)
+      '@tiptap/extension-task-item':
+        specifier: ^2.2.2
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)
+      '@tiptap/extension-task-list':
+        specifier: ^2.2.2
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
+      '@tiptap/extension-typography':
+        specifier: ^2.2.2
+        version: 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
+      '@tiptap/starter-kit':
+        specifier: ^2.2.1
+        version: 2.27.2
+      tiptap-markdown:
+        specifier: ^0.8.9
+        version: 0.8.10(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
+    devDependencies:
+      svelte:
+        specifier: ^5.56.8
+        version: 5.56.8(@typescript-eslint/types@8.65.0)
 
   packages/core:
     dependencies:

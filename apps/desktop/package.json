@@ -29,6 +29,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@haptic/app": "workspace:^",
     "@haptic/core": "workspace:^",
     "@haptic/editor": "workspace:^",
     "@haptic/ui": "workspace:^",

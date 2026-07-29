@@ -1,8 +1,8 @@
 <script lang="ts">
-	import EditorInlineTitle from '$lib/components/shared/editor/inline-title.svelte';
-	import EditorSearch from '$lib/components/shared/editor/search.svelte';
-	import EditorToolbar from '$lib/components/shared/editor/toolbar.svelte';
-	import Editor from '@/components/shared/editor/editor.svelte';
+	import EditorInlineTitle from '@haptic/app/components/shared/editor/inline-title.svelte';
+	import EditorSearch from '@haptic/app/components/shared/editor/search.svelte';
+	import EditorToolbar from '@haptic/app/components/shared/editor/toolbar.svelte';
+	import Editor from '@haptic/app/components/shared/editor/editor.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import { activeFile, collectionSettings } from '@/store';
 	import { shortcutToString } from '@/utils';

@@ -73,3 +73,6 @@ export interface SearchResultParams {
 }
 
 export type Platform = 'darwin' | 'linux' | 'windows';
+
+/** User-facing theme preference ('auto' follows the OS). */
+export type AppTheme = 'auto' | 'light' | 'dark';

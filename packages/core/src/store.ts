@@ -41,6 +41,12 @@ const collectionSettings = writable<CollectionSettingsParams>(BASE_COLLECTION_SE
 const platform = writable<Platform>('darwin');
 const appTheme = writable<'auto' | 'light' | 'dark'>('auto');
 
+// True when running inside the Tauri desktop shell. The desktop app sets this
+// at boot (lib/adapter.ts); web leaves it false. Shared components branch on
+// this for genuinely web-vs-desktop differences (`platform` only answers
+// which OS, and web keeps its historical 'darwin' default).
+const isDesktopApp = writable<boolean>(false);
+
 export {
   activeFile,
   appSettings,
@@ -52,6 +58,7 @@ export {
   editorMode,
   editorSearchActive,
   editorSearchValue,
+  isDesktopApp,
   isNoteDetailSidebarOpen,
   isPageSidebarOpen,
   noteDetailSidebarWidth,

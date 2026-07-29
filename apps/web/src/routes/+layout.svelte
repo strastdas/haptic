@@ -3,11 +3,12 @@
 	import migrations from '$lib/database/migrations/migrations.sql?raw';
 	import seed from '$lib/database/migrations/seed.sql?raw';
 	import { loadSettings } from '@/api/settings';
-	import Footer from '@/components/layout/footer.svelte';
-	import Header from '@/components/layout/header.svelte';
-	import Sidebar from '@/components/layout/sidebar.svelte';
-	import Command from '@/components/shared/command-menu/command.svelte';
-	import Icon from '@/components/shared/icon.svelte';
+	import Footer from '@haptic/app/components/layout/footer.svelte';
+	import Header from '@haptic/app/components/layout/header.svelte';
+	import Sidebar from '@haptic/app/components/layout/sidebar.svelte';
+	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
+	import { importCollection } from '@/import-collection';
+	import Icon from '@haptic/app/components/shared/icon.svelte';
 	import { db, pgClient } from '@/database/client';
 	import { collection as collectionTable } from '@/database/schema';
 	import { collection } from '@/store';
@@ -115,7 +116,7 @@
 </svelte:head>
 
 {#if $device.isDesktop}
-	<Command />
+	<Command {importCollection} />
 	<ModeWatcher />
 	<Header />
 	<Sidebar />

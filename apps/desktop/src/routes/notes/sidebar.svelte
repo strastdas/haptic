@@ -2,9 +2,9 @@
 	import { fetchCollectionEntries } from '@/api/collection';
 	import { createFolder } from '@/api/folders';
 	import { createNote, openNote } from '@/api/notes';
-	import Icon from '@/components/shared/icon.svelte';
-	import Shortcut from '@/components/shared/shortcut.svelte';
-	import Tooltip from '@/components/shared/tooltip.svelte';
+	import Icon from '@haptic/app/components/shared/icon.svelte';
+	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
+	import Tooltip from '@haptic/app/components/shared/tooltip.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import {
 		activeFile,
@@ -17,7 +17,7 @@
 		resizingPageSidebar
 	} from '@/store';
 	import { Button } from '@haptic/ui/components/button';
-	import Label from '@haptic/ui/components/label/label.svelte';
+	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
 	import type { UnlistenFn } from '@tauri-apps/api/event';
 	import type { FileEntry } from '@tauri-apps/api/fs';
@@ -27,15 +27,15 @@
 	import Entries from './entries.svelte';
 	import SearchResults from './search-results.svelte';
 
-	let searchValue: string = $state();
-	let searchDebounce: NodeJS.Timeout = $state();
+	let searchValue: string = $state('');
+	let searchDebounce: NodeJS.Timeout | undefined = $state();
 	let searchLoading: boolean = $state(false);
 	let caseSensitive: boolean = $state(false);
 	let wholeWord: boolean = $state(false);
 	let results: { path: string; context_preview: string }[] = $state([]);
 	let entries: FileEntry[] = $state([]);
-	let folderToggleState: 'collapse' | 'expand' = $state();
-	let toggleFolderStates: () => void = $state();
+	let folderToggleState: 'collapse' | 'expand' = $state('expand');
+	let toggleFolderStates: (() => void) | undefined = $state();
 	let stopWatching: UnlistenFn;
 
 	let startX: number | null;
@@ -203,7 +203,7 @@
 					variant="ghost"
 					scale="md"
 					class="h-7 w-7 fill-muted-foreground hover:fill-foreground transition-all"
-					on:click={async () => createNote($collection)}
+					onclick={async () => createNote($collection)}
 				>
 					<Shortcut options={SHORTCUTS['notes:create']} />
 					<Icon name="notePlus" class="w-[18px] h-[18px]" />
@@ -215,7 +215,7 @@
 					variant="ghost"
 					scale="md"
 					class="h-7 w-7 fill-muted-foreground hover:fill-foreground transition-all"
-					on:click={async () => createFolder($collection)}
+					onclick={async () => createFolder($collection)}
 				>
 					<Shortcut options={SHORTCUTS['notes:create-folder']} />
 					<Icon name="folderPlus" class="w-[18px] h-[18px]" />
@@ -230,8 +230,8 @@
 					variant="ghost"
 					scale="md"
 					class="h-7 w-7 fill-muted-foreground hover:fill-foreground"
-					on:click={async () => {
-						toggleFolderStates();
+					onclick={async () => {
+						toggleFolderStates?.();
 					}}
 				>
 					<Icon
@@ -256,7 +256,7 @@
 					variant="ghost"
 					scale="md"
 					class="h-7 w-7 fill-muted-foreground hover:fill-foreground transition-all"
-					on:click={() => {
+					onclick={() => {
 						collectionSearchActive.set(!$collectionSearchActive);
 					}}
 				>
@@ -309,7 +309,7 @@
 						variant="ghost"
 						scale="md"
 						class={'h-7 w-6 shrink-0 group hover:bg-transparent'}
-						on:click={() => {
+						onclick={() => {
 							caseSensitive = !caseSensitive;
 							searchCollection();
 						}}
@@ -328,7 +328,7 @@
 						variant="ghost"
 						scale="md"
 						class={'h-7 w-6 shrink-0 group hover:bg-transparent'}
-						on:click={() => {
+						onclick={() => {
 							wholeWord = !wholeWord;
 							searchCollection();
 						}}
@@ -347,7 +347,7 @@
 						variant="ghost"
 						scale="md"
 						class={'h-7 w-6 group shrink-0 transition-all hover:bg-transparent fill-muted-foreground hover:fill-foreground '}
-						on:click={() => {
+						onclick={() => {
 							closeSearch();
 						}}
 					>

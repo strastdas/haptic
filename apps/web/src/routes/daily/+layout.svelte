@@ -1,6 +1,6 @@
 <script lang="ts">
 	import NotesSidebar from './sidebar.svelte';
-	import Layout from '$lib/components/notes/layout.svelte';
+	import Layout from '@haptic/app/components/notes/layout.svelte';
 	interface Props {
 		children?: import('svelte').Snippet;
 	}

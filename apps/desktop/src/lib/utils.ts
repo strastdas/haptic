@@ -1,12 +1,12 @@
 // Shared helpers live in @haptic/core; only desktop-specific (Tauri) helpers remain here.
 export * from '@haptic/core/utils';
+// Theme actions live behind @haptic/core's platform seam (registered in ./adapter).
+export { setTheme, toggleTheme } from '@haptic/core/adapter';
 export { setEditorContent } from '@haptic/editor/store';
 
-import { appTheme } from '@haptic/core/store';
 import { emit } from '@tauri-apps/api/event';
 import { createDir, readDir } from '@tauri-apps/api/fs';
 import { invoke } from '@tauri-apps/api/tauri';
-import { get } from 'svelte/store';
 
 // Show in folder
 export async function showInFolder(path: string) {
@@ -67,19 +67,3 @@ export function updateWindowTheme() {
   });
 }
 
-export function toggleTheme() {
-  // Theme options
-  const themes = ['auto', 'light', 'dark'];
-
-  // Current theme
-  const currentTheme = get(appTheme);
-
-  // Get index of current theme
-  const index = themes.indexOf(currentTheme);
-
-  // Get next theme
-  const nextTheme = themes[(index + 1) % themes.length] as 'auto' | 'light' | 'dark';
-
-  // Update theme
-  appTheme.set(nextTheme);
-}

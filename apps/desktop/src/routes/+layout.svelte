@@ -1,11 +1,11 @@
 <script lang="ts">
 	import '@/adapter';
 	import { loadSettings } from '@/api/settings';
-	import Footer from '@/components/layout/footer.svelte';
-	import Header from '@/components/layout/header.svelte';
-	import Sidebar from '@/components/layout/sidebar.svelte';
+	import Footer from '@haptic/app/components/layout/footer.svelte';
+	import Header from '@haptic/app/components/layout/header.svelte';
+	import Sidebar from '@haptic/app/components/layout/sidebar.svelte';
 	import { platform as osPlatform } from '@tauri-apps/api/os';
-	import Command from '@/components/shared/command-menu/command.svelte';
+	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { appTheme, collection, platform } from '@/store';
 	import { updateWindowTheme, validateHapticFolder } from '@/utils';
 	import '@haptic/ui/app.desktop.css';

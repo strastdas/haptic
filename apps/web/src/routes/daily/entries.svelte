@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { deleteNote, openNote } from '@/api/notes';
-	import Icon from '@/components/shared/icon.svelte';
-	import Shortcut from '@/components/shared/shortcut.svelte';
+	import Icon from '@haptic/app/components/shared/icon.svelte';
+	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import { activeFile } from '@/store';
 	import type { FileEntry } from '@/types';
 	import { shortcutToString } from '@/utils';
-	import Button from '@haptic/ui/components/button/button.svelte';
+	import { Button } from '@haptic/ui/components/button';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
-	import Label from '@haptic/ui/components/label/label.svelte';
+	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
 
 	interface Props {
@@ -113,7 +113,7 @@
 									'h-7 w-full transition-all text-secondary-foreground/80 hover:text-foreground flex items-center gap-2 justify-start',
 									$activeFile === entry.path && 'bg-accent text-foreground'
 								)}
-								on:click={() => openNote(entry.path, true)}
+								onclick={() => openNote(entry.path, true)}
 							>
 								<Shortcut
 									options={SHORTCUTS['note:delete']}
@@ -137,7 +137,7 @@
 						<ContextMenu.Separator />
 						<ContextMenu.Item
 							class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
-							on:click={() => deleteNote(entry.path)}
+							onclick={() => deleteNote(entry.path)}
 						>
 							<Icon
 								name="bin"

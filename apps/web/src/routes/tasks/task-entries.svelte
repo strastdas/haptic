@@ -6,7 +6,7 @@
 	import type { SearchResultParams } from '@/types';
 	import { searchEntries } from '@/utils';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
-	import Label from '@haptic/ui/components/label/label.svelte';
+	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
@@ -126,7 +126,7 @@
 		<Collapsible.Root open={openState[path]} class="w-full transition-all">
 			<Collapsible.Trigger
 				class="text-[13px] w-full text-secondary-foreground flex items-center h-7 justify-start gap-1.5 group hover:text-foreground transition-all"
-				on:click={() => toggleOpen(path)}
+				onclick={() => toggleOpen(path)}
 			>
 				<ChevronDown
 					class={cn(

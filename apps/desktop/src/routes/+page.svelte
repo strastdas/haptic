@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { shortcutToString } from '@/utils';
 	import { SHORTCUTS } from '@/constants';
-	import Shortcut from '@/components/shared/shortcut.svelte';
+	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import { getCollections } from '$lib/api/collection';
 	import { open as browserOpen } from '@tauri-apps/api/shell';
 	import { onMount } from 'svelte';

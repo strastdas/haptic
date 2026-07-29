@@ -28,6 +28,7 @@
   "type": "module",
   "dependencies": {
     "@electric-sql/pglite": "^0.2.0",
+    "@haptic/app": "workspace:^",
     "@haptic/core": "workspace:^",
     "@haptic/editor": "workspace:^",
     "@haptic/ui": "workspace:^",

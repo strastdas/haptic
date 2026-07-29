@@ -1,30 +1,14 @@
 // Shared helpers live in @haptic/core; only web-specific (PGlite/DOM) helpers remain here.
 export * from '@haptic/core/utils';
+// Theme actions live behind @haptic/core's platform seam (registered in ./adapter).
+export { setTheme, toggleTheme } from '@haptic/core/adapter';
 export { setEditorContent } from '@haptic/editor/store';
 
 import { collection } from '@haptic/core/store';
 import type { FileEntry, SearchResultParams } from '@haptic/core/types';
 import type { entry as entryTable } from '@/database/schema';
-import { setMode, userPrefersMode } from 'mode-watcher';
 import { get } from 'svelte/store';
 import { pgClient } from './database/client';
-
-export function toggleTheme() {
-  // Theme options
-  const themes = ['system', 'light', 'dark'];
-
-  // Current theme
-  const currentTheme = get(userPrefersMode);
-
-  // Get index of current theme
-  const index = themes.indexOf(currentTheme);
-
-  // Get next theme
-  const nextTheme = themes[(index + 1) % themes.length] as 'system' | 'light' | 'dark';
-
-  // Set the next theme
-  setMode(nextTheme);
-}
 
 export function buildFileTree(
   entries: (typeof entryTable.$inferSelect)[],

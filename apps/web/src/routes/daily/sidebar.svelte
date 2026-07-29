@@ -13,7 +13,7 @@
 	} from '@/store';
 	import type { FileEntry } from '@/types';
 	import { Calendar } from '@haptic/ui/components/calendar';
-	import Label from '@haptic/ui/components/label/label.svelte';
+	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
@@ -208,9 +208,10 @@ import type { DateValue } from '@internationalized/date';
 	</div>
 
 	<Calendar
+		type="single"
 		bind:value={calValue}
 		class="border-t w-full"
-		onValueChange={(e) => handleOpenCalendarDay(e)}
+		onValueChange={handleOpenCalendarDay}
 	/>
 </div>
 

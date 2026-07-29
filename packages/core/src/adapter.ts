@@ -1,5 +1,8 @@
+import { get } from 'svelte/store';
+import { appTheme } from './store';
 import type {
   AppSettingsParams,
+  AppTheme,
   CollectionParams,
   CollectionSettingsParams,
   FileEntry,
@@ -87,3 +90,54 @@ export const loadSettings: StorageAdapter['loadSettings'] = (...args) =>
   required().loadSettings(...args);
 export const setSettings: StorageAdapter['setSettings'] = (...args) =>
   required().setSettings(...args);
+
+/**
+ * Platform action seam (the "theme controller" pattern). Each app registers its
+ * platform-specific side effects at boot alongside the StorageAdapter:
+ *
+ * - web: `applyTheme` forwards to mode-watcher's `setMode`, `openExternal`
+ *   opens a new browser tab.
+ * - desktop: theme application already happens via an `appTheme` subscription
+ *   (Tauri theme plugin), `openExternal`/`showInFolder` use Tauri shell APIs.
+ *
+ * Shared components only call the free functions below; the `appTheme` store
+ * in ./store stays the single source of truth for the current preference.
+ */
+export interface PlatformActions {
+  /** Apply a theme preference to the platform (e.g. mode-watcher, Tauri). */
+  applyTheme?(theme: AppTheme): void;
+  /** Open a URL in the user's browser. */
+  openExternal(url: string): void | Promise<unknown>;
+  /** Reveal a file in the OS file manager (desktop only). */
+  showInFolder?(path: string): void | Promise<unknown>;
+}
+
+let platformActions: PlatformActions | null = null;
+
+export function setPlatformActions(impl: PlatformActions) {
+  platformActions = impl;
+}
+
+/** Sets the theme preference and applies it to the platform. */
+export function setTheme(theme: AppTheme) {
+  appTheme.set(theme);
+  platformActions?.applyTheme?.(theme);
+}
+
+/** Cycles auto -> light -> dark -> auto. */
+export function toggleTheme() {
+  const themes: AppTheme[] = ['auto', 'light', 'dark'];
+  const next = themes[(themes.indexOf(get(appTheme)) + 1) % themes.length];
+  setTheme(next);
+}
+
+export function openExternal(url: string) {
+  if (platformActions) {
+    return platformActions.openExternal(url);
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+export function showInFolder(path: string) {
+  return platformActions?.showInFolder?.(path);
+}

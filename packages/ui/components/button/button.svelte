@@ -24,6 +24,12 @@
 				"icon-sm": "size-8 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-md",
 				"icon-lg": "size-10",
 			},
+			// Repo-local extension (not CLI-generated): press-scale micro-interaction
+			// used across the haptic apps (scale="sm" | "md").
+			scale: {
+				sm: "transition-transform active:scale-[98%]",
+				md: "transition-transform active:scale-95",
+			},
 		},
 		defaultVariants: {
 			variant: "default",
@@ -33,11 +39,13 @@
 
 	export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
 	export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
+	export type ButtonScale = VariantProps<typeof buttonVariants>["scale"];
 
 	export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 		WithElementRef<HTMLAnchorAttributes> & {
 			variant?: ButtonVariant;
 			size?: ButtonSize;
+			scale?: ButtonScale;
 		};
 </script>
 
@@ -46,6 +54,7 @@
 		class: className,
 		variant = "default",
 		size = "default",
+		scale = undefined,
 		ref = $bindable(null),
 		href = undefined,
 		type = "button",
@@ -59,7 +68,7 @@
 	<a
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size, scale }), className)}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
@@ -72,7 +81,7 @@
 	<button
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size, scale }), className)}
 		{type}
 		{disabled}
 		{...restProps}

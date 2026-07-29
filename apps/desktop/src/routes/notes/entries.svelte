@@ -4,12 +4,12 @@
 
 	import { createFolder, deleteFolder, moveFolder, renameFolder } from '@/api/folders';
 	import { createNote, deleteNote, duplicateNote, moveNote, openNote } from '@/api/notes';
-	import Icon from '@/components/shared/icon.svelte';
-	import Shortcut from '@/components/shared/shortcut.svelte';
+	import Icon from '@haptic/app/components/shared/icon.svelte';
+	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import { SHORTCUTS } from '@/constants';
 	import { activeFile, collection, editor, platform } from '@/store';
 	import { shortcutToString, showInFolder } from '@/utils';
-	import Button from '@haptic/ui/components/button/button.svelte';
+	import { Button } from '@haptic/ui/components/button';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
 	import { cn } from '@haptic/ui/lib/utils';
@@ -18,10 +18,15 @@
 
 	interface Props {
 		entries: FileEntry[];
-		toggleState: 'collapse' | 'expand';
+		toggleState?: 'collapse' | 'expand';
+		toggleFolderStates?: () => void;
 	}
 
-	let { entries, toggleState = $bindable() }: Props = $props();
+	let {
+		entries,
+		toggleState = $bindable('expand'),
+		toggleFolderStates = $bindable()
+	}: Props = $props();
 	let folderOpenStates: boolean[] = $state([]);
 	let dragItem: HTMLElement | null = null; // Reference to the original element being dragged
 	let dragPreviewItem: HTMLElement | null = null; // Reference to the custom drag preview element
@@ -52,9 +57,10 @@
 		return `${(path.split('/').length - $collection.split('/').length) * 0.75}rem`;
 	}
 
-	export function toggleFolderStates() {
+	// Exposed to the parent via the bindable `toggleFolderStates` prop
+	toggleFolderStates = () => {
 		folderOpenStates = folderOpenStates.map(() => (toggleState === 'expand' ? true : false));
-	}
+	};
 
 	// Rename note
 	// BUG: Currently shortcuts prevent from typing when ur on hover fix that
@@ -297,10 +303,10 @@
 						}}
 						data-is-folder
 					>
-						<Collapsible.Trigger asChild >
-							{#snippet children({ builder })}
+						<Collapsible.Trigger>
+							{#snippet child({ props })}
 														<Button
-									builders={[builder]}
+									{...props}
 									size="sm"
 									variant="ghost"
 									scale="sm"
@@ -344,16 +350,16 @@
 										>
 									</div>
 									<!-- TODO: Make this an optional feature -->
-									<span class="text-xs text-foreground/40">{entry.children.length}</span>
+									<span class="text-xs text-foreground/40">{entry.children?.length}</span>
 								</Button>
 																				{/snippet}
-												</Collapsible.Trigger>
+						</Collapsible.Trigger>
 					</div>
 				</ContextMenu.Trigger>
 				<ContextMenu.Content class="w-44">
 					<ContextMenu.Item
 						class="flex items-center gap-2 font-base group"
-						on:click={() => {
+						onclick={() => {
 							createNote(entry.path);
 							folderOpenStates[i] = true;
 						}}
@@ -369,7 +375,7 @@
 					</ContextMenu.Item>
 					<ContextMenu.Item
 						class="flex items-center gap-2 font-base group"
-						on:click={() => {
+						onclick={() => {
 							createFolder(entry.path);
 							folderOpenStates[i] = true;
 						}}
@@ -386,7 +392,7 @@
 					<ContextMenu.Separator />
 					<ContextMenu.Item
 						class="flex items-center gap-2 font-base group"
-						on:click={async () => {
+						onclick={async () => {
 							handleRename(entry, 'folder');
 						}}
 					>
@@ -408,7 +414,7 @@
 								{#if directory.name !== entry.name}
 									<ContextMenu.Item
 										class="flex items-center gap-2 font-base group"
-										on:click={() => moveFolder(entry.path, directory.path)}
+										onclick={() => moveFolder(entry.path, directory.path)}
 									>
 										<Icon
 											name="folder"
@@ -422,7 +428,7 @@
 							{#if getDirectories(entries).filter((directory) => directory.name !== entry.name).length === 0}
 								<ContextMenu.Item
 									class="flex items-center gap-2 font-base group"
-									on:click={async () => {
+									onclick={async () => {
 										// Create a new folder in parent directory
 										const dirPath = await createFolder(
 											entry.path.split('/').slice(0, -1).join('/')
@@ -447,7 +453,7 @@
 					<ContextMenu.Separator />
 					<ContextMenu.Item
 						class="flex items-center gap-2 font-base group"
-						on:click={() => showInFolder(entry.path)}
+						onclick={() => showInFolder(entry.path)}
 					>
 						<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
 						Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
@@ -458,7 +464,7 @@
 					<ContextMenu.Separator />
 					<ContextMenu.Item
 						class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
-						on:click={() => deleteFolder(entry.path)}
+						onclick={() => deleteFolder(entry.path)}
 					>
 						<Icon name="bin" class="w-3.5 h-3.5 fill-destructive/70 group-hover:fill-destructive" />
 						Delete
@@ -495,7 +501,7 @@
 							$activeFile === entry.path && 'bg-accent text-foreground'
 						)}
 						style={`padding-left: ${calculateDepth(entry.path)}`}
-						on:click={() => openNote(entry.path)}
+						onclick={() => openNote(entry.path)}
 						draggable
 					>
 						<Shortcut
@@ -521,7 +527,7 @@
 			<ContextMenu.Content class="w-44">
 				<ContextMenu.Item
 					class="flex items-center gap-2 font-base group"
-					on:click={async () => {
+					onclick={async () => {
 						handleRename(entry, 'note');
 					}}
 				>
@@ -534,7 +540,7 @@
 				</ContextMenu.Item>
 				<ContextMenu.Item
 					class="flex items-center gap-2 font-base group"
-					on:click={() => duplicateNote(entry.path)}
+					onclick={() => duplicateNote(entry.path)}
 				>
 					<Icon name="copy" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
 					Duplicate
@@ -545,7 +551,7 @@
 				<ContextMenu.Separator />
 				<ContextMenu.Item
 					class="flex items-center gap-2 font-base group"
-					on:click={() => showInFolder(entry.path)}
+					onclick={() => showInFolder(entry.path)}
 				>
 					<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
 					Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
@@ -564,7 +570,7 @@
 							{#if directory.name !== entry.name}
 								<ContextMenu.Item
 									class="flex items-center gap-2 font-base group"
-									on:click={() => moveNote(entry.path, directory.path)}
+									onclick={() => moveNote(entry.path, directory.path)}
 								>
 									<Icon
 										name="folder"
@@ -578,7 +584,7 @@
 						{#if getDirectories(entries).length === 0}
 							<ContextMenu.Item
 								class="flex items-center gap-2 font-base group"
-								on:click={async () => {
+								onclick={async () => {
 									// Create a new folder in parent directory
 									await createFolder(entry.path.split('/').slice(0, -1).join('/'));
 
@@ -601,7 +607,7 @@
 				<ContextMenu.Separator />
 				<ContextMenu.Item
 					class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
-					on:click={() => deleteNote(entry.path)}
+					onclick={() => deleteNote(entry.path)}
 				>
 					<Icon name="bin" class="w-3.5 h-3.5 fill-destructive/70 group-hover:fill-destructive" />
 					Delete

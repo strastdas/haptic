@@ -10,11 +10,13 @@ declare global {
   }
 }
 
-// Non-standard directory-picker attributes used by the collection importer
-// (<input webkitdirectory directory>), absent from Svelte's HTML typings.
+// Non-standard attributes absent from Svelte's HTML typings:
+// - webkitdirectory/directory: directory picker used by the collection importer
+// - autocorrect: Safari-only text-correction toggle used by the editor
 declare namespace svelteHTML {
   interface HTMLAttributes<T> {
-    webkitdirectory?: boolean | '';
-    directory?: boolean | '';
+    webkitdirectory?: boolean | '' | null;
+    directory?: boolean | '' | null;
+    autocorrect?: string | null;
   }
 }
