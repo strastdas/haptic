@@ -186,6 +186,13 @@ import type { DateValue } from '@internationalized/date';
 		role="presentation"
 	></div>
 
+	<Calendar
+		type="single"
+		bind:value={calValue}
+		class="border-b w-full shrink-0"
+		onValueChange={handleOpenCalendarDay}
+	/>
+
 	<!-- Note Entries -->
 	<div
 		class="flex flex-col items-start gap-2 w-full h-full overflow-auto pt-2.5 px-2 pb-2"
@@ -200,13 +207,6 @@ import type { DateValue } from '@internationalized/date';
 			<Entries {entries} />
 		{/if}
 	</div>
-
-	<Calendar
-		type="single"
-		bind:value={calValue}
-		class="border-t w-full"
-		onValueChange={handleOpenCalendarDay}
-	/>
 </div>
 
 <style>
