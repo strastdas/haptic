@@ -239,12 +239,12 @@
 		(event.currentTarget as HTMLElement).style.opacity = '';
 
 		if (previousHighlightedElement) {
+			const firstChild = previousHighlightedElement.firstElementChild as HTMLElement | null;
 			// Check if the note is not being dropped in the same folder it's currently in
 			const isSameFolder =
 				previousHighlightedElement.dataset.path ===
 					path.split('/').slice(0, -1).join('/') ||
-				previousHighlightedElement.firstElementChild?.dataset.path ===
-					path.split('/').slice(0, -1).join('/');
+				firstChild?.dataset.path === path.split('/').slice(0, -1).join('/');
 
 			if (!isSameFolder) {
 				// Move the note to the folder
@@ -254,14 +254,11 @@
 					} else {
 						moveNote(path, previousHighlightedElement.dataset.path!);
 					}
-				} else if (previousHighlightedElement.firstElementChild?.dataset.path) {
+				} else if (firstChild?.dataset.path) {
 					if (isFolder) {
-						moveFolder(
-							path,
-							previousHighlightedElement.firstElementChild.dataset.path!
-						);
+						moveFolder(path, firstChild.dataset.path!);
 					} else {
-						moveNote(path, previousHighlightedElement.firstElementChild.dataset.path!);
+						moveNote(path, firstChild.dataset.path!);
 					}
 				}
 			}

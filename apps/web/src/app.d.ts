@@ -9,3 +9,12 @@ declare global {
     // interface Platform {}
   }
 }
+
+// Non-standard directory-picker attributes used by the collection importer
+// (<input webkitdirectory directory>), absent from Svelte's HTML typings.
+declare namespace svelteHTML {
+  interface HTMLAttributes<T> {
+    webkitdirectory?: boolean | '';
+    directory?: boolean | '';
+  }
+}

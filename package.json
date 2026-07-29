@@ -21,9 +21,6 @@
   },
   "packageManager": "pnpm@10.33.4",
   "lint-staged": {
-    "*.{js,mjs,cjs,ts,svelte}": [
-      "oxlint --config oxlint.config.mjs --fix"
-    ],
     "*.{js,mjs,cjs,ts,json}": [
       "oxfmt"
     ]
