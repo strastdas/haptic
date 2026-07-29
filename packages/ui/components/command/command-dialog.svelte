@@ -1,24 +1,42 @@
 <script lang="ts">
-	import Command from './command.svelte';
-	import * as Dialog from '../dialog';
-	import type { Dialog as DialogPrimitive } from 'bits-ui';
-	import type { Command as CommandPrimitive } from 'cmdk-sv';
+	import type { Command as CommandPrimitive, Dialog as DialogPrimitive } from "bits-ui";
+	import type { Snippet } from "svelte";
+	import Command from "./command.svelte";
+	import * as Dialog from "@haptic/ui/components/dialog/index.js";
+	import { cn, type WithoutChildrenOrChild } from "@haptic/ui/lib/utils.js";
 
-	type $$Props = DialogPrimitive.Props &
-		CommandPrimitive.CommandProps & { onKeyDown?: (event: KeyboardEvent) => void };
-
-	export let open: $$Props['open'] = false;
-	export let value: $$Props['value'] = undefined;
+	let {
+		open = $bindable(false),
+		ref = $bindable(null),
+		value = $bindable(""),
+		title = "Command Palette",
+		description = "Search for a command to run...",
+		showCloseButton = false,
+		portalProps,
+		children,
+		class: className,
+		...restProps
+	}: WithoutChildrenOrChild<DialogPrimitive.RootProps> &
+		WithoutChildrenOrChild<CommandPrimitive.RootProps> & {
+			portalProps?: DialogPrimitive.PortalProps;
+			children: Snippet;
+			title?: string;
+			description?: string;
+			showCloseButton?: boolean;
+			class?: string;
+		} = $props();
 </script>
 
-<Dialog.Root bind:open {...$$restProps}>
-	<Dialog.Content class="overflow-hidden p-0 !w-[518px] top-[15%]">
-		<Command
-			class="[&_[data-cmdk-group-heading]]:px-2 [&_[data-cmdk-group-heading]]:font-medium [&_[data-cmdk-group-heading]]:text-muted-foreground [&_[data-cmdk-group]:not([hidden])_~[data-cmdk-group]]:pt-0 [&_[data-cmdk-group]]:px-2 [&_[data-cmdk-input-wrapper]_svg]:h-5 [&_[data-cmdk-input-wrapper]_svg]:w-5 [&_[data-cmdk-input]]:h-12 [&_[data-cmdk-item]]:px-4 [&_[data-cmdk-item]]:py-3 [&_[data-cmdk-item]_svg]:h-4 [&_[data-cmdk-item]_svg]:w-4"
-			{...$$restProps}
-			bind:value
-		>
-			<slot />
-		</Command>
+<Dialog.Root bind:open {...restProps}>
+	<Dialog.Header class="sr-only">
+		<Dialog.Title>{title}</Dialog.Title>
+		<Dialog.Description>{description}</Dialog.Description>
+	</Dialog.Header>
+	<Dialog.Content
+		class={cn("rounded-xl! top-1/3 translate-y-0 overflow-hidden p-0", className)}
+		{showCloseButton}
+		{portalProps}
+	>
+		<Command {...restProps} bind:value bind:ref {children} />
 	</Dialog.Content>
 </Dialog.Root>

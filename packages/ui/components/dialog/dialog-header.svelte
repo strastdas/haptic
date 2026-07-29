@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { cn } from '../../lib/utils';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from "@haptic/ui/lib/utils.js";
 
-	type $$Props = HTMLAttributes<HTMLDivElement>;
-
-	let className: $$Props['class'] = undefined;
-	export { className as class };
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
 </script>
 
-<div class={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...$$restProps}>
-	<slot />
+<div
+	bind:this={ref}
+	data-slot="dialog-header"
+	class={cn("gap-2 flex flex-col", className)}
+	{...restProps}
+>
+	{@render children?.()}
 </div>

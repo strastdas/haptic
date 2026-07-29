@@ -22,7 +22,7 @@
 	import { Button } from '@haptic/ui/components/button';
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { ALargeSmall, WholeWord } from 'lucide-svelte';
+	import { ALargeSmall, WholeWord } from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
 	import Entries from './entries.svelte';

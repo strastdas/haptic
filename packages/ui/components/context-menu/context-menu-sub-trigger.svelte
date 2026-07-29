@@ -1,32 +1,29 @@
 <script lang="ts">
-	import { ContextMenu as ContextMenuPrimitive } from 'bits-ui';
-	import { cn } from '../../lib/utils';
-	import { ChevronRight } from 'radix-icons-svelte';
+	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
+	import { cn, type WithoutChild } from "@haptic/ui/lib/utils.js";
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
-	type $$Props = ContextMenuPrimitive.SubTriggerProps & {
+	let {
+		ref = $bindable(null),
+		class: className,
+		inset,
+		children,
+		...restProps
+	}: WithoutChild<ContextMenuPrimitive.SubTriggerProps> & {
 		inset?: boolean;
-	};
-	type $$Events = ContextMenuPrimitive.SubTriggerEvents;
-
-	let className: $$Props['class'] = undefined;
-	export let inset: $$Props['inset'] = undefined;
-	export { className as class };
+	} = $props();
 </script>
 
 <ContextMenuPrimitive.SubTrigger
+	bind:ref
+	data-slot="context-menu-sub-trigger"
+	data-inset={inset}
 	class={cn(
-		'flex cursor-pointer h-7 text-foreground select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
-		inset && 'pl-8',
+		"focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground rounded-sm px-2 py-1.5 text-sm data-inset:pl-8 [&_svg:not([class*='size-'])]:size-4 flex cursor-default items-center outline-hidden select-none data-inset:ps-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		className
 	)}
-	{...$$restProps}
-	on:click
-	on:keydown
-	on:focusin
-	on:focusout
-	on:pointerleave
-	on:pointermove
+	{...restProps}
 >
-	<slot />
-	<ChevronRight class="ml-auto h-4 w-4" />
+	{@render children?.()}
+	<ChevronRightIcon class="ml-auto" />
 </ContextMenuPrimitive.SubTrigger>

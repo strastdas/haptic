@@ -6,7 +6,7 @@
 	import { openNote } from '@/api/notes';
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
-	import { ChevronDown, Loader } from 'lucide-svelte';
+	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 
 	interface Props {

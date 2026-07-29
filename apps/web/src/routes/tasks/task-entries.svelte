@@ -8,7 +8,7 @@
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { ChevronDown, Loader } from 'lucide-svelte';
+	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';
 	import { get } from 'svelte/store';

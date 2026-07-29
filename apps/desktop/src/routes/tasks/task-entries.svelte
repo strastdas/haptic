@@ -7,7 +7,7 @@
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { invoke } from '@tauri-apps/api/tauri';
-	import { ChevronDown, Loader } from 'lucide-svelte';
+	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';
 

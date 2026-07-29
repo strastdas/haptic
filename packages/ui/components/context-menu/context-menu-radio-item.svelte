@@ -1,35 +1,35 @@
 <script lang="ts">
-	import { ContextMenu as ContextMenuPrimitive } from 'bits-ui';
-	import { cn } from '../../lib/utils';
-	import { DotFilled } from 'radix-icons-svelte';
+	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
+	import { cn, type WithoutChild } from "@haptic/ui/lib/utils.js";
+	import CheckIcon from '@lucide/svelte/icons/check';
 
-	type $$Props = ContextMenuPrimitive.RadioItemProps;
-	type $$Events = ContextMenuPrimitive.RadioItemEvents;
-
-	let className: $$Props['class'] = undefined;
-	export let value: $$Props['value'];
-	export { className as class };
+	let {
+		ref = $bindable(null),
+		class: className,
+		inset,
+		children: childrenProp,
+		...restProps
+	}: WithoutChild<ContextMenuPrimitive.RadioItemProps> & {
+		inset?: boolean;
+	} = $props();
 </script>
 
 <ContextMenuPrimitive.RadioItem
+	bind:ref
+	data-slot="context-menu-radio-item"
+	data-inset={inset}
 	class={cn(
-		'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+		"focus:bg-accent focus:text-accent-foreground gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm data-inset:pl-8 [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		className
 	)}
-	{value}
-	{...$$restProps}
-	on:click
-	on:keydown
-	on:focusin
-	on:focusout
-	on:pointerdown
-	on:pointerleave
-	on:pointermove
+	{...restProps}
 >
-	<span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-		<ContextMenuPrimitive.RadioIndicator>
-			<DotFilled class="h-4 w-4 fill-current" />
-		</ContextMenuPrimitive.RadioIndicator>
-	</span>
-	<slot />
+	{#snippet children({ checked })}
+		<span class="absolute right-2 pointer-events-none">
+			{#if checked}
+				<CheckIcon  />
+			{/if}
+		</span>
+		{@render childrenProp?.({ checked })}
+	{/snippet}
 </ContextMenuPrimitive.RadioItem>

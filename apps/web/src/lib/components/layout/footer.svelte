@@ -9,7 +9,7 @@
 	import { Input } from '@haptic/ui/components/input';
 	import * as Sheet from '@haptic/ui/components/sheet';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { ChevronDown } from 'lucide-svelte';
+	import { ChevronDown } from '@lucide/svelte';
 	import { userPrefersMode } from 'mode-watcher';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
 	import Icon from '../shared/icon.svelte';

@@ -5,7 +5,7 @@
 	import Icon from '@/components/shared/icon.svelte';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { Button } from '@haptic/ui/components/button';
-	import { Replace, ReplaceAll, WholeWord, ALargeSmall } from 'lucide-svelte';
+	import { Replace, ReplaceAll, WholeWord, ALargeSmall } from '@lucide/svelte';
 	import {
 		collectionSettings,
 		editor,

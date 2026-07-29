@@ -1,27 +1,36 @@
 <script lang="ts">
-	import { Calendar as CalendarPrimitive } from 'bits-ui';
-	import { ChevronLeft } from 'lucide-svelte';
-	import { buttonVariants } from '../button/index';
-	import { cn } from '../../lib/utils';
+	import { Calendar as CalendarPrimitive } from "bits-ui";
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
+	import { buttonVariants, type ButtonVariant } from "@haptic/ui/components/button/index.js";
+	import { cn } from "@haptic/ui/lib/utils.js";
 
-	type $$Props = CalendarPrimitive.PrevButtonProps;
-	type $$Events = CalendarPrimitive.PrevButtonEvents;
-
-	let className: $$Props['class'] = undefined;
-	export { className as class };
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		variant = "ghost",
+		...restProps
+	}: CalendarPrimitive.PrevButtonProps & {
+		variant?: ButtonVariant;
+	} = $props();
 </script>
 
+{#snippet Fallback()}
+	<ChevronLeftIcon class={cn("size-4", className)} />
+{/snippet}
+
 <CalendarPrimitive.PrevButton
-	on:click
+	bind:ref
 	class={cn(
-		buttonVariants({ variant: 'outline', scale: 'md' }),
-		'h-[26px] w-[26px] bg-transparent p-0 opacity-50 hover:opacity-100',
+		buttonVariants({ variant }),
+		"size-(--cell-size) bg-transparent p-0 select-none disabled:opacity-50 rtl:rotate-180",
 		className
 	)}
-	{...$$restProps}
-	let:builder
+	{...restProps}
 >
-	<slot {builder}>
-		<ChevronLeft class="h-3.5 w-3.5" />
-	</slot>
+	{#if children}
+		{@render children?.()}
+	{:else}
+		{@render Fallback()}
+	{/if}
 </CalendarPrimitive.PrevButton>

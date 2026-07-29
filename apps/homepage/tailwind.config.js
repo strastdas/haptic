@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const sharedConfig = require('@haptic/tailwind-config/tailwind.config.js');
+const sharedConfig = require('./tailwind-preset.cjs');
 
 module.exports = {
   presets: [sharedConfig],

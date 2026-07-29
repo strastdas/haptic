@@ -7,7 +7,7 @@
 	import { formatTimeAgo, shortcutToString } from '@/utils';
 	import * as Command from '@haptic/ui/components/command';
 	import { open as browserOpen } from '@tauri-apps/api/shell';
-	import { Twitter } from 'lucide-svelte';
+	import { Twitter } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { mainCommands as commands, createNoteCommands } from './commands';
 	import { getAllItems } from './helpers';

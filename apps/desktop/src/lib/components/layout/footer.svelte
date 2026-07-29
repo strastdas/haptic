@@ -7,7 +7,7 @@
 	import * as Sheet from '@haptic/ui/components/sheet';
 	import { Input } from '@haptic/ui/components/input';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
-	import { ChevronDown } from 'lucide-svelte';
+	import { ChevronDown } from '@lucide/svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
 	import { shortcutToString, toggleTheme } from '@/utils';

@@ -1,0 +1,113 @@
+/* Haptic palette — ported from the pre-Tailwind-4 theme (HSL, light + dark). */
+:root {
+  --accent-dark: hsl(0 0% 18%);
+  --accent-foreground-dark: hsl(210 20% 98%);
+  --accent-foreground-light: hsl(220.9 39.3% 11%);
+  --accent-light: hsl(220 14.3% 95.9%);
+  --background-dark: hsl(0 0% 7%);
+  --background-light: hsl(0 0% 100%);
+  --border-dark: hsl(0 0% 18%);
+  --border-light: hsl(220 13% 91%);
+  --card-dark: hsl(0 0% 7%);
+  --card-foreground-dark: hsl(210 20% 98%);
+  --card-foreground-light: hsl(224 71.4% 4.1%);
+  --card-light: hsl(0 0% 100%);
+  --destructive-dark: hsl(355 100% 75%);
+  --destructive-foreground-dark: hsl(210 20% 98%);
+  --destructive-foreground-light: hsl(210 20% 98%);
+  --destructive-light: hsl(0 72.2% 50.6%);
+  --foreground-dark: hsl(0 0% 90%);
+  --foreground-light: hsl(224 71.4% 4.1%);
+  --input-dark: hsl(0 0% 18%);
+  --input-light: hsl(220 13% 91%);
+  --muted-dark: hsl(0 0% 30%);
+  --muted-foreground-dark: hsl(0 0% 55%);
+  --muted-foreground-light: hsl(0 0% 46.1%);
+  --muted-light: hsl(0 0% 88%);
+  --popover-dark: hsl(0 0% 7%);
+  --popover-foreground-dark: hsl(210 20% 98%);
+  --popover-foreground-light: hsl(224 71.4% 4.1%);
+  --popover-light: hsl(0 0% 100%);
+  --primary-dark: hsl(210 20% 98%);
+  --primary-foreground-dark: hsl(220.9 39.3% 11%);
+  --primary-foreground-light: hsl(210 20% 98%);
+  --primary-light: hsl(0 0% 9%);
+  --ring-dark: hsl(0 0% 18%);
+  --ring-light: hsl(220 13% 91%);
+  --secondary-background-dark: hsl(0 0% 9%);
+  --secondary-background-light: hsl(0 0% 98.8%);
+  --secondary-dark: hsl(0 0% 15%);
+  --secondary-foreground-dark: hsl(0 0% 85%);
+  --secondary-foreground-light: hsl(0 0% 20%);
+  --secondary-light: hsl(0 0% 96%);
+  --radius: 0.625rem;
+
+  --accent: var(--accent-light);
+  --accent-foreground: var(--accent-foreground-light);
+  --background: var(--background-light);
+  --border: var(--border-light);
+  --card: var(--card-light);
+  --card-foreground: var(--card-foreground-light);
+  --destructive: var(--destructive-light);
+  --destructive-foreground: var(--destructive-foreground-light);
+  --foreground: var(--foreground-light);
+  --input: var(--input-light);
+  --muted: var(--muted-light);
+  --muted-foreground: var(--muted-foreground-light);
+  --popover: var(--popover-light);
+  --popover-foreground: var(--popover-foreground-light);
+  --primary: var(--primary-light);
+  --primary-foreground: var(--primary-foreground-light);
+  --ring: var(--ring-light);
+  --secondary: var(--secondary-light);
+  --secondary-background: var(--secondary-background-light);
+  --secondary-foreground: var(--secondary-foreground-light);
+}
+
+.dark {
+  --accent: var(--accent-dark);
+  --accent-foreground: var(--accent-foreground-dark);
+  --background: var(--background-dark);
+  --border: var(--border-dark);
+  --card: var(--card-dark);
+  --card-foreground: var(--card-foreground-dark);
+  --destructive: var(--destructive-dark);
+  --destructive-foreground: var(--destructive-foreground-dark);
+  --foreground: var(--foreground-dark);
+  --input: var(--input-dark);
+  --muted: var(--muted-dark);
+  --muted-foreground: var(--muted-foreground-dark);
+  --popover: var(--popover-dark);
+  --popover-foreground: var(--popover-foreground-dark);
+  --primary: var(--primary-dark);
+  --primary-foreground: var(--primary-foreground-dark);
+  --ring: var(--ring-dark);
+  --secondary: var(--secondary-dark);
+  --secondary-background: var(--secondary-background-dark);
+  --secondary-foreground: var(--secondary-foreground-dark);
+}
+
+/* Haptic-specific design tokens on top of the shadcn set */
+@theme inline {
+  --color-secondary-background: var(--secondary-background);
+}
+
+/* Editor typography ("prose prose-theme"), ported from the TW3 typography() modifier */
+.prose-theme {
+  --tw-prose-body: color-mix(in srgb, var(--foreground) 90%, transparent);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: color-mix(in srgb, var(--foreground) 90%, transparent);
+  --tw-prose-links: var(--primary);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: color-mix(in srgb, var(--foreground) 30%, transparent);
+  --tw-prose-bullets: color-mix(in srgb, var(--foreground) 30%, transparent);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: color-mix(in srgb, var(--foreground) 90%, transparent);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: color-mix(in srgb, var(--foreground) 60%, transparent);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--background);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}

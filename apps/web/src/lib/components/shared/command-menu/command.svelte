@@ -10,7 +10,7 @@
 	import { activeFile, collection } from '@/store';
 	import { formatTimeAgo, shortcutToString } from '@/utils';
 	import * as Command from '@haptic/ui/components/command';
-	import { Loader, Twitter } from 'lucide-svelte';
+	import { Loader, Twitter } from '@lucide/svelte';
 	import { setMode, userPrefersMode } from 'mode-watcher';
 	import { onMount } from 'svelte';
 	import { mainCommands as commands, createNoteCommands } from './commands';

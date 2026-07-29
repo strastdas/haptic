@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "paths": {
+      "@haptic/ui": ["."],
+      "@haptic/ui/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.svelte"],
+  "exclude": ["node_modules"]
+}
