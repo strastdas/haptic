@@ -24,8 +24,8 @@ const isNoteDetailSidebarOpen = writable<boolean>(false);
 const noteDetailSidebarWidth = writable<number>(210);
 const resizingNoteDetailSidebar = writable<boolean>(false);
 export const settingsStore = writable<SettingsStateParams>({
-	isOpen: false,
-	activePage: 'general'
+  isOpen: false,
+  activePage: 'general'
 });
 
 const appTheme = writable<'auto' | 'light' | 'dark'>('auto');
@@ -33,23 +33,23 @@ const appSettings = writable<AppSettingsParams>(BASE_APP_SETTINGS);
 const collectionSettings = writable<CollectionSettingsParams>(BASE_COLLECTION_SETTINGS);
 
 export {
-	activeFile,
-	appSettings,
-	appTheme,
-	platform,
-	collection,
-	collectionSearchActive,
-	collectionSettings,
-	editor,
-	editorMode,
-	editorSearchActive,
-	editorSearchValue,
-	isNoteDetailSidebarOpen,
-	isPageSidebarOpen,
-	noteDetailSidebarWidth,
-	noteHistory,
-	pageSidebarWidth,
-	resizingNoteDetailSidebar,
-	resizingPageSidebar,
-	tooltipsOpen
+  activeFile,
+  appSettings,
+  appTheme,
+  platform,
+  collection,
+  collectionSearchActive,
+  collectionSettings,
+  editor,
+  editorMode,
+  editorSearchActive,
+  editorSearchValue,
+  isNoteDetailSidebarOpen,
+  isPageSidebarOpen,
+  noteDetailSidebarWidth,
+  noteHistory,
+  pageSidebarWidth,
+  resizingNoteDetailSidebar,
+  resizingPageSidebar,
+  tooltipsOpen
 };
