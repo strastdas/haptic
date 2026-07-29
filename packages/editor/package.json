@@ -9,7 +9,7 @@
     "./extensions": "./src/extensions/index.ts"
   },
   "peerDependencies": {
-    "svelte": "^4.2.7"
+    "svelte": "^5.0.0"
   },
   "dependencies": {
     "@tiptap/core": "^2.2.1",

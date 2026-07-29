@@ -12,7 +12,7 @@
     "./adapter": "./src/adapter.ts"
   },
   "peerDependencies": {
-    "svelte": "^4.2.7"
+    "svelte": "^5.0.0"
   },
   "dependencies": {
     "clsx": "^2.1.0",
