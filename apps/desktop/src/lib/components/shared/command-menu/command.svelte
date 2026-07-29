@@ -12,11 +12,11 @@
 	import { mainCommands as commands, createNoteCommands } from './commands';
 	import { getAllItems } from './helpers';
 
-	let open = false;
-	let search = '';
-	let value: string | undefined = undefined;
-	let page: string | undefined = undefined;
-	let openedWithShortcut = '';
+	let open = $state(false);
+	let search = $state('');
+	let value: string | undefined = $state(undefined);
+	let page: string | undefined = $state(undefined);
+	let openedWithShortcut = $state('');
 
 	const shortcutKeyMap: Record<string, string | undefined> = {
 		'cmd+k': 'default',

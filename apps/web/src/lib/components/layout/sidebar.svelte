@@ -7,7 +7,7 @@
 	import SettingsModal from '../settings/settings-modal.svelte';
 	import { SHORTCUTS } from '@/constants';
 
-	let selected: 'notes' | 'daily' | 'tasks' = 'notes';
+	let selected: 'notes' | 'daily' | 'tasks' = $state('notes');
 
 	page.subscribe((value) => {
 		const path = value.url.pathname;

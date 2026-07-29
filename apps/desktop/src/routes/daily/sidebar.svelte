@@ -20,8 +20,8 @@ import type { DateValue } from '@internationalized/date';
 	import { watchImmediate } from 'tauri-plugin-fs-watch-api';
 	import Entries from './entries.svelte';
 
-	let calValue = today(getLocalTimeZone());
-	let entries: FileEntry[] = [];
+	let calValue = $state(today(getLocalTimeZone()));
+	let entries: FileEntry[] = $state([]);
 	let stopWatching: UnlistenFn;
 
 	// Watch for changes in the collection
@@ -183,9 +183,9 @@ import type { DateValue } from '@internationalized/date';
 	<!-- Drag border -->
 	<div
 		class="h-full w-1 border-r cursor-col-resize absolute top-0 right-0 z-10 hover:bg-foreground/10 hover:delay-75 transition-all duration-200 active:bg-foreground/20 active:!cursor-col-resize"
-		on:mousedown={resizeHandler}
+		onmousedown={resizeHandler}
 		role="presentation"
-	/>
+	></div>
 
 	<!-- Note Entries -->
 	<div

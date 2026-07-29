@@ -9,7 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { collection, platform } from '@/store';
 
-	let selected: 'notes' | 'daily' | 'tasks' | null = null;
+	let selected: 'notes' | 'daily' | 'tasks' | null = $state(null);
 
 	function navigateTo(path: string) {
 		if ($collection) {

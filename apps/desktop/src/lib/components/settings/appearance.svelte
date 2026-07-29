@@ -7,8 +7,8 @@
 	import Icon from '../shared/icon.svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
-	let selectedTheme = { value: 'haptic', label: 'Haptic' };
-	let selectedFont = { value: 'inter', label: 'Inter' };
+	let selectedTheme = $state({ value: 'haptic', label: 'Haptic' });
+	let selectedFont = $state({ value: 'inter', label: 'Inter' });
 </script>
 
 <div class="space-y-5">

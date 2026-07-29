@@ -16,7 +16,7 @@
 	import Shortcut from '../shortcut.svelte';
 	import { SearchAndReplace } from '@haptic/editor';
 
-	let element: HTMLDivElement;
+	let element: HTMLDivElement = $state();
 	let tiptapEditor: Editor;
 	let timeout: NodeJS.Timeout;
 

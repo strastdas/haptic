@@ -15,7 +15,7 @@ import type { IconKey } from '$lib/components/shared/icon.svelte';
 	import General from './general.svelte';
 	import HapticSync from './haptic-sync.svelte';
 
-	$: ({ isOpen, activePage } = $settingsStore);
+	let { isOpen, activePage } = $derived($settingsStore);
 
 	const settings: Record<string, { name: string; icon: IconKey; content: ComponentType }[]> = {
 		App: [
@@ -110,7 +110,7 @@ import type { IconKey } from '$lib/components/shared/icon.svelte';
 						>
 							<div class="flex flex-col items-start justify-start h-full w-full gap-3 px-1">
 								<h1 class="text-lg font-medium">{tab.name}</h1>
-								<svelte:component this={tab.content} />
+								<tab.content />
 							</div>
 						</Tabs.Content>
 					{/each}

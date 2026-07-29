@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { SHORTCUTS } from '@/constants';
 	import { activeFile,settingsStore } from '@/store';
 	import { shortcutToString, toggleTheme } from '@/utils';
@@ -15,10 +17,10 @@
 
 		import Shortcut from '../shared/shortcut.svelte';
 
-	let open = false;
-	let searchValue = '';
-	let collapsedCategories: string[] = [];
-	let filteredCommands = [...commands];
+	let open = $state(false);
+	let searchValue = $state('');
+	let collapsedCategories: string[] = $state([]);
+	let filteredCommands = $state([...commands]);
 
 	activeFile.subscribe((notePath) => {
 		// Remove last note specific commands
@@ -33,14 +35,16 @@
 	});
 
 	// Filter commands based on search value
-	$: filteredCommands = commands
-		.map((group) => ({
-			...group,
-			commands: group.commands.filter((command) =>
-				command.title.toLowerCase().includes(searchValue.toLowerCase())
-			)
-		}))
-		.filter((group) => group.commands.length > 0);
+	run(() => {
+		filteredCommands = commands
+			.map((group) => ({
+				...group,
+				commands: group.commands.filter((command) =>
+					command.title.toLowerCase().includes(searchValue.toLowerCase())
+				)
+			}))
+			.filter((group) => group.commands.length > 0);
+	});
 </script>
 
 <footer

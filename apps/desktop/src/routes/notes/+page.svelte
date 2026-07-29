@@ -29,7 +29,7 @@
 			<div class="flex gap-5">
 				<button
 					class="text-sm gap-1.5 flex text-muted-foreground hover:text-secondary-foreground transition-colors items-center justify-center"
-					on:click={() => {
+					onclick={() => {
 						document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', metaKey: true }));
 					}}
 				>
@@ -42,7 +42,7 @@
 				>
 				<button
 					class="text-sm gap-1.5 flex text-muted-foreground hover:text-secondary-foreground transition-colors items-center justify-center"
-					on:click={() => {
+					onclick={() => {
 						createNote($collection);
 					}}
 				>

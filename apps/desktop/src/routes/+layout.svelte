@@ -12,6 +12,11 @@
 	import { BaseDirectory, readTextFile } from '@tauri-apps/api/fs';
 	import { invoke } from '@tauri-apps/api/tauri';
 	import { onMount } from 'svelte';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	// Prevent right-clicking in production
 	// TODO: Test if this even works in production (not sure if tauri has access to env variables)
@@ -70,7 +75,7 @@
 {/if}
 <Sidebar />
 <main class="flex min-h-screen w-full items-center justify-center">
-	<slot />
+	{@render children?.()}
 </main>
 <Footer />
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { openNote } from '@/api/notes';
 	import { activeFile, collection, editor, editorSearchActive, editorSearchValue } from '@/store';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
@@ -9,18 +11,11 @@
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';
 
-	let tasks: { path: string; context_preview: string }[] = [];
-	let loading = false;
-	let openState: Record<string, boolean> = {};
-	let groupedTasks: Record<string, { context_preview: string }[]> = {};
-	$: groupedTasks = groupResults(tasks);
+	let tasks: { path: string; context_preview: string }[] = $state([]);
+	let loading = $state(false);
+	let openState: Record<string, boolean> = $state({});
+	let groupedTasks: Record<string, { context_preview: string }[]> = $state({});
 
-	// Initialize all collapsibles as open
-	$: Object.keys(groupedTasks).forEach((path) => {
-		if (openState[path] === undefined) {
-			openState[path] = true;
-		}
-	});
 
 	function groupResults(
 		results: { path: string; context_preview: string }[]
@@ -113,6 +108,17 @@
 	onDestroy(() => {
 		unsubscribeSave();
 	});
+	run(() => {
+		groupedTasks = groupResults(tasks);
+	});
+	// Initialize all collapsibles as open
+	run(() => {
+		Object.keys(groupedTasks).forEach((path) => {
+			if (openState[path] === undefined) {
+				openState[path] = true;
+			}
+		});
+	});
 </script>
 
 <div class="w-full text-xs space-y-1 pl-1">
@@ -138,7 +144,7 @@
 				{#each groupedTasks[path] as result, index (result.context_preview)}
 					<button
 						class="flex items-start min-w-full overflow-hidden text-start p-2 bg-secondary-background border rounded-md text-xs hover:bg-accent hover:text-accent-foreground"
-						on:click={async () => {
+						onclick={async () => {
 							editorSearchValue.set('');
 							if ($activeFile !== path) {
 								console.log('File already open');

@@ -28,15 +28,15 @@
 	import Entries from './entries.svelte';
 	import SearchResults from './search-results.svelte';
 
-	let searchValue: string;
-	let searchDebounce: NodeJS.Timeout;
-	let searchLoading: boolean = false;
-	let caseSensitive: boolean = false;
-	let wholeWord: boolean = false;
-	let results: SearchResultParams[] = [];
-	let entries: FileEntry[] = [];
-	let folderToggleState: 'collapse' | 'expand';
-	let toggleFolderStates: () => void;
+	let searchValue: string = $state();
+	let searchDebounce: NodeJS.Timeout = $state();
+	let searchLoading: boolean = $state(false);
+	let caseSensitive: boolean = $state(false);
+	let wholeWord: boolean = $state(false);
+	let results: SearchResultParams[] = $state([]);
+	let entries: FileEntry[] = $state([]);
+	let folderToggleState: 'collapse' | 'expand' = $state();
+	let toggleFolderStates: () => void = $state();
 	let stopWatching: () => void;
 
 	// Watch for changes in the collection
@@ -183,9 +183,9 @@
 	<!-- Drag border -->
 	<div
 		class="h-full w-1 border-r cursor-col-resize absolute top-0 right-0 z-10 hover:bg-foreground/10 hover:delay-75 transition-all duration-200 active:bg-foreground/20 active:!cursor-col-resize"
-		on:mousedown={resizeHandler}
+		onmousedown={resizeHandler}
 		role="presentation"
-	/>
+	></div>
 
 	<!-- Controls -->
 	<div class="relative top-0 flex flex-col min-h-10 w-full border-b bg-background overflow-hidden">
@@ -282,7 +282,7 @@
 					autocomplete="off"
 					autocorrect="off"
 					bind:value={searchValue}
-					on:keydown={(e) => {
+					onkeydown={(e) => {
 						clearTimeout(searchDebounce);
 
 						// Start search debounce timeout

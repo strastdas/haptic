@@ -6,7 +6,7 @@
 <header
 	class="absolute top-0 w-full flex justify-between items-center h-9 border-b pl-20 bg-background z-40 px-1.5"
 >
-	<div />
+	<div></div>
 	<p
 		class="pointer-events-none text-sm text-foreground/85 hover:text-foreground/100 transition-all cursor-default outline-none -mr-[159px]"
 	>

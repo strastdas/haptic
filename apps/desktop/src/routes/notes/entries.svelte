@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Entries from './entries.svelte';
+	import { run } from 'svelte/legacy';
+
 	import { createFolder, deleteFolder, moveFolder, renameFolder } from '@/api/folders';
 	import { createNote, deleteNote, duplicateNote, moveNote, openNote } from '@/api/notes';
 	import Icon from '@/components/shared/icon.svelte';
@@ -13,23 +16,29 @@
 	import type { FileEntry } from '@tauri-apps/api/fs';
 	import { get } from 'svelte/store';
 
-	export let entries: FileEntry[];
-	export let toggleState: 'collapse' | 'expand';
-	let folderOpenStates: boolean[] = [];
+	interface Props {
+		entries: FileEntry[];
+		toggleState: 'collapse' | 'expand';
+	}
+
+	let { entries, toggleState = $bindable() }: Props = $props();
+	let folderOpenStates: boolean[] = $state([]);
 	let dragItem: HTMLElement | null = null; // Reference to the original element being dragged
 	let dragPreviewItem: HTMLElement | null = null; // Reference to the custom drag preview element
 	let previousHighlightedElement: HTMLElement | null = null;
-	let isRenaming = false;
+	let isRenaming = $state(false);
 
-	$: toggleState = folderOpenStates.every((state) => state === false) ? 'expand' : 'collapse';
+	run(() => {
+		toggleState = folderOpenStates.every((state) => state === false) ? 'expand' : 'collapse';
+	});
 
 	// Watch for entries changes and update folderOpenStates array
 	// This is necessary as the folderOpenStates array would be empty until collapsible is used to set the initial state
-	$: {
+	run(() => {
 		if (folderOpenStates.length !== entries.length) {
 			folderOpenStates = new Array(entries.length).fill(false);
 		}
-	}
+	});
 
 	// Get all directories in the collection
 	function getDirectories(entries: FileEntry[]): FileEntry[] {
@@ -281,62 +290,64 @@
 					<div
 						class="w-full h-full"
 						role="button"
-						on:dragstart={(e) => handleDragStart(e, entry.name || '')}
+						ondragstart={(e) => handleDragStart(e, entry.name || '')}
 						tabindex="0"
-						on:dragend={(e) => {
+						ondragend={(e) => {
 							handleDragEnd(e, entry.path, true);
 						}}
 						data-is-folder
 					>
-						<Collapsible.Trigger asChild let:builder>
-							<Button
-								builders={[builder]}
-								size="sm"
-								variant="ghost"
-								scale="sm"
-								class="h-7 w-full fill-muted-foreground hover:fill-foreground text-secondary-foreground/80 hover:text-foreground transition-all flex items-center justify-between"
-								style={`padding-left: ${calculateDepth(entry.path)}`}
-								draggable
-							>
-								<Shortcut
-									options={SHORTCUTS['folder:create']}
-									callback={() => {
-										!isRenaming && createFolder(entry.path);
-									}}
-								/>
-								<Shortcut
-									options={SHORTCUTS['folder:rename']}
-									callback={() => !isRenaming && handleRename(entry, 'folder')}
-								/>
-								<Shortcut
-									options={SHORTCUTS['folder:create-note']}
-									callback={() => !isRenaming && createNote(entry.path)}
-								/>
-								<Shortcut
-									options={SHORTCUTS['folder:delete']}
-									callback={() => !isRenaming && deleteFolder(entry.path)}
-								/>
-								<Shortcut
-									options={SHORTCUTS['folder:show-in-folder']}
-									callback={() => !isRenaming && showInFolder(entry.path)}
-								/>
-								<div class="flex items-center w-[calc(100%-20px)] gap-2">
-									<Icon
-										name="folder"
-										class={cn('w-[18px] h-[18px] shrink-0', folderOpenStates[i] && 'hidden')}
+						<Collapsible.Trigger asChild >
+							{#snippet children({ builder })}
+														<Button
+									builders={[builder]}
+									size="sm"
+									variant="ghost"
+									scale="sm"
+									class="h-7 w-full fill-muted-foreground hover:fill-foreground text-secondary-foreground/80 hover:text-foreground transition-all flex items-center justify-between"
+									style={`padding-left: ${calculateDepth(entry.path)}`}
+									draggable
+								>
+									<Shortcut
+										options={SHORTCUTS['folder:create']}
+										callback={() => {
+											!isRenaming && createFolder(entry.path);
+										}}
 									/>
-									<Icon
-										name="folderOpen"
-										class={cn('w-[18px] h-[18px] shrink-0', !folderOpenStates[i] && 'hidden')}
+									<Shortcut
+										options={SHORTCUTS['folder:rename']}
+										callback={() => !isRenaming && handleRename(entry, 'folder')}
 									/>
-									<span class="text-xs truncate outline-none" autocorrect="off" spellcheck="false"
-										>{entry.name}</span
-									>
-								</div>
-								<!-- TODO: Make this an optional feature -->
-								<span class="text-xs text-foreground/40">{entry.children.length}</span>
-							</Button>
-						</Collapsible.Trigger>
+									<Shortcut
+										options={SHORTCUTS['folder:create-note']}
+										callback={() => !isRenaming && createNote(entry.path)}
+									/>
+									<Shortcut
+										options={SHORTCUTS['folder:delete']}
+										callback={() => !isRenaming && deleteFolder(entry.path)}
+									/>
+									<Shortcut
+										options={SHORTCUTS['folder:show-in-folder']}
+										callback={() => !isRenaming && showInFolder(entry.path)}
+									/>
+									<div class="flex items-center w-[calc(100%-20px)] gap-2">
+										<Icon
+											name="folder"
+											class={cn('w-[18px] h-[18px] shrink-0', folderOpenStates[i] && 'hidden')}
+										/>
+										<Icon
+											name="folderOpen"
+											class={cn('w-[18px] h-[18px] shrink-0', !folderOpenStates[i] && 'hidden')}
+										/>
+										<span class="text-xs truncate outline-none" autocorrect="off" spellcheck="false"
+											>{entry.name}</span
+										>
+									</div>
+									<!-- TODO: Make this an optional feature -->
+									<span class="text-xs text-foreground/40">{entry.children.length}</span>
+								</Button>
+																				{/snippet}
+												</Collapsible.Trigger>
 					</div>
 				</ContextMenu.Trigger>
 				<ContextMenu.Content class="w-44">
@@ -460,7 +471,7 @@
 			<Collapsible.Content
 				class={cn('space-y-1.5 pt-1.5', entry.children.length === 0 && 'hidden')}
 			>
-				<svelte:self entries={entry.children} />
+				<Entries entries={entry.children} />
 			</Collapsible.Content>
 		</Collapsible.Root>
 	{:else}
@@ -469,9 +480,9 @@
 				<div
 					class="w-full h-full"
 					role="button"
-					on:dragstart={(e) => handleDragStart(e, entry.name || '')}
+					ondragstart={(e) => handleDragStart(e, entry.name || '')}
 					tabindex="0"
-					on:dragend={(e) => {
+					ondragend={(e) => {
 						handleDragEnd(e, entry.path);
 					}}
 				>

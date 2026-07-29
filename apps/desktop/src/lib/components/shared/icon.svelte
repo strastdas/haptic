@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	// Define your icons object here
 	let icons = {
 		moon: {
@@ -256,21 +256,27 @@
 		}
 	} as const;
 
-	// Define a type alias for keyof typeof icons
+	
 	export type IconKey = keyof typeof icons;
 </script>
 
 <script lang="ts">
-	export let name: keyof typeof icons;
+	interface Props {
+		// Define a type alias for keyof typeof icons
+		name: keyof typeof icons;
+		[key: string]: any
+	}
+
+	let { ...props }: Props = $props();
 	let displayIcon = icons[name];
 </script>
 
 <svg
-	class={$$props.class}
+	class={props.class}
 	width="1em"
 	height="1em"
 	viewBox="0 0 {displayIcon.box} {displayIcon.box}"
-	{...$$restProps}
+	{...props}
 >
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html displayIcon.svg}

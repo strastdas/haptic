@@ -15,6 +15,11 @@
 	import '@haptic/ui/app.web.css';
 	import { ModeWatcher } from 'mode-watcher';
 	import { onMount } from 'svelte';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	// Device detector
 	const device = createDeviceDetector();
@@ -115,7 +120,7 @@
 	<Header />
 	<Sidebar />
 	<main class="flex min-h-screen w-full items-center justify-center">
-		<slot />
+		{@render children?.()}
 	</main>
 	<Footer />
 {:else}

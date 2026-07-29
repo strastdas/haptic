@@ -9,7 +9,7 @@
 	import Icon from '../shared/icon.svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
-	let selectedTrashLocation: { value: 'system' | 'haptic' | 'delete'; label: string } = {
+	let selectedTrashLocation: { value: 'system' | 'haptic' | 'delete'; label: string } = $state({
 		value: $collectionSettings.notes.trash_dir,
 		label:
 			$collectionSettings.notes.trash_dir === 'system'
@@ -17,7 +17,7 @@
 				: ($collectionSettings.notes.trash_dir === 'haptic'
 					? 'Haptic trash'
 					: 'Permanently delete')
-	};
+	});
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const handleSelected = (value: any) => {

@@ -1,8 +1,12 @@
 <script lang="ts">
 	import shortcut from '@/actions/shortcut';
 import type { ShortcutParams } from '@/actions/shortcut';
-	export let options: ShortcutParams;
-	export let callback: (() => void) | undefined = undefined;
+	interface Props {
+		options: ShortcutParams;
+		callback?: (() => void) | undefined;
+	}
+
+	let { options, callback = undefined }: Props = $props();
 </script>
 
-<div class="hidden" use:shortcut={{ ...options, callback }} />
+<div class="hidden" use:shortcut={{ ...options, callback }}></div>

@@ -3,9 +3,13 @@
 	import { activeFile, collectionSettings, editor, editorMode } from '@/store';
 	import { cn } from '@/utils';
 
-	export let preCheckRegex: RegExp | undefined = undefined;
+	interface Props {
+		preCheckRegex?: RegExp | undefined;
+	}
 
-	let value = '';
+	let { preCheckRegex = undefined }: Props = $props();
+
+	let value = $state('');
 
 	// Handle keydown for enter key
 	function handleKeydown(event: KeyboardEvent) {
@@ -72,8 +76,8 @@
 				// Safari / Webkit for some reason has a smaller editor width so we need to adjust
 				/^((?!chrome|android).)*safari/i.test(navigator.userAgent) && 'w-[635px]'
 			)}
-			on:keydown={handleKeydown}
-			on:blur={handleBlur}
+			onkeydown={handleKeydown}
+			onblur={handleBlur}
 			bind:value
 		/>
 	{/if}

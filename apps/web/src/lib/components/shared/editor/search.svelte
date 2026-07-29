@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { Input } from '@haptic/ui/components/input';
 	import Icon from '@/components/shared/icon.svelte';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
@@ -18,17 +20,17 @@
 	import { escapeRegExp } from '@/utils';
 	import Tooltip from '@/components/shared/tooltip.svelte';
 
-	let replaceValue = '';
-	let caseSensitive = false;
-	let wholeWord = false;
-	let expanded = false;
+	let replaceValue = $state('');
+	let caseSensitive = $state(false);
+	let wholeWord = $state(false);
+	let expanded = $state(false);
 
-	$: {
+	run(() => {
 		if ($editor) {
 			$editor.commands.setReplaceTerm(replaceValue);
 			$editor.commands.setCaseSensitive(caseSensitive);
 		}
-	}
+	});
 
 	const goToSelection = () => {
 		if (!$editor) {return;}

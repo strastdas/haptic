@@ -17,10 +17,14 @@
 	import Button from '@haptic/ui/components/button/button.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 
-	export let hideHistory: boolean = false;
-	export let hideParentDirectories: boolean = false;
+	interface Props {
+		hideHistory?: boolean;
+		hideParentDirectories?: boolean;
+	}
 
-	let historyIndex: number = 0;
+	let { hideHistory = false, hideParentDirectories = false }: Props = $props();
+
+	let historyIndex: number = $state(0);
 
 	noteHistory.subscribe((value) => {
 		historyIndex = value.length - 1;
@@ -129,8 +133,8 @@
 				</Button>
 			</Tooltip>
 		{:else}
-			<div class="w-6" />
-			<div class="w-6" />
+			<div class="w-6"></div>
+			<div class="w-6"></div>
 		{/if}
 	</div>
 	<div class="flex gap-1.5 w-fit">

@@ -16,7 +16,7 @@
 	import { SHORTCUTS } from '@/constants';
 	import { get } from 'svelte/store';
 
-	let element: HTMLDivElement;
+	let element: HTMLDivElement = $state();
 	let tiptapEditor: Editor;
 	let timeout: NodeJS.Timeout;
 

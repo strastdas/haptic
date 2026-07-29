@@ -3,9 +3,13 @@
 	import { editor, activeFile, collectionSettings, editorMode } from '@/store';
 	import { cn } from '@/utils';
 
-	export let preCheckRegex: RegExp | undefined = undefined;
+	interface Props {
+		preCheckRegex?: RegExp | undefined;
+	}
 
-	let value = '';
+	let { preCheckRegex = undefined }: Props = $props();
+
+	let value = $state('');
 
 	// Handle keydown for enter key
 	function handleKeydown(event: KeyboardEvent) {
@@ -68,8 +72,8 @@
 			autocorrect="off"
 			disabled={$editorMode !== 'edit'}
 			class="w-[635px] prose font-bold text-4xl text-foreground mx-auto bg-transparent focus:outline-none"
-			on:keydown={handleKeydown}
-			on:blur={handleBlur}
+			onkeydown={handleKeydown}
+			onblur={handleBlur}
 			bind:value
 		/>
 	{/if}

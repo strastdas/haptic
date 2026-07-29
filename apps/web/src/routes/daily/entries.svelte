@@ -11,8 +11,12 @@
 	import Label from '@haptic/ui/components/label/label.svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 
-	export let entries: FileEntry[];
-	let groupedEntries: Record<string, FileEntry[]>;
+	interface Props {
+		entries: FileEntry[];
+	}
+
+	let { entries }: Props = $props();
+	let groupedEntries: Record<string, FileEntry[]> = $derived(groupEntries(entries));
 
 	function groupEntries(entries: FileEntry[]): Record<string, FileEntry[]> {
 		const now = new Date();
@@ -81,7 +85,7 @@
 		return grouped;
 	}
 
-	$: groupedEntries = groupEntries(entries);
+	
 </script>
 
 {#each Object.entries(groupedEntries) as [groupName, groupEntries]}

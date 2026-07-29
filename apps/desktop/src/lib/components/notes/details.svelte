@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { getNoteMetadataParams } from '@/api/notes';
 	import Icon from '@/components/shared/icon.svelte';
 	import Tooltip from '@/components/shared/tooltip.svelte';
@@ -18,13 +20,13 @@
 	import type { NodePos } from '@tiptap/core';
 	import { onDestroy, onMount } from 'svelte';
 
-	let tab: 'metadata' | 'toc' = 'metadata';
-	let nodeHeadings: NodePos[] | null = null;
-	let activeNoteMetadataParams: NoteMetadataParams | null = null;
+	let tab: 'metadata' | 'toc' = $state('metadata');
+	let nodeHeadings: NodePos[] | null = $state(null);
+	let activeNoteMetadataParams: NoteMetadataParams | null = $state(null);
 
 	// Reactive variables
-	let createdTimeAgo: string;
-	let modifiedTimeAgo: string;
+	let createdTimeAgo: string = $state();
+	let modifiedTimeAgo: string = $state();
 	let timeUpdateInterval: NodeJS.Timeout;
 
 	let startX: number | null;
@@ -92,12 +94,7 @@
 		}
 	}
 
-	$: if (activeNoteMetadataParams && tab === 'metadata') {
-		updateTimes();
-	}
 
-	// Calculate TOC items
-	$: tocItems = tab === 'toc' && nodeHeadings ? calculateTocItems(nodeHeadings) : [];
 
 	function calculateTocItems(headings: NodePos[]) {
 		let minLevel = Math.min(...headings.map((h) => h.attributes.level));
@@ -139,6 +136,13 @@
 		stopWatching();
 		clearInterval(timeUpdateInterval);
 	});
+	run(() => {
+		if (activeNoteMetadataParams && tab === 'metadata') {
+			updateTimes();
+		}
+	});
+	// Calculate TOC items
+	let tocItems = $derived(tab === 'toc' && nodeHeadings ? calculateTocItems(nodeHeadings) : []);
 </script>
 
 <div
@@ -152,9 +156,9 @@
 	<!-- Drag border -->
 	<div
 		class="h-full w-1 border-l cursor-col-resize absolute top-0 left-0 z-10 hover:bg-foreground/10 hover:delay-75 transition-all duration-200 active:bg-foreground/20 active:!cursor-col-resize"
-		on:mousedown={resizeHandler}
+		onmousedown={resizeHandler}
 		role="presentation"
-	/>
+	></div>
 
 	<!-- Controls -->
 	<div
@@ -257,7 +261,7 @@
 						type="button"
 						class="flex flex-row items-center justify-between w-full min-h-[24px] h-6 text-[13px] truncate font-normal text-muted-foreground hover:text-primary transition-all"
 						style="padding-left: {item.indent}rem"
-						on:click={() => {
+						onclick={() => {
 							if (!nodeHeadings) return;
 
 							// Set cursor focus to the heading

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { activeFile, editor, editorSearchActive, editorSearchValue } from '@/store';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { openNote } from '@/api/notes';
@@ -7,13 +9,21 @@
 	import { ChevronDown, Loader } from 'lucide-svelte';
 	import markdownit from 'markdown-it';
 
-	export let query: string;
-	export let searchSettings: { caseSensitive: boolean; wholeWord: boolean };
-	export let results: { path: string; context_preview: string }[] = [];
-	export let loading = false;
-	let openState: Record<string, boolean> = {};
-	let groupedResults: Record<string, { context_preview: string }[]> = {};
-	$: groupedResults = groupResults(results);
+	interface Props {
+		query: string;
+		searchSettings: { caseSensitive: boolean; wholeWord: boolean };
+		results?: { path: string; context_preview: string }[];
+		loading?: boolean;
+	}
+
+	let {
+		query,
+		searchSettings,
+		results = [],
+		loading = false
+	}: Props = $props();
+	let openState: Record<string, boolean> = $state({});
+	let groupedResults: Record<string, { context_preview: string }[]> = $state({});
 
 	// group results function which groups all the results from the same path together in an array
 	function groupResults(
@@ -35,16 +45,7 @@
 		return grouped;
 	}
 
-	$: console.log(groupedResults);
 
-	// Initialize all collapsibles as open
-	$: {
-		Object.keys(groupedResults).forEach((path) => {
-			if (openState[path] === undefined) {
-				openState[path] = true;
-			}
-		});
-	}
 
 	function toggleOpen(path: string) {
 		openState[path] = !openState[path];
@@ -77,6 +78,20 @@
 			}
 		}
 	};
+	run(() => {
+		groupedResults = groupResults(results);
+	});
+	run(() => {
+		console.log(groupedResults);
+	});
+	// Initialize all collapsibles as open
+	run(() => {
+		Object.keys(groupedResults).forEach((path) => {
+			if (openState[path] === undefined) {
+				openState[path] = true;
+			}
+		});
+	});
 </script>
 
 <div class="w-full text-xs space-y-1 pl-1">
@@ -104,7 +119,7 @@
 				{#each groupedResults[path] as result, index}
 					<button
 						class="flex items-start min-w-full overflow-hidden text-start p-2 bg-secondary-background border rounded-md text-xs hover:bg-accent hover:text-accent-foreground"
-						on:click={async () => {
+						onclick={async () => {
 							// set search term
 							editorSearchValue.set('');
 

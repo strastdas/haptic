@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { goto } from '$app/navigation';
 	import Icon from '$lib/components/shared/icon.svelte';
 	import { db } from '$lib/database/client';
@@ -14,13 +16,13 @@
 	import { mainCommands as commands, createNoteCommands } from './commands';
 	import { getAllItems } from './helpers';
 
-	let open = false;
-	let search = '';
-	let value: string | undefined = undefined;
-	let page: string | undefined = undefined;
-	let openedWithShortcut = '';
-	let fileInput: HTMLInputElement | null = null;
-	let loadingCollection: { loading: boolean; progress: number } | undefined = undefined;
+	let open = $state(false);
+	let search = $state('');
+	let value: string | undefined = $state(undefined);
+	let page: string | undefined = $state(undefined);
+	let openedWithShortcut = $state('');
+	let fileInput: HTMLInputElement | null = $state(null);
+	let loadingCollection: { loading: boolean; progress: number } | undefined = $state(undefined);
 
 	const shortcutKeyMap: Record<string, string | undefined> = {
 		'cmd+k': 'default',
@@ -186,10 +188,12 @@
 		}
 	}
 
-	let files: FileList | undefined;
-	$: if (files) {
-		openCollection();
-	}
+	let files: FileList | undefined = $state();
+	run(() => {
+		if (files) {
+			openCollection();
+		}
+	});
 </script>
 
 <Command.Dialog

@@ -8,8 +8,8 @@
 	import * as Select from '@haptic/ui/components/select';
 	import { Switch } from '@haptic/ui/components/switch';
 
-	let selectedFont = { value: 'inter', label: 'Inter' };
-	let selectedFontSize = { value: 'normal', label: 'Normal' };
+	let selectedFont = $state({ value: 'inter', label: 'Inter' });
+	let selectedFontSize = $state({ value: 'normal', label: 'Normal' });
 </script>
 
 <div class="space-y-5">

@@ -5,10 +5,10 @@
 	import Switch from '@haptic/ui/components/switch/switch.svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
-	let autoSync = false;
-	let autoBackup = false;
-	let selectedSyncInterval = { value: '5m', label: '5 minutes' };
-	let selectedBackupInterval = { value: '1w', label: '1 week' };
+	let autoSync = $state(false);
+	let autoBackup = $state(false);
+	let selectedSyncInterval = $state({ value: '5m', label: '5 minutes' });
+	let selectedBackupInterval = $state({ value: '1w', label: '1 week' });
 </script>
 
 <div class="space-y-5">

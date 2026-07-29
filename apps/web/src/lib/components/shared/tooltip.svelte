@@ -4,9 +4,15 @@
 	import type { ShortcutParams } from '@/types';
 	import { shortcutToString } from '@/utils';
 	import { onDestroy } from 'svelte';
+	import type { Snippet } from 'svelte';
 
-	export let text = 'Tooltip';
-	export let shortcut: ShortcutParams | undefined = undefined;
+	interface Props extends Record<string, unknown> {
+		text?: string;
+		shortcut?: ShortcutParams;
+		children?: Snippet;
+	}
+
+	let { text = 'Tooltip', shortcut = undefined, children, ...rest }: Props = $props();
 
 	// Track this instance's contribution to the global open-counter so it can
 	// always be undone. Previously, destroying a component while its tooltip was
@@ -51,8 +57,8 @@
 	closeDelay={$tooltipsOpen >= 1 ? 0 : 50}
 	onOpenChange={handleOpenChange}
 >
-	<Tooltip.Trigger><slot /></Tooltip.Trigger>
-	<Tooltip.Content {...$$props} transitionConfig={{ duration: $tooltipsOpen > 1 ? 125 : 175 }}>
+	<Tooltip.Trigger>{@render children?.()}</Tooltip.Trigger>
+	<Tooltip.Content {...rest} transitionConfig={{ duration: $tooltipsOpen > 1 ? 125 : 175 }}>
 		{text}
 		{#if shortcut}
 			<span

@@ -9,14 +9,22 @@
 		resizingNoteDetailSidebar
 	} from '@/store';
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	export let sidebar: any;
+	
+	interface Props {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		sidebar: any;
+		children?: import('svelte').Snippet;
+	}
+
+	let { sidebar, children }: Props = $props();
+
+	const SvelteComponent = $derived(sidebar);
 </script>
 
 <div
 	class="flex flex-col w-full h-[calc(100vh-4.5rem)] bg-secondary-background ml-12 overflow-hidden"
 >
-	<svelte:component this={sidebar} />
+	<SvelteComponent />
 	<div
 		class="h-full overflow-y-auto"
 		style={`
@@ -29,7 +37,7 @@
 					}
 			`}
 	>
-		<slot />
+		{@render children?.()}
 	</div>
 	<NoteDetails />
 </div>
