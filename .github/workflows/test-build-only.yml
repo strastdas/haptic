@@ -1,10 +1,9 @@
 name: 'test-on-pr'
 
+# Disabled during modernization (Tauri 1 build fails on current runners).
+# Replaced by ci.yml in Phase 1 and a Tauri 2 build job in Phase 4.
 on:
-  pull_request:
-    paths:
-      - 'apps/desktop/**'
-      - 'packages/ui/**'
+  workflow_dispatch:
 
 # This workflow will build the app without publishing
 jobs:

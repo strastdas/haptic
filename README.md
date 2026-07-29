@@ -42,6 +42,9 @@
     </a>
 </p>
 
+> [!NOTE]
+> This is an actively maintained fork of [chroxify/haptic](https://github.com/chroxify/haptic), which has been inactive since early 2025. It is being modernized (Svelte 5, Tauri 2, Tailwind 4) and developed further here. Licensed under AGPLv3, same as upstream — full credit to [@chroxify](https://github.com/chroxify) for the original work.
+
 ## Introduction
 
 Haptic is a new local-first & privacy-focused, open-source home for your markdown notes. It's minimal, lightweight, efficient and aims to have _all you need and nothing you don't_.

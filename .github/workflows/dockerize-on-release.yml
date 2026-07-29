@@ -1,9 +1,8 @@
 name: 'dockerize-on-release'
 
+# Disabled during modernization (pushes to upstream's Docker Hub repo).
 on:
-  release:
-    types: [published]
-    branches: ['main']
+  workflow_dispatch:
 
 jobs:
   build:

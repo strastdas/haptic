@@ -1,8 +1,9 @@
 name: 'publish'
 
+# Disabled during modernization (upstream signing keys/domains; Tauri 1 pipeline).
+# Re-enabled as part of the Phase 4 CI redesign.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 # This workflow will build and publish the app on every release.
 jobs:
