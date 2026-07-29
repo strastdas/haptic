@@ -23,8 +23,8 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { ALargeSmall, WholeWord } from '@lucide/svelte';
 	import { type UnwatchFn, watchImmediate } from '@tauri-apps/plugin-fs';
-	import Entries from './entries.svelte';
-	import SearchResults from './search-results.svelte';
+	import Entries from '@haptic/app/components/notes/entries.svelte';
+	import SearchResults from '@haptic/app/components/notes/search-results.svelte';
 
 	let searchValue: string = $state('');
 	let searchDebounce: NodeJS.Timeout | undefined = $state();

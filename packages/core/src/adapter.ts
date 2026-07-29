@@ -49,7 +49,8 @@ export interface StorageAdapter {
     matchWord?: boolean
   ): Promise<SearchResultParams[]>;
   // folders
-  createFolder(dirPath: string): Promise<unknown>;
+  /** Resolves to the path of the folder that was created. */
+  createFolder(dirPath: string): Promise<string>;
   deleteFolder(path: string, recursive?: boolean): Promise<unknown>;
   renameFolder(path: string, name: string): Promise<unknown>;
   moveFolder(source: string, target: string): Promise<unknown>;

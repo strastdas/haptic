@@ -103,7 +103,7 @@ export function runStorageAdapterContract(
     });
 
     it('moves a note into a folder and rejects name conflicts', async () => {
-      const folderPath = (await adapter.createFolder(root)) as string;
+      const folderPath = await adapter.createFolder(root);
       await adapter.createNote(root, 'Move.md');
       await adapter.moveNote(`${root}/Move.md`, folderPath);
 
@@ -128,7 +128,7 @@ export function runStorageAdapterContract(
     });
 
     it('refuses to delete a folder with visible children unless recursive', async () => {
-      const folderPath = (await adapter.createFolder(root)) as string;
+      const folderPath = await adapter.createFolder(root);
       await adapter.createNote(folderPath, 'Keep.md');
 
       await expect(adapter.deleteFolder(folderPath)).rejects.toThrow();
@@ -139,7 +139,7 @@ export function runStorageAdapterContract(
     });
 
     it('deletes a folder containing only hidden files without the recursive flag', async () => {
-      const folderPath = (await adapter.createFolder(root)) as string;
+      const folderPath = await adapter.createFolder(root);
       await adapter.createNote(folderPath, '.DS_Store');
 
       await adapter.deleteFolder(folderPath);
@@ -147,14 +147,14 @@ export function runStorageAdapterContract(
     });
 
     it('renames a folder', async () => {
-      const folderPath = (await adapter.createFolder(root)) as string;
+      const folderPath = await adapter.createFolder(root);
       await adapter.renameFolder(folderPath, 'Projects');
       expect(await names()).toEqual(['Projects']);
     });
 
     it('moves a folder with its children into another folder', async () => {
-      const source = (await adapter.createFolder(root)) as string; // Untitled
-      const target = (await adapter.createFolder(root)) as string; // Untitled 1
+      const source = await adapter.createFolder(root); // Untitled
+      const target = await adapter.createFolder(root); // Untitled 1
       await adapter.createNote(source, 'Child.md');
 
       await adapter.moveFolder(source, target);
@@ -177,7 +177,7 @@ export function runStorageAdapterContract(
     it('returns a nested tree with folders first, sorted naturally', async () => {
       await adapter.createNote(root, 'b 10.md');
       await adapter.createNote(root, 'b 2.md');
-      const folderPath = (await adapter.createFolder(root)) as string;
+      const folderPath = await adapter.createFolder(root);
       await adapter.createNote(folderPath, 'inner.md');
 
       const entries = await tree();

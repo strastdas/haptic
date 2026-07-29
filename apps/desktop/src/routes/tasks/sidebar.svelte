@@ -8,7 +8,7 @@
 		resizingPageSidebar
 	} from '@/store';
 	import { cn } from '@haptic/ui/lib/utils';
-	import TaskEntries from './task-entries.svelte';
+	import TaskEntries from '@haptic/app/components/tasks/task-entries.svelte';
 
 	let startX: number | null;
 	let startWidth: number;

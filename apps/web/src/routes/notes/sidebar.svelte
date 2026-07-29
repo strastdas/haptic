@@ -25,8 +25,8 @@
 	import { ALargeSmall, WholeWord } from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
-	import Entries from './entries.svelte';
-	import SearchResults from './search-results.svelte';
+	import Entries from '@haptic/app/components/notes/entries.svelte';
+	import SearchResults from '@haptic/app/components/notes/search-results.svelte';
 
 	let searchValue: string = $state('');
 	let searchDebounce: NodeJS.Timeout | undefined = $state();

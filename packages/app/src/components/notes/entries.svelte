@@ -2,14 +2,21 @@
 	import Entries from './entries.svelte';
 	import { run } from 'svelte/legacy';
 
-	import { createFolder, deleteFolder, moveFolder, renameFolder } from '@/api/folders';
-	import { createNote, deleteNote, duplicateNote, moveNote, openNote } from '@/api/notes';
-	import Icon from '@haptic/app/components/shared/icon.svelte';
-	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
-	import { SHORTCUTS } from '@/constants';
-	import { activeFile, collection, editor } from '@/store';
-	import type { FileEntry } from '@/types';
-	import { shortcutToString } from '@/utils';
+	import {
+		createFolder,
+		deleteFolder,
+		moveFolder,
+		renameFolder,
+		showInFolder
+	} from '@haptic/core/adapter';
+	import { createNote, deleteNote, duplicateNote, moveNote, openNote } from '@haptic/core/adapter';
+	import Icon from '../shared/icon.svelte';
+	import Shortcut from '../shared/shortcut.svelte';
+	import { SHORTCUTS } from '@haptic/core/constants';
+	import { activeFile, collection, isDesktopApp, platform } from '@haptic/core/store';
+	import { editor } from '@haptic/editor/store';
+	import type { FileEntry } from '@haptic/core/types';
+	import { shortcutToString } from '@haptic/core/utils';
 	import { Button } from '@haptic/ui/components/button';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
@@ -332,6 +339,12 @@
 										options={SHORTCUTS['folder:delete']}
 										callback={() => !isRenaming && deleteFolder(entry.path)}
 									/>
+									{#if $isDesktopApp}
+										<Shortcut
+											options={SHORTCUTS['folder:show-in-folder']}
+											callback={() => !isRenaming && showInFolder(entry.path)}
+										/>
+									{/if}
 									<div class="flex items-center w-[calc(100%-20px)] gap-2">
 										<Icon
 											name="folder"
@@ -446,6 +459,19 @@
 							{/if}
 						</ContextMenu.SubContent>
 					</ContextMenu.Sub>
+					{#if $isDesktopApp}
+						<ContextMenu.Separator />
+						<ContextMenu.Item
+							class="flex items-center gap-2 font-base group"
+							onclick={() => showInFolder(entry.path)}
+						>
+							<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+							Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
+							<ContextMenu.Shortcut
+								>{shortcutToString(SHORTCUTS['folder:show-in-folder'])}</ContextMenu.Shortcut
+							>
+						</ContextMenu.Item>
+					{/if}
 					<ContextMenu.Separator />
 					<ContextMenu.Item
 						class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
@@ -501,6 +527,12 @@
 							options={SHORTCUTS['note:delete']}
 							callback={() => !isRenaming && deleteNote(entry.path)}
 						/>
+						{#if $isDesktopApp}
+							<Shortcut
+								options={SHORTCUTS['note:show-in-folder']}
+								callback={() => !isRenaming && showInFolder(entry.path)}
+							/>
+						{/if}
 						<span class="text-xs truncate" autocorrect="off" spellcheck="false">{entry.name}</span>
 					</Button>
 				</div>
@@ -575,6 +607,19 @@
 						{/if}
 					</ContextMenu.SubContent>
 				</ContextMenu.Sub>
+				{#if $isDesktopApp}
+					<ContextMenu.Separator />
+					<ContextMenu.Item
+						class="flex items-center gap-2 font-base group"
+						onclick={() => showInFolder(entry.path)}
+					>
+						<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+						Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
+						<ContextMenu.Shortcut
+							>{shortcutToString(SHORTCUTS['note:show-in-folder'])}</ContextMenu.Shortcut
+						>
+					</ContextMenu.Item>
+				{/if}
 				<ContextMenu.Separator />
 				<ContextMenu.Item
 					class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"

@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { openNote } from '@/api/notes';
-	import { activeFile, collection, editor, editorSearchActive, editorSearchValue } from '@/store';
+	import { openNote } from '@haptic/core/adapter';
+	import { activeFile, collection, editorSearchActive, editorSearchValue } from '@haptic/core/store';
+	import { editor } from '@haptic/editor/store';
+	import type { SearchResultParams } from '@haptic/core/types';
+	import { searchEntries } from '@haptic/core/adapter';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { invoke } from '@tauri-apps/api/core';
 	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';
+	import { get } from 'svelte/store';
 
-	let tasks: { path: string; context_preview: string }[] = $state([]);
+	let tasks: SearchResultParams[] = $state([]);
 	let loading = $state(false);
 	let openState: Record<string, boolean> = $state({});
 	let groupedTasks: Record<string, { context_preview: string }[]> = $state({});
@@ -71,13 +74,7 @@
 		loading = true;
 
 		try {
-			tasks = (await invoke('search_files', {
-				dirPath: $collection,
-				query: '- [ ]',
-				caseSensitive: false,
-				matchWord: false,
-				recursive: true
-			})) as { path: string; context_preview: string }[];
+			tasks = await searchEntries(get(collection), '- [ ]', false, false);
 
 			loading = false;
 		} catch (error) {
@@ -147,7 +144,6 @@
 						onclick={async () => {
 							editorSearchValue.set('');
 							if ($activeFile !== path) {
-								console.log('File already open');
 								openNote(path, true);
 							}
 
