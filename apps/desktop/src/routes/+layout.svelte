@@ -4,13 +4,13 @@
 	import Footer from '@haptic/app/components/layout/footer.svelte';
 	import Header from '@haptic/app/components/layout/header.svelte';
 	import Sidebar from '@haptic/app/components/layout/sidebar.svelte';
-	import { platform as osPlatform } from '@tauri-apps/api/os';
+	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { appTheme, collection, platform } from '@/store';
 	import { updateWindowTheme, validateHapticFolder } from '@/utils';
 	import '@haptic/ui/app.desktop.css';
-	import { BaseDirectory, readTextFile } from '@tauri-apps/api/fs';
-	import { invoke } from '@tauri-apps/api/tauri';
+	import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
+	import { platform as osPlatform } from '@tauri-apps/plugin-os';
 	import { onMount } from 'svelte';
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -19,15 +19,14 @@
 	let { children }: Props = $props();
 
 	// Prevent right-clicking in production
-	// TODO: Test if this even works in production (not sure if tauri has access to env variables)
-	if (process.env.NODE_ENV !== 'development') {
+	if (import.meta.env.PROD) {
 		document.addEventListener('contextmenu', (event) => event.preventDefault());
 	}
 
 	// Load latest collection
 	async function loadLatestCollection() {
 		const collections = await readTextFile('collections.json', {
-			dir: BaseDirectory.AppData
+			baseDir: BaseDirectory.AppData
 		}).catch(() => null);
 
 		if (!collections) {return;}
@@ -52,16 +51,17 @@
 		// Load app & collection settings
 		loadSettings(true, true);
 
-		// Set platform
-		platform.set((await osPlatform()) as 'darwin' | 'linux' | 'windows');
+		// Set platform (v2's platform() is sync and reports 'macos', not 'darwin')
+		const os = osPlatform();
+		platform.set(os === 'macos' ? 'darwin' : (os as 'linux' | 'windows'));
 	});
 
 	// Keep local theme synced
 	appTheme.subscribe(async (value) => {
-		// Update app theme
-		await invoke('plugin:theme|set_theme', {
-			theme: value
-		});
+		// Update app theme ('auto' -> null follows the OS theme)
+		await getCurrentWindow()
+			.setTheme(value === 'auto' ? null : value)
+			.catch((error) => console.error('Failed to set window theme:', error));
 
 		// Update window theme
 		updateWindowTheme();

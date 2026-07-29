@@ -19,11 +19,10 @@
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
-	import type { UnlistenFn } from '@tauri-apps/api/event';
-	import type { FileEntry } from '@tauri-apps/api/fs';
-	import { invoke } from '@tauri-apps/api/tauri';
+	import type { FileEntry } from '@/types';
+	import { invoke } from '@tauri-apps/api/core';
 	import { ALargeSmall, WholeWord } from '@lucide/svelte';
-	import { watchImmediate } from 'tauri-plugin-fs-watch-api';
+	import { type UnwatchFn, watchImmediate } from '@tauri-apps/plugin-fs';
 	import Entries from './entries.svelte';
 	import SearchResults from './search-results.svelte';
 
@@ -36,7 +35,7 @@
 	let entries: FileEntry[] = $state([]);
 	let folderToggleState: 'collapse' | 'expand' = $state('expand');
 	let toggleFolderStates: (() => void) | undefined = $state();
-	let stopWatching: UnlistenFn;
+	let stopWatching: UnwatchFn;
 
 	let startX: number | null;
 	let startWidth: number;

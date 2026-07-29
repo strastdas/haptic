@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { FileEntry } from '@tauri-apps/api/fs';
+	import type { FileEntry } from '@/types';
 	import { Button } from '@haptic/ui/components/button';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
 	import Icon from '@haptic/app/components/shared/icon.svelte';

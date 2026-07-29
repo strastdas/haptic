@@ -1,13 +1,14 @@
 import { collection, appSettings, collectionSettings } from '@/store';
 import type { AppSettingsParams, CollectionSettingsParams } from '@/types';
-import { BaseDirectory, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
+import { appDataDir } from '@tauri-apps/api/path';
+import { BaseDirectory, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
 
 export const loadSettings = async (loadApp: boolean, loadCollection: boolean) => {
   if (loadApp) {
     const appSettingsPath = 'settings.json';
     const appSettingsText = await readTextFile(appSettingsPath, {
-      dir: BaseDirectory.AppData
+      baseDir: BaseDirectory.AppData
     }).catch(() => null);
 
     if (appSettingsText) {
@@ -36,8 +37,11 @@ export const setSettings = async (
     const appSettingsPath = 'settings.json';
     const appSettingsText = JSON.stringify(value ?? get(appSettings));
     appSettings.set((value ?? get(appSettings)) as AppSettingsParams);
+    // v2's writeTextFile does not create parent directories; make sure the
+    // app data dir exists before the first write on a fresh install.
+    await mkdir(await appDataDir(), { recursive: true }).catch(() => null);
     await writeTextFile(appSettingsPath, appSettingsText, {
-      dir: BaseDirectory.AppData
+      baseDir: BaseDirectory.AppData
     });
   }
 

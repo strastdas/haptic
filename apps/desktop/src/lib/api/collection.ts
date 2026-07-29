@@ -1,9 +1,11 @@
 import { activeFile, collection, noteHistory } from '@/store';
 import { hideDotFiles, validateHapticFolder, sortFileEntry } from '@/utils';
-import { readDir, writeTextFile, readTextFile, BaseDirectory } from '@tauri-apps/api/fs';
+import { appDataDir } from '@tauri-apps/api/path';
+import { open } from '@tauri-apps/plugin-dialog';
+import { BaseDirectory, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
-import { open } from '@tauri-apps/api/dialog';
 import type { CollectionParams } from '@/types';
+import { readDirTree } from './fs';
 
 // Fetch the collection entries
 export const fetchCollectionEntries = async (
@@ -17,7 +19,7 @@ export const fetchCollectionEntries = async (
     new Error('No directory path provided');
   }
 
-  let files = await readDir(dirPath, { recursive: true });
+  let files = await readDirTree(dirPath);
 
   if (sort === 'name') {
     files.sort((a, b) => sortFileEntry(a, b));
@@ -60,8 +62,12 @@ export const loadCollection = async (path?: string | undefined) => {
   };
 
   const collections = await readTextFile('collections.json', {
-    dir: BaseDirectory.AppData
+    baseDir: BaseDirectory.AppData
   }).catch(() => null);
+
+  // v2's writeTextFile does not create parent directories; make sure the app
+  // data dir exists before the first write on a fresh install.
+  await mkdir(await appDataDir(), { recursive: true }).catch(() => null);
 
   if (collections) {
     const collectionsArray = JSON.parse(collections);
@@ -73,11 +79,11 @@ export const loadCollection = async (path?: string | undefined) => {
 
     collectionsArray.push(collectionObj);
     await writeTextFile('collections.json', JSON.stringify(collectionsArray), {
-      dir: BaseDirectory.AppData
+      baseDir: BaseDirectory.AppData
     });
   } else {
     await writeTextFile('collections.json', JSON.stringify([collectionObj]), {
-      dir: BaseDirectory.AppData
+      baseDir: BaseDirectory.AppData
     });
   }
 };
@@ -85,7 +91,7 @@ export const loadCollection = async (path?: string | undefined) => {
 // Get all collections
 export const getCollections = async (): Promise<CollectionParams[]> => {
   const collections = await readTextFile('collections.json', {
-    dir: BaseDirectory.AppData
+    baseDir: BaseDirectory.AppData
   }).catch(() => null);
 
   if (!collections) {

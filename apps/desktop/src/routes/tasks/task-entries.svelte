@@ -6,7 +6,7 @@
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { invoke } from '@tauri-apps/api/tauri';
+	import { invoke } from '@tauri-apps/api/core';
 	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';

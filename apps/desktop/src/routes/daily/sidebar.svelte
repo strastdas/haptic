@@ -15,14 +15,13 @@
 	import { cn } from '@haptic/ui/lib/utils';
 	import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
-	import type { UnlistenFn } from '@tauri-apps/api/event';
-	import type { FileEntry } from '@tauri-apps/api/fs';
-	import { watchImmediate } from 'tauri-plugin-fs-watch-api';
+	import type { FileEntry } from '@/types';
+	import { type UnwatchFn, watchImmediate } from '@tauri-apps/plugin-fs';
 	import Entries from './entries.svelte';
 
 	let calValue = $state(today(getLocalTimeZone()));
 	let entries: FileEntry[] = $state([]);
-	let stopWatching: UnlistenFn;
+	let stopWatching: UnwatchFn;
 
 	// Watch for changes in the collection
 	async function watchCollection() {

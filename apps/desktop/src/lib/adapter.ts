@@ -1,6 +1,6 @@
 import { setPlatformActions, setStorageAdapter } from '@haptic/core/adapter';
 import { isDesktopApp } from '@haptic/core/store';
-import { open as shellOpen } from '@tauri-apps/api/shell';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import * as collection from './api/collection';
 import * as folders from './api/folders';
 import * as notes from './api/notes';
@@ -28,6 +28,6 @@ isDesktopApp.set(true);
  * forwards changes to the Tauri theme plugin.
  */
 setPlatformActions({
-  openExternal: (url) => shellOpen(url),
+  openExternal: (url) => openUrl(url),
   showInFolder
 });

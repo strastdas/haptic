@@ -4,9 +4,9 @@ export * from '@haptic/core/utils';
 export { setTheme, toggleTheme } from '@haptic/core/adapter';
 export { setEditorContent } from '@haptic/editor/store';
 
+import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
-import { createDir, readDir } from '@tauri-apps/api/fs';
-import { invoke } from '@tauri-apps/api/tauri';
+import { exists, mkdir } from '@tauri-apps/plugin-fs';
 
 // Show in folder
 export async function showInFolder(path: string) {
@@ -18,25 +18,33 @@ export async function validateHapticFolder(path: string) {
     return;
   }
 
-  const hapticFolder = await readDir(`${path}/.haptic`).catch(() => null);
+  const hapticFolder = await exists(`${path}/.haptic`).catch(() => false);
 
   if (!hapticFolder) {
     // Create .haptic folder
-    await createDir(`${path}/.haptic`);
+    await mkdir(`${path}/.haptic`);
 
     // Create trash folder
-    await createDir(`${path}/.haptic/trash`);
+    await mkdir(`${path}/.haptic/trash`);
 
     // Create daily folder
-    await createDir(`${path}/.haptic/daily`);
+    await mkdir(`${path}/.haptic/daily`);
   }
 }
 
 function hslToHex(hsl: string): string {
-  // Extract the H, S, and L values from the HSL string
+  // Extract the H, S, and L values from the HSL string. Accepts both the bare
+  // "h s% l%" triplet (pre-Tailwind 4) and the full "hsl(h s% l% / a)" color
+  // that --background resolves to since the Tailwind 4 port.
   const [h, sPercent, lPercent] = hsl
-    .replaceAll(/%/g, '') // Remove percentage signs
-    .split(' ')
+    .trim()
+    .replace(/^hsla?\(/i, '') // Strip the hsl()/hsla() wrapper
+    .replace(/\)$/, '')
+    .replace(/\/.*$/, '') // Drop any "/ alpha" tail
+    .replaceAll(',', ' ') // Legacy comma-separated syntax
+    .replaceAll('%', '') // Remove percentage signs
+    .trim()
+    .split(/\s+/)
     .map(Number);
 
   const s = sPercent / 100;

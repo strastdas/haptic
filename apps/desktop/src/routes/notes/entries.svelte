@@ -13,7 +13,7 @@
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
 	import { cn } from '@haptic/ui/lib/utils';
-	import type { FileEntry } from '@tauri-apps/api/fs';
+	import type { FileEntry } from '@/types';
 	import { get } from 'svelte/store';
 
 	interface Props {

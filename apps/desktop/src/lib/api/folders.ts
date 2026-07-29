@@ -1,20 +1,21 @@
 import { OS_TRASH_DIR } from '@/constants';
 import { collection, collectionSettings, platform } from '@/store';
 import { getNextUntitledName } from '@/utils';
-import { createDir, readDir, removeFile, renameFile } from '@tauri-apps/api/fs';
 import { homeDir } from '@tauri-apps/api/path';
+import { mkdir, remove, rename } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
+import { readDirTree } from './fs';
 
 // Create a new folder
 export const createFolder = async (dirPath: string) => {
   // Read the directory
-  const files = await readDir(dirPath);
+  const files = await readDirTree(dirPath, false);
 
   // Generate a new name
   const name = getNextUntitledName(files, 'Untitled');
 
   // Save the new folder
-  await createDir(`${dirPath}/${name}`);
+  await mkdir(`${dirPath}/${name}`);
 
   return `${dirPath}/${name}`;
 };
@@ -24,7 +25,7 @@ export const deleteFolder = async (path: string, recursive = false) => {
   const folderName = path.split('/').pop()!;
 
   if (!recursive) {
-    let children = await readDir(path);
+    let children = await readDirTree(path, false);
 
     // Ignore hidden files (.DS_Store etc.): the tree hides dotfiles, so a
     // folder that looks empty to the user must be deletable.
@@ -37,15 +38,15 @@ export const deleteFolder = async (path: string, recursive = false) => {
 
   switch (get(collectionSettings).notes.trash_dir) {
     case 'system': {
-      await renameFile(path, `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${folderName}`);
+      await rename(path, `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${folderName}`);
       break;
     }
     case 'haptic': {
-      await renameFile(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
+      await rename(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
       break;
     }
     case 'delete': {
-      await removeFile(path);
+      await remove(path, { recursive: true });
       break;
     }
   }
@@ -53,13 +54,13 @@ export const deleteFolder = async (path: string, recursive = false) => {
 
 // Rename a folder
 export const renameFolder = async (path: string, name: string) => {
-  await renameFile(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
+  await rename(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
 };
 
 // Move a folder
 export const moveFolder = async (source: string, target: string) => {
   // Get target directory
-  const files = await readDir(target);
+  const files = await readDirTree(target, false);
 
   // Make sure there are no name conflicts
   const folderName = source.split('/').pop()!;
@@ -68,5 +69,5 @@ export const moveFolder = async (source: string, target: string) => {
     throw new Error('Name conflict');
   }
 
-  await renameFile(source, `${target}/${folderName}`);
+  await rename(source, `${target}/${folderName}`);
 };

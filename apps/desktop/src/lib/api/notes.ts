@@ -2,15 +2,15 @@ import { OS_TRASH_DIR } from '@/constants';
 import { activeFile, collection, collectionSettings, editor, noteHistory, platform } from '@/store';
 import type { NoteMetadataParams } from '@/types';
 import { calculateReadingTime, getNextUntitledName, setEditorContent } from '@/utils';
-import { readDir, readTextFile, removeFile, renameFile, writeTextFile } from '@tauri-apps/api/fs';
 import { homeDir } from '@tauri-apps/api/path';
+import { readTextFile, remove, rename, stat, writeTextFile } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
-import { metadata } from 'tauri-plugin-fs-extra-api';
+import { readDirTree } from './fs';
 
 // Create a new note
 export const createNote = async (dirPath: string, name?: string) => {
   // Read the directory
-  const files = await readDir(dirPath);
+  const files = await readDirTree(dirPath, false);
 
   // Generate a new name (Untitled.md, if there are any exiting Untitled notes, increment the number by 1)
   if (!name) {
@@ -43,18 +43,18 @@ export async function openNote(path: string, skipHistory = false) {
 export const deleteNote = async (path: string) => {
   switch (get(collectionSettings).notes.trash_dir) {
     case 'system': {
-      await renameFile(
+      await rename(
         path,
         `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${path.split('/').pop()!}`
       );
       break;
     }
     case 'haptic': {
-      await renameFile(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
+      await rename(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
       break;
     }
     case 'delete': {
-      await removeFile(path);
+      await remove(path);
       break;
     }
   }
@@ -72,7 +72,7 @@ export const renameNote = async (path: string, name: string) => {
   name = name.replaceAll(/[/\\?%*:|"<>]/g, '');
 
   // Read the directory
-  const files = await readDir(path.split('/').slice(0, -1).join('/'));
+  const files = await readDirTree(path.split('/').slice(0, -1).join('/'), false);
 
   // Make sure there are no name conflicts
   if (
@@ -84,7 +84,7 @@ export const renameNote = async (path: string, name: string) => {
   }
 
   // Rename the file
-  await renameFile(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
+  await rename(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
   activeFile.set(`${path.split('/').slice(0, -1).join('/')}/${name}`);
 };
 
@@ -101,7 +101,7 @@ export const saveNote = async (path: string) => {
 
 export const moveNote = async (source: string, target: string) => {
   // Get target directory
-  const files = await readDir(target);
+  const files = await readDirTree(target, false);
 
   // Make sure there are no name conflicts
   const noteName = source.split('/').pop()!;
@@ -110,7 +110,7 @@ export const moveNote = async (source: string, target: string) => {
     throw new Error('Name conflict');
   }
 
-  await renameFile(source, `${target}/${noteName}`);
+  await rename(source, `${target}/${noteName}`);
   openNote(`${target}/${noteName}`);
 };
 
@@ -129,7 +129,7 @@ export const duplicateNote = async (path: string) => {
   const ext = path.split('.').pop()!;
 
   // Get current index of the note
-  const files = await readDir(path.split('/').slice(0, -1).join('/'));
+  const files = await readDirTree(path.split('/').slice(0, -1).join('/'), false);
   const notes = files.filter((file) => file.name?.startsWith(name) && file.children === undefined);
 
   // Write the new note
@@ -141,8 +141,13 @@ export const duplicateNote = async (path: string) => {
 };
 
 export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataParams> => {
-  // General file metadata
-  const fileMetadata = await metadata(path);
+  // General file metadata (v2 `stat` replaces the old fs-extra `metadata`)
+  const fileStat = await stat(path);
+  const fileMetadata = {
+    modifiedAt: fileStat.mtime ?? new Date(0),
+    createdAt: fileStat.birthtime ?? new Date(0),
+    size: fileStat.size
+  };
 
   // Get editor metadata
   const editorWordCount = get(editor).storage.characterCount.words();
