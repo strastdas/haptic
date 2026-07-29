@@ -66,4 +66,3 @@ export function updateWindowTheme() {
     console.error('Failed to emit event:', error);
   });
 }
-
