@@ -1,6 +1,7 @@
 @import './theme.css';
 @import './haptic.css';
 @plugin '@tailwindcss/typography';
+@source '../../apps/desktop/src';
 
 /* Desktop follows the OS theme via media query (tauri-side theme switching). */
 @media (prefers-color-scheme: dark) {

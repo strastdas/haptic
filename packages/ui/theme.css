@@ -3,6 +3,15 @@
 @import 'shadcn-svelte/tailwind.css';
 @import '@fontsource-variable/inter';
 
+/* This file is resolved through node_modules (workspace symlink), so Tailwind's
+   automatic source detection finds nothing. Every directory whose markup uses
+   utility classes has to be declared explicitly. Each app adds its own `src`. */
+@source './components';
+@source './lib';
+@source '../app/src';
+@source '../editor/src';
+@source '../core/src';
+
 /* Map the palette custom properties (defined in haptic.css) onto Tailwind
    theme tokens so utilities like border-border / bg-background exist. */
 @theme inline {

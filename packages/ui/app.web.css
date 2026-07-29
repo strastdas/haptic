@@ -1,6 +1,7 @@
 @import './theme.css';
 @import './haptic.css';
 @plugin '@tailwindcss/typography';
+@source '../../apps/web/src';
 
 /* Web switches theme via mode-watcher toggling the `dark` class on <html>. */
 @custom-variant dark (&:is(.dark *));
