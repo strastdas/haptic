@@ -1,6 +1,19 @@
 <script lang="ts">
-	import { activeFile, collection, editorMode, isDesktopApp } from '@haptic/core/store';
+	import { activeFile, collection, editorMode } from '@haptic/core/store';
 	import { cn } from '@haptic/ui/lib/utils';
+
+	interface Props {
+		/**
+		 * Centre the title and reserve room on both sides. The desktop shell sets
+		 * this: the title bar doubles as the macOS window chrome, so the title has
+		 * to clear the traffic lights (~78px) and stay visually centred in the
+		 * window. Passed explicitly rather than read from a store so the layout
+		 * can't depend on bootstrap ordering.
+		 */
+		windowChrome?: boolean;
+	}
+
+	let { windowChrome = false }: Props = $props();
 
 	let collectionName = $derived($collection?.split('/').pop() || '');
 	let fileName = $derived($activeFile?.split('/').pop() || '');
@@ -9,10 +22,7 @@
 <header
 	class={cn(
 		'absolute top-0 w-full flex items-center h-9 border-b bg-background z-40',
-		// Centred on desktop. The padding is symmetric and wide enough to clear the
-		// macOS traffic lights (~78px): justify-center only centres while the title
-		// fits, so a long one has to run out from a safe left edge, not under them.
-		$isDesktopApp ? 'justify-center px-20' : 'justify-start px-3'
+		windowChrome ? 'justify-center px-20' : 'justify-start px-3'
 	)}
 	data-tauri-drag-region
 >

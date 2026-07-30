@@ -74,7 +74,7 @@
 <Command />
 
 {#if $platform === 'darwin'}
-	<Header />
+	<Header windowChrome />
 {/if}
 <Sidebar />
 <main class="flex min-h-screen w-full items-center justify-center">
