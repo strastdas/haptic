@@ -4,14 +4,14 @@
 	import Footer from '@haptic/app/components/layout/footer.svelte';
 	import Header from '@haptic/app/components/layout/header.svelte';
 	import Sidebar from '@haptic/app/components/layout/sidebar.svelte';
-	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { appTheme, collection, platform } from '@/store';
-	import { updateWindowTheme, validateHapticFolder } from '@/utils';
+	import { validateHapticFolder } from '@/utils';
+	import { applyTheme, watchSystemTheme } from '@/theme';
 	import '@haptic/ui/app.desktop.css';
 	import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 	import { platform as osPlatform } from '@tauri-apps/plugin-os';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	interface Props {
 		children?: import('svelte').Snippet;
 	}
@@ -56,15 +56,14 @@
 		platform.set(os === 'macos' ? 'darwin' : (os as 'linux' | 'windows'));
 	});
 
-	// Keep local theme synced
-	appTheme.subscribe(async (value) => {
-		// Update app theme ('auto' -> null follows the OS theme)
-		await getCurrentWindow()
-			.setTheme(value === 'auto' ? null : value)
-			.catch((error) => console.error('Failed to set window theme:', error));
+	// Keep the shell's theme in sync with the preference, and follow the OS while
+	// that preference is 'auto'.
+	const stopWatchingTheme = appTheme.subscribe(applyTheme);
+	const stopWatchingSystemTheme = watchSystemTheme();
 
-		// Update window theme
-		updateWindowTheme();
+	onDestroy(() => {
+		stopWatchingTheme();
+		stopWatchingSystemTheme();
 	});
 </script>
 
