@@ -1,0 +1,35 @@
+/*
+ * Ioskeley Mono, self-hosted.
+ *
+ * Mirrors https://cdn.strast.dev/fonts/ioskeley-mono.full.css, which the web
+ * app links directly. The desktop app has to work offline, so it imports this
+ * instead and Vite bundles the woff2 files into the Tauri binary.
+ * Keep the two in sync when the CDN stylesheet changes.
+ */
+
+@font-face {
+  font-family: 'ioskeley-mono';
+  src: url('./ioskeley-mono/IoskeleyMono-CondensedLight.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'ioskeley-mono';
+  src: url('./ioskeley-mono/IoskeleyMono-Condensed.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'ioskeley-mono';
+  src: url('./ioskeley-mono/IoskeleyMono-CondensedSemiBold.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+}

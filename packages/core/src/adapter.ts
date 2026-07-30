@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { appTheme, draftFile } from './store';
+import { appTheme, draftFile, editorMode } from './store';
 import type {
   AppSettingsParams,
   AppTheme,
@@ -84,6 +84,10 @@ export const createNote: StorageAdapter['createNote'] = (...args) => required().
 export const openNote: StorageAdapter['openNote'] = (...args) => {
   // Navigating away abandons an unwritten draft.
   draftFile.set(null);
+  // Every note opens read-only; editing is always re-entered deliberately.
+  // Hooked here rather than on `activeFile` because renameNote repoints that
+  // store too, and renaming shouldn't kick you out of the editor.
+  editorMode.set('view');
   return required().openNote(...args);
 };
 export const deleteNote: StorageAdapter['deleteNote'] = (...args) => required().deleteNote(...args);

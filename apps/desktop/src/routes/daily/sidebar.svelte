@@ -5,6 +5,7 @@
 		activeFile,
 		collection,
 		draftFile,
+		editorMode,
 		editor,
 		isPageSidebarOpen,
 		pageSidebarWidth,
@@ -52,6 +53,7 @@ import type { DateValue } from '@internationalized/date';
 		setEditorContent('');
 		activeFile.set(path);
 		draftFile.set(path);
+		editorMode.set('view');
 	};
 
 	collection.subscribe(async (value) => {

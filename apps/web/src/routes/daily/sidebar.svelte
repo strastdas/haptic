@@ -6,6 +6,7 @@
 		activeFile,
 		collection,
 		draftFile,
+		editorMode,
 		collectionEntries,
 		editor,
 		isPageSidebarOpen,
@@ -49,6 +50,7 @@ import type { DateValue } from '@internationalized/date';
 		setEditorContent('');
 		activeFile.set(path);
 		draftFile.set(path);
+		editorMode.set('view');
 	};
 
 	const stopWatchingStore = collectionEntries.subscribe((value) => {
