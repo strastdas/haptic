@@ -39,9 +39,9 @@
   --sidebar-ring: hsl(351.05, 16.71%, 14.09%);
 
   /*
-   * Haptic-specific: the app-chrome surface behind the editor, toolbar and
-   * note panes. Not part of the shadcn set, so it is mapped onto --card and
-   * resolves per mode automatically (both rules land on <html>).
+   * Haptic-specific: the surface behind the editor, toolbar and note panes.
+   * Not part of the shadcn set. In light mode it is the raised card surface —
+   * white paper on a warm page.
    */
   --secondary-background: var(--card);
 }
@@ -79,6 +79,13 @@
   --sidebar-accent-foreground: hsl(67, 12.69%, 94.2%);
   --sidebar-border: hsl(339.89, 3.63%, 17.21%);
   --sidebar-ring: hsl(352.24, 28.99%, 88.48%);
+
+  /*
+   * Inverted in dark mode: the writing surface is recessed rather than raised,
+   * so note text sits on the darkest thing on screen. The palette has nothing
+   * below --background, so it is derived from it.
+   */
+  --secondary-background: color-mix(in oklab, var(--background) 70%, black);
 }
 
 /* Haptic-specific design tokens on top of the shadcn set */
