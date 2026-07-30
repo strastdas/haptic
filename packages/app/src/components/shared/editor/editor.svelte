@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
-	import { activeFile, collectionSettings } from '@haptic/core/store';
+	import { activeFile, collectionSettings, editorMode } from '@haptic/core/store';
 	import { editor } from '@haptic/editor/store';
 	import StarterKit from '@tiptap/starter-kit';
 	import Document from '@tiptap/extension-document';
@@ -24,6 +24,7 @@
 	onMount(() => {
 		tiptapEditor = new Editor({
 			element: element!,
+			editable: get(editorMode) === 'edit',
 			extensions: [
 				StarterKit.configure({
 					document: false,
@@ -95,7 +96,14 @@
 		});
 	});
 
+	// The store is the single source of truth for the mode — the toolbar pen and
+	// the command menu both just set it, and the TipTap instance follows here.
+	const stopWatchingMode = editorMode.subscribe((mode) => {
+		tiptapEditor?.setEditable(mode === 'edit');
+	});
+
 	onDestroy(() => {
+		stopWatchingMode();
 		if (editor) {
 			tiptapEditor.destroy();
 		}

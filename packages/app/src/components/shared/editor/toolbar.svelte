@@ -184,14 +184,8 @@
 				class="h-6 w-6 fill-muted-foreground hover:fill-foreground transition-all"
 				onclick={() => {
 					// TODO: Implement source mode in future
-					// Set the mode
-					if ($editorMode === 'edit') {
-						$editor.setEditable(false);
-						editorMode.set('view');
-					} else if ($editorMode === 'view') {
-						$editor.setEditable(true);
-						editorMode.set('edit');
-					}
+					// editor.svelte applies this to the TipTap instance.
+					editorMode.set($editorMode === 'edit' ? 'view' : 'edit');
 				}}
 			>
 				<Shortcut options={SHORTCUTS['editor:toggle-mode']} />

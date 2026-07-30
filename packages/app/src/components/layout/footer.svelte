@@ -7,12 +7,12 @@
 	import * as Sheet from '@haptic/ui/components/sheet';
 	import { Input } from '@haptic/ui/components/input';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
-	import { ChevronDown } from '@lucide/svelte';
+	import { ChevronDown, Download } from '@lucide/svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
-	import { toggleTheme } from '@haptic/core/adapter';
+	import { openExternal, toggleTheme } from '@haptic/core/adapter';
 	import { shortcutToString } from '@haptic/core/utils';
-	import { activeFile, appTheme, settingsStore } from '@haptic/core/store';
+	import { activeFile, appTheme, isDesktopApp, settingsStore } from '@haptic/core/store';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import Shortcut from '../shared/shortcut.svelte';
 	
@@ -196,5 +196,20 @@
 				<Icon name="share" class="w-4 h-4" />
 			</Button>
 		</Tooltip>
+
+		<!-- Web only: the desktop app IS the download. -->
+		{#if !$isDesktopApp}
+			<Tooltip text="Get the desktop app">
+				<Button
+					size="icon"
+					variant="ghost"
+					class="h-6 w-6 text-muted-foreground hover:text-foreground transition-all"
+					scale="md"
+					onclick={() => openExternal('https://go.haptic.md/download')}
+				>
+					<Download class="w-4 h-4" />
+				</Button>
+			</Tooltip>
+		{/if}
 	</div>
 </footer>

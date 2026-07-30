@@ -15,7 +15,11 @@ const activeFile = writable<string | null>(null);
  */
 const draftFile = writable<string | null>(null);
 const noteHistory = writable<string[]>([]);
-const editorMode = writable<'edit' | 'view'>('edit');
+/**
+ * Notes open read-only; editing is entered deliberately via the toolbar pen
+ * (or the toggle shortcut). The editor's `editable` flag follows this store.
+ */
+const editorMode = writable<'edit' | 'view'>('view');
 const editorSearchValue = writable<string>('');
 const editorSearchActive = writable<boolean>(false);
 
