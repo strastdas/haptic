@@ -34,8 +34,11 @@ export function searchEntries(
   });
 }
 
-export async function validateHapticFolder(path: string) {
-  if (path === null) {
+export async function validateHapticFolder(path: string | null | undefined) {
+  // On a first launch there is no collection yet — `undefined` used to slip
+  // past a `=== null` check and try to mkdir "undefined/.haptic", which threw
+  // and aborted the rest of the layout's onMount.
+  if (!path) {
     return;
   }
 

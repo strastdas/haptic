@@ -7,7 +7,7 @@
 	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { appTheme, collection, platform } from '@/store';
 	import { validateHapticFolder } from '@/utils';
-	import { applyTheme, watchSystemTheme } from '@/theme';
+	import { applyTheme, hydrateTheme, persistTheme, watchSystemTheme } from '@/theme';
 	import '@haptic/ui/app.desktop.css';
 	import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
 	import { platform as osPlatform } from '@tauri-apps/plugin-os';
@@ -48,8 +48,9 @@
 		// Validate haptic folder
 		await validateHapticFolder($collection);
 
-		// Load app & collection settings
-		loadSettings(true, true);
+		// Load app & collection settings, then adopt the persisted theme preference
+		await loadSettings(true, true);
+		hydrateTheme();
 
 		// Set platform (v2's platform() is sync and reports 'macos', not 'darwin')
 		const os = osPlatform();
@@ -58,7 +59,10 @@
 
 	// Keep the shell's theme in sync with the preference, and follow the OS while
 	// that preference is 'auto'.
-	const stopWatchingTheme = appTheme.subscribe(applyTheme);
+	const stopWatchingTheme = appTheme.subscribe((theme) => {
+		applyTheme(theme);
+		persistTheme(theme);
+	});
 	const stopWatchingSystemTheme = watchSystemTheme();
 
 	onDestroy(() => {

@@ -18,7 +18,8 @@ export const loadSettings = async (loadApp: boolean, loadCollection: boolean) =>
     }
   }
 
-  if (loadCollection) {
+  // Collection settings live inside the vault, so they need one to exist.
+  if (loadCollection && get(collection)) {
     const collectionSettingsPath = `${get(collection)}/.haptic/settings.json`;
     const collectionSettingsText = await readTextFile(collectionSettingsPath).catch(() => null);
     if (collectionSettingsText) {
@@ -45,7 +46,7 @@ export const setSettings = async (
     });
   }
 
-  if (settingsType === 'collection') {
+  if (settingsType === 'collection' && get(collection)) {
     const collectionSettingsPath = `${get(collection)}/.haptic/settings.json`;
     const collectionSettingsText = JSON.stringify(value ?? get(collectionSettings));
     collectionSettings.set((value ?? get(collectionSettings)) as CollectionSettingsParams);
