@@ -5,8 +5,6 @@
 	import Tooltip from '../tooltip.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import {
-		activeFile,
-		collection,
 		editorMode,
 		editorSearchActive,
 		isNoteDetailSidebarOpen,
@@ -19,10 +17,9 @@
 
 	interface Props {
 		hideHistory?: boolean;
-		hideParentDirectories?: boolean;
 	}
 
-	let { hideHistory = false, hideParentDirectories = false }: Props = $props();
+	let { hideHistory = false }: Props = $props();
 
 	let historyIndex: number = $state(0);
 
@@ -136,40 +133,6 @@
 			<div class="w-6"></div>
 			<div class="w-6"></div>
 		{/if}
-	</div>
-	<div class="flex gap-1.5">
-		<p class="text-xs flex items-center text-muted-foreground fill-muted-foreground">
-			{#if !hideParentDirectories}
-				{#each $activeFile?.replace($collection, '').split('/') ?? [] as folder, i}
-					{#if i !== 0}
-						<Button
-							size="sm"
-							variant="ghost"
-							scale="sm"
-							class={cn(
-								'h-6 text-[13px] w-fit px-1.5 fill-muted-foreground hover:fill-foreground transition-all font-normal',
-								i === ($activeFile?.replace($collection, '').split('/') ?? [])?.length - 1 &&
-									'text-foreground font-medium'
-							)}
-						>
-							{folder}
-						</Button>
-						{#if i !== ($activeFile?.replace($collection, '').split('/') ?? [])?.length - 1}
-							<Icon name="chevron" class="w-3.5 h-3.5 inline-block" />
-						{/if}
-					{/if}
-				{/each}
-			{:else}
-				<Button
-					size="sm"
-					variant="ghost"
-					scale="sm"
-					class="h-6 text-[13px] w-fit px-1.5 text-foreground transition-all font-medium"
-				>
-					{$activeFile?.replace($collection, '').split('/')?.slice(-1)[0] ?? ''}
-				</Button>
-			{/if}
-		</p>
 	</div>
 	<div class="flex gap-1.5">
 		<Tooltip
