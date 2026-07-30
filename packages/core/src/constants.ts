@@ -1,3 +1,6 @@
+/** This fork's home. Upstream's go.haptic.md links are not ours to send users to. */
+export const REPO_URL = 'https://github.com/strastdas/haptic';
+
 import type { CollectionSettingsParams, ShortcutParams } from './types';
 
 export const SHORTCUTS: Record<string, ShortcutParams> = {

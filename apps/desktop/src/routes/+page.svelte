@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { shortcutToString } from '@/utils';
-	import { SHORTCUTS } from '@/constants';
+	import { REPO_URL, SHORTCUTS } from '@/constants';
 	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import { getCollections } from '$lib/api/collection';
 	import { openUrl as browserOpen } from '@tauri-apps/plugin-opener';
 	import { onMount } from 'svelte';
 
 	let githubShortcut = { command: true, key: 'g' };
-	let sponsorShortcut = { command: true, key: 's' };
 
 	async function fetchCollections() {
 		const collections = await getCollections();
@@ -45,7 +44,7 @@
 			<button
 				class="text-sm gap-1.5 flex text-muted-foreground hover:text-secondary-foreground transition-colors items-center justify-center"
 				onclick={() => {
-					browserOpen('https://go.haptic.md/github');
+					browserOpen(REPO_URL);
 				}}
 			>
 				<Shortcut options={githubShortcut} />
@@ -57,20 +56,6 @@
 				Star on GitHub
 			</button>
 
-			<button
-				class="text-sm gap-1.5 flex text-muted-foreground hover:text-secondary-foreground transition-colors items-center justify-center"
-				onclick={() => {
-					browserOpen('https://go.haptic.md/sponsor');
-				}}
-			>
-				<Shortcut options={sponsorShortcut} />
-				<span
-					class="pointer-events-none inline-flex h-[18px] pl-1.5 tracking-widest select-none items-center gap-1 rounded bg-secondary px-1 font-mono text-muted-foreground opacity-100"
-				>
-					{shortcutToString(sponsorShortcut)}
-				</span>
-				Become a sponsor
-			</button>
 		</div>
 	</div>
 </div>

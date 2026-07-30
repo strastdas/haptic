@@ -1,12 +1,10 @@
 <!-- Header -->
 <div align="center" style="margin-top: 120px">
-  <a href="https://haptic.md/app">
-    <img
-      src="./.github/assets/icon.svg"
-      alt="Haptic"
-      height="100"
-    />
-  </a>
+  <img
+    src="./.github/assets/icon.svg"
+    alt="Haptic"
+    height="100"
+  />
 
   <h3 align="center">Haptic
   </h3>
@@ -17,9 +15,6 @@
 
 <!-- TOC -->
 <p align="center">
-    <a href="https://haptic.md"><strong>Learn more »</strong></a>
-    <br />
-    <br />
     <a href="#introduction">Introduction</a>
     ·
     <a href="#tech-stack">Tech Stack</a>
@@ -33,13 +28,11 @@
 </p>
 
 <p>
-    <a href="https://haptic.md/app">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./.github/assets/haptic-dark.png">
-        <source media="(prefers-color-scheme: light)" srcset="./.github/assets/haptic-light.png">
-        <img alt="Haptic" src="./.github/assets/haptic-dark.png">
-      </picture>
-    </a>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./.github/assets/haptic-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="./.github/assets/haptic-light.png">
+      <img alt="Haptic" src="./.github/assets/haptic-dark.png">
+    </picture>
 </p>
 
 > [!NOTE]
@@ -48,8 +41,6 @@
 ## Introduction
 
 Haptic is a new local-first & privacy-focused, open-source home for your markdown notes. It's minimal, lightweight, efficient and aims to have _all you need and nothing you don't_.
-
-If you'd like to learn more about Haptic, why it's being built, what its goals are and how it differs from all the other markdown editors out there, you can read more about it [here](https://haptic.md/app).
 
 ## Tech Stack
 

@@ -8,6 +8,7 @@
 		openNote,
 		setTheme
 	} from '@haptic/core/adapter';
+	import { REPO_URL } from '@haptic/core/constants';
 	import { activeFile, appTheme, collection } from '@haptic/core/store';
 	import { formatTimeAgo, shortcutToString } from '@haptic/core/utils';
 	import * as Command from '@haptic/ui/components/command';
@@ -384,20 +385,9 @@
 			<Command.Group heading="Help & Support">
 				<Command.Item
 					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
-					value="sponsor"
-					onSelect={() => {
-						openExternal('https://go.haptic.md/sponsor');
-						handlePageState(undefined);
-					}}
-				>
-					<Icon name="heart" />
-					Sponsor Haptic
-				</Command.Item>
-				<Command.Item
-					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
 					value="help"
 					onSelect={() => {
-						openExternal('https://go.haptic.md/help');
+						openExternal(`${REPO_URL}/issues`);
 						handlePageState(undefined);
 					}}
 				>
@@ -408,7 +398,7 @@
 					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
 					value="feedback"
 					onSelect={() => {
-						openExternal('https://go.haptic.md/feedback');
+						openExternal(`${REPO_URL}/issues/new`);
 						handlePageState(undefined);
 					}}
 				>
@@ -422,23 +412,12 @@
 					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
 					value="copy_link"
 					onSelect={() => {
-						navigator.clipboard.writeText('https://haptic.md');
+						navigator.clipboard.writeText(REPO_URL);
 						handlePageState(undefined);
 					}}
 				>
 					<Icon name="browserUrl" />
 					Copy link
-				</Command.Item>
-				<Command.Item
-					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
-					value="share_on_twitter"
-					onSelect={() => {
-						openExternal('https://go.haptic.md/tweet');
-						handlePageState(undefined);
-					}}
-				>
-					<Icon name="share" />
-					Share on Twitter
 				</Command.Item>
 			</Command.Group>
 		{/if}

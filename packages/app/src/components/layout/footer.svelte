@@ -13,7 +13,7 @@
 	import { openExternal, toggleTheme } from '@haptic/core/adapter';
 	import { shortcutToString } from '@haptic/core/utils';
 	import { activeFile, appTheme, isDesktopApp, settingsStore } from '@haptic/core/store';
-	import { SHORTCUTS } from '@haptic/core/constants';
+	import { REPO_URL, SHORTCUTS } from '@haptic/core/constants';
 	import Shortcut from '../shared/shortcut.svelte';
 	
 	let open = $state(false);
@@ -205,7 +205,7 @@
 					variant="ghost"
 					class="h-6 w-6 text-muted-foreground hover:text-foreground transition-all"
 					scale="md"
-					onclick={() => openExternal('https://go.haptic.md/download')}
+					onclick={() => openExternal(`${REPO_URL}/releases`)}
 				>
 					<Download class="w-4 h-4" />
 				</Button>
