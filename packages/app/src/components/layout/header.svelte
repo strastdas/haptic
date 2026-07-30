@@ -9,8 +9,8 @@
 <header
 	class={cn(
 		'absolute top-0 w-full flex items-center h-9 border-b bg-background z-40',
-		// Desktop needs room for the traffic lights before the title starts.
-		$isDesktopApp ? 'pl-20 pr-3' : 'px-3'
+		// Centred on desktop — left-aligned would sit under the traffic lights.
+		$isDesktopApp ? 'justify-center pl-12 pr-3' : 'justify-start px-3'
 	)}
 	data-tauri-drag-region
 >
