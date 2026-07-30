@@ -21,6 +21,7 @@
 	import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
 	import { onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
 	import Entries from './entries.svelte';
 
 	let calValue = $state(today(getLocalTimeZone()));
@@ -34,6 +35,16 @@ import type { DateValue } from '@internationalized/date';
 		});
 
 		return dbWatcher.unsubscribe;
+	}
+
+	/*
+	 * The calendar needs seven 32px columns plus the panel's own padding, so the
+	 * shared 210px sidebar floor clipped the last day. This view raises it.
+	 */
+	const MIN_WIDTH = 248;
+
+	if (get(pageSidebarWidth) < MIN_WIDTH) {
+		pageSidebarWidth.set(MIN_WIDTH);
 	}
 
 	/**
@@ -90,12 +101,12 @@ import type { DateValue } from '@internationalized/date';
 		}
 
 		// Set width bounds
-		if ($pageSidebarWidth + e.movementX < 210 || $pageSidebarWidth + e.movementX > 500) {
+		if ($pageSidebarWidth + e.movementX < MIN_WIDTH || $pageSidebarWidth + e.movementX > 500) {
 			return;
 		}
 
 		// Set cursor resize bounds to prevent resizing when cursor is outside of the width bounds
-		if (x < 245 || x > 550) {
+		if (x < MIN_WIDTH + 35 || x > 550) {
 			return;
 		}
 

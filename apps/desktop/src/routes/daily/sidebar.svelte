@@ -13,6 +13,7 @@
 		platform
 	} from '@/store';
 	import { setEditorContent } from '@/utils';
+	import { get } from 'svelte/store';
 	import { Calendar } from '@haptic/ui/components/calendar';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
@@ -37,6 +38,16 @@ import type { DateValue } from '@internationalized/date';
 		);
 
 		return stopWatching;
+	}
+
+	/*
+	 * The calendar needs seven 32px columns plus the panel's own padding, so the
+	 * shared 210px sidebar floor clipped the last day. This view raises it.
+	 */
+	const MIN_WIDTH = 248;
+
+	if (get(pageSidebarWidth) < MIN_WIDTH) {
+		pageSidebarWidth.set(MIN_WIDTH);
 	}
 
 	/**
@@ -93,10 +104,10 @@ import type { DateValue } from '@internationalized/date';
 		}
 
 		const diff = x - startX;
-		const newWidth = Math.max(210, Math.min(500, startWidth + diff));
+		const newWidth = Math.max(MIN_WIDTH, Math.min(500, startWidth + diff));
 
 		// Set cursor resize bounds to prevent resizing when cursor is outside of the width bounds
-		if (x < 245 || x > 550) {
+		if (x < MIN_WIDTH + 35 || x > 550) {
 			return;
 		}
 
