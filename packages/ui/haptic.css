@@ -1,90 +1,84 @@
-/* Haptic palette — ported from the pre-Tailwind-4 theme (HSL, light + dark). */
+/*
+ * Palette. Plain shadcn Tailwind-4 shape — complete hsl() colours on :root,
+ * overridden under .dark. Both apps switch on the .dark class (web via
+ * mode-watcher, desktop via lib/theme.ts), so no light/dark indirection.
+ */
 :root {
-  --accent-dark: hsl(0 0% 18%);
-  --accent-foreground-dark: hsl(210 20% 98%);
-  --accent-foreground-light: hsl(220.9 39.3% 11%);
-  --accent-light: hsl(220 14.3% 95.9%);
-  --background-dark: hsl(0 0% 7%);
-  --background-light: hsl(0 0% 100%);
-  --border-dark: hsl(0 0% 18%);
-  --border-light: hsl(220 13% 91%);
-  --card-dark: hsl(0 0% 7%);
-  --card-foreground-dark: hsl(210 20% 98%);
-  --card-foreground-light: hsl(224 71.4% 4.1%);
-  --card-light: hsl(0 0% 100%);
-  --destructive-dark: hsl(355 100% 75%);
-  --destructive-foreground-dark: hsl(210 20% 98%);
-  --destructive-foreground-light: hsl(210 20% 98%);
-  --destructive-light: hsl(0 72.2% 50.6%);
-  --foreground-dark: hsl(0 0% 90%);
-  --foreground-light: hsl(224 71.4% 4.1%);
-  --input-dark: hsl(0 0% 18%);
-  --input-light: hsl(220 13% 91%);
-  --muted-dark: hsl(0 0% 30%);
-  --muted-foreground-dark: hsl(0 0% 55%);
-  --muted-foreground-light: hsl(0 0% 46.1%);
-  --muted-light: hsl(0 0% 88%);
-  --popover-dark: hsl(0 0% 7%);
-  --popover-foreground-dark: hsl(210 20% 98%);
-  --popover-foreground-light: hsl(224 71.4% 4.1%);
-  --popover-light: hsl(0 0% 100%);
-  --primary-dark: hsl(210 20% 98%);
-  --primary-foreground-dark: hsl(220.9 39.3% 11%);
-  --primary-foreground-light: hsl(210 20% 98%);
-  --primary-light: hsl(0 0% 9%);
-  --ring-dark: hsl(0 0% 18%);
-  --ring-light: hsl(220 13% 91%);
-  --secondary-background-dark: hsl(0 0% 9%);
-  --secondary-background-light: hsl(0 0% 98.8%);
-  --secondary-dark: hsl(0 0% 15%);
-  --secondary-foreground-dark: hsl(0 0% 85%);
-  --secondary-foreground-light: hsl(0 0% 20%);
-  --secondary-light: hsl(0 0% 96%);
   --radius: 0.625rem;
+  --background: hsl(0, 5.52%, 96.67%);
+  --foreground: hsl(339.96, 2.94%, 22.16%);
+  --card: hsl(300, 50%, 100%);
+  --card-foreground: hsl(339.96, 2.94%, 22.16%);
+  --popover: hsl(300, 50%, 100%);
+  --popover-foreground: hsl(339.96, 2.94%, 22.16%);
+  --primary: hsl(351.05, 16.71%, 14.09%);
+  --primary-foreground: hsl(60.4, 13.42%, 97.78%);
+  --secondary: hsl(0.01, 3.59%, 80.32%);
+  --secondary-foreground: hsl(0, 0%, 0%);
+  --muted: hsl(67, 12.69%, 94.2%);
+  --muted-foreground: hsl(330.28, 3.04%, 39.32%);
+  --accent: hsl(67, 12.69%, 94.2%);
+  --accent-foreground: hsl(339.96, 2.94%, 22.16%);
+  --destructive: hsl(351.73, 100%, 40.53%);
+  --destructive-foreground: hsl(60.4, 13.42%, 97.78%);
+  --border: hsl(360, 8.11%, 82.56%);
+  --input: hsl(83.6, 9.08%, 86.21%);
+  --ring: hsl(351.05, 16.71%, 14.09%);
+  --chart-1: hsl(347.84, 40.61%, 55.36%);
+  --chart-2: hsl(21.95, 56.41%, 43.86%);
+  --chart-3: hsl(52.62, 100%, 20.97%);
+  --chart-4: hsl(280, 31.08%, 44.87%);
+  --chart-5: hsl(185.96, 100%, 13.64%);
+  --sidebar: hsl(60.4, 13.42%, 97.78%);
+  --sidebar-foreground: hsl(339.96, 2.94%, 22.16%);
+  --sidebar-primary: hsl(351.05, 16.71%, 14.09%);
+  --sidebar-primary-foreground: hsl(60.4, 13.42%, 97.78%);
+  --sidebar-accent: hsl(67, 12.69%, 94.2%);
+  --sidebar-accent-foreground: hsl(339.96, 2.94%, 22.16%);
+  --sidebar-border: hsl(83.6, 9.08%, 86.21%);
+  --sidebar-ring: hsl(351.05, 16.71%, 14.09%);
 
-  --accent: var(--accent-light);
-  --accent-foreground: var(--accent-foreground-light);
-  --background: var(--background-light);
-  --border: var(--border-light);
-  --card: var(--card-light);
-  --card-foreground: var(--card-foreground-light);
-  --destructive: var(--destructive-light);
-  --destructive-foreground: var(--destructive-foreground-light);
-  --foreground: var(--foreground-light);
-  --input: var(--input-light);
-  --muted: var(--muted-light);
-  --muted-foreground: var(--muted-foreground-light);
-  --popover: var(--popover-light);
-  --popover-foreground: var(--popover-foreground-light);
-  --primary: var(--primary-light);
-  --primary-foreground: var(--primary-foreground-light);
-  --ring: var(--ring-light);
-  --secondary: var(--secondary-light);
-  --secondary-background: var(--secondary-background-light);
-  --secondary-foreground: var(--secondary-foreground-light);
+  /*
+   * Haptic-specific: the app-chrome surface behind the editor, toolbar and
+   * note panes. Not part of the shadcn set, so it is mapped onto --card and
+   * resolves per mode automatically (both rules land on <html>).
+   */
+  --secondary-background: var(--card);
 }
 
 .dark {
-  --accent: var(--accent-dark);
-  --accent-foreground: var(--accent-foreground-dark);
-  --background: var(--background-dark);
-  --border: var(--border-dark);
-  --card: var(--card-dark);
-  --card-foreground: var(--card-foreground-dark);
-  --destructive: var(--destructive-dark);
-  --destructive-foreground: var(--destructive-foreground-dark);
-  --foreground: var(--foreground-dark);
-  --input: var(--input-dark);
-  --muted: var(--muted-dark);
-  --muted-foreground: var(--muted-foreground-dark);
-  --popover: var(--popover-dark);
-  --popover-foreground: var(--popover-foreground-dark);
-  --primary: var(--primary-dark);
-  --primary-foreground: var(--primary-foreground-dark);
-  --ring: var(--ring-dark);
-  --secondary: var(--secondary-dark);
-  --secondary-background: var(--secondary-background-dark);
-  --secondary-foreground: var(--secondary-foreground-dark);
+  --background: hsl(339.51, 9.91%, 5.39%);
+  --foreground: hsl(67, 12.69%, 94.2%);
+  --card: hsl(339.66, 6.7%, 8.4%);
+  --card-foreground: hsl(67, 12.69%, 94.2%);
+  --popover: hsl(339.66, 6.7%, 8.4%);
+  --popover-foreground: hsl(67, 12.69%, 94.2%);
+  --primary: hsl(352.24, 28.99%, 88.48%);
+  --primary-foreground: hsl(339.51, 9.91%, 5.39%);
+  --secondary: hsl(329.99, 3.04%, 39.2%);
+  --secondary-foreground: hsl(67, 12.69%, 94.2%);
+  --muted: hsl(339.81, 4.49%, 13.4%);
+  --muted-foreground: hsl(355.74, 4.42%, 55.79%);
+  --accent: hsl(339.81, 4.49%, 13.4%);
+  --accent-foreground: hsl(67, 12.69%, 94.2%);
+  --destructive: hsl(358.76, 100%, 69.84%);
+  --destructive-foreground: hsl(339.51, 9.91%, 5.39%);
+  --border: hsl(339.89, 3.63%, 17.21%);
+  --input: hsl(339.89, 3.63%, 17.21%);
+  --ring: hsl(352.24, 28.99%, 88.48%);
+  --chart-1: hsl(348.67, 58.73%, 67.93%);
+  --chart-2: hsl(21.27, 57.88%, 56.39%);
+  --chart-3: hsl(50.87, 62.6%, 38.36%);
+  --chart-4: hsl(279.65, 33.4%, 56.82%);
+  --chart-5: hsl(185.37, 100%, 20.9%);
+  --sidebar: hsl(339.58, 8.21%, 6.66%);
+  --sidebar-foreground: hsl(67, 12.69%, 94.2%);
+  --sidebar-primary: hsl(352.24, 28.99%, 88.48%);
+  --sidebar-primary-foreground: hsl(339.51, 9.91%, 5.39%);
+  --sidebar-accent: hsl(339.81, 4.49%, 13.4%);
+  --sidebar-accent-foreground: hsl(67, 12.69%, 94.2%);
+  --sidebar-border: hsl(339.89, 3.63%, 17.21%);
+  --sidebar-ring: hsl(352.24, 28.99%, 88.48%);
 }
 
 /* Haptic-specific design tokens on top of the shadcn set */
