@@ -9,8 +9,10 @@
 <header
 	class={cn(
 		'absolute top-0 w-full flex items-center h-9 border-b bg-background z-40',
-		// Centred on desktop — left-aligned would sit under the traffic lights.
-		$isDesktopApp ? 'justify-center pl-12 pr-3' : 'justify-start px-3'
+		// Centred on desktop. The padding is symmetric and wide enough to clear the
+		// macOS traffic lights (~78px): justify-center only centres while the title
+		// fits, so a long one has to run out from a safe left edge, not under them.
+		$isDesktopApp ? 'justify-center px-20' : 'justify-start px-3'
 	)}
 	data-tauri-drag-region
 >
