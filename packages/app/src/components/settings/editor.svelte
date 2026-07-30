@@ -7,13 +7,10 @@
 	import * as Select from '@haptic/ui/components/select';
 	import { Switch } from '@haptic/ui/components/switch';
 
+	// The control is locked, so it lists the font actually in use rather than a
+	// menu of fonts the app doesn't ship.
 	const fontLabels: Record<string, string> = {
-		inter: 'Inter',
-		roboto: 'Roboto',
-		lato: 'Lato',
-		poppins: 'Poppins',
-		nunito: 'Nunito',
-		openSans: 'Open Sans'
+		lilgrotesk: 'LilGrotesk'
 	};
 	const fontSizeLabels: Record<string, string> = {
 		smaller: 'Smaller',
@@ -23,7 +20,7 @@
 		larger: 'Larger'
 	};
 
-	let selectedFont = $state('inter');
+	let selectedFont = $state('lilgrotesk');
 	let selectedFontSize = $state('normal');
 </script>
 
@@ -37,12 +34,7 @@
 					{fontLabels[selectedFont]}
 				</Select.Trigger>
 				<Select.Content>
-					<Select.Item value="inter">Inter</Select.Item>
-					<Select.Item value="roboto">Roboto</Select.Item>
-					<Select.Item value="lato">Lato</Select.Item>
-					<Select.Item value="poppins">Poppins</Select.Item>
-					<Select.Item value="nunito">Nunito</Select.Item>
-					<Select.Item value="openSans">Open Sans</Select.Item>
+					<Select.Item value="lilgrotesk">LilGrotesk</Select.Item>
 				</Select.Content>
 			</Select.Root>
 		</div>

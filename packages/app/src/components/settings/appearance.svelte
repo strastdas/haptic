@@ -9,17 +9,14 @@
 	import Tooltip from '../shared/tooltip.svelte';
 
 	const themeLabels: Record<string, string> = { haptic: 'Haptic' };
+	// The control is locked, so it lists the font actually in use rather than a
+	// menu of fonts the app doesn't ship.
 	const fontLabels: Record<string, string> = {
-		inter: 'Inter',
-		roboto: 'Roboto',
-		lato: 'Lato',
-		poppins: 'Poppins',
-		nunito: 'Nunito',
-		openSans: 'Open Sans'
+		lilgrotesk: 'LilGrotesk'
 	};
 
 	let selectedTheme = $state('haptic');
-	let selectedFont = $state('inter');
+	let selectedFont = $state('lilgrotesk');
 </script>
 
 <div class="space-y-5">
@@ -105,12 +102,7 @@
 					{fontLabels[selectedFont]}
 				</Select.Trigger>
 				<Select.Content>
-					<Select.Item value="inter">Inter</Select.Item>
-					<Select.Item value="roboto">Roboto</Select.Item>
-					<Select.Item value="lato">Lato</Select.Item>
-					<Select.Item value="poppins">Poppins</Select.Item>
-					<Select.Item value="nunito">Nunito</Select.Item>
-					<Select.Item value="openSans">Open Sans</Select.Item>
+					<Select.Item value="lilgrotesk">LilGrotesk</Select.Item>
 				</Select.Content>
 			</Select.Root>
 		</div>
