@@ -22,7 +22,9 @@ pnpm + Turborepo workspace (`apps/*`, `packages/*`).
 
 1. `StorageAdapter` (`packages/core/src/adapter.ts`) — each app registers its implementation at boot (`lib/adapter.ts`, imported for its side effect from the root layout). Shared code calls the delegating free functions (`createNote`, `fetchCollectionEntries`, …), which throw if no adapter is registered.
 2. `PlatformActions` (same file) — `setTheme` / `toggleTheme` / `openExternal` / `showInFolder`, registered the same way.
-3. Stores — `platform` (which OS), `isDesktopApp` (which shell), `appTheme`.
+3. Stores — `platform` (which OS), `isDesktopApp` (which shell), `appTheme`, `draftFile` (a note the editor shows that isn't in storage yet).
+
+When the difference is **layout** rather than capability, pass a prop instead of reading a store: `<Header windowChrome />` is set by the desktop shell.
 
 `packages/app` must never import `@tauri-apps/*`, PGlite, or drizzle. If shared code needs a platform capability, add it to a seam. Web-only UI (e.g. the `webkitdirectory` collection import) is injected as a prop from the app.
 
@@ -33,13 +35,20 @@ Anything genuinely divergent stays app-local: routes (`src/routes/**`), `lib/api
 ```fish
 pnpm install
 pnpm dev                  # all apps; ASK before starting a dev server
-pnpm --filter=desktop dev:tauri
+pnpm --filter=desktop dev:tauri   # desktop dev server is pinned to :1420, web to :5173
 pnpm check                # svelte-check — run after any code change
 pnpm test                 # vitest (unit + StorageAdapter contract)
 pnpm --filter=web test:e2e  # playwright (builds + previews; needs `playwright install chromium` once)
 pnpm build --filter=web --filter=desktop
 pnpm lint:oxc / pnpm format
 cd apps/desktop/src-tauri && cargo check   # Rust
+
+# Signed + notarized macOS build (needs the Developer ID cert in the keychain
+# and a stored notarytool profile — see docs/releasing.md)
+cd apps/desktop
+APPLE_SIGNING_IDENTITY='Developer ID Application: …' pnpm tauri build
+xcrun notarytool submit <dmg> --keychain-profile haptic --wait
+xcrun stapler staple <dmg>
 ```
 
 Package manager is **pnpm** (see `packageManager` in the root `package.json`). Node >= 22.
@@ -55,6 +64,10 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 
 ## Landmines
 
+- **Tailwind sees nothing by default.** The entry CSS lives in `packages/ui`, which every app resolves through a node_modules symlink, and Tailwind 4 skips node_modules when auto-detecting sources. Every directory containing markup is declared with `@source` in `theme.css` / `app.{web,desktop}.css`. **A new package with classes in it must be added there or its utilities silently won't generate.**
+- **Component CSS must use complete colours.** Tokens are full `hsl()` values, not Tailwind-3 bare channels — write `var(--border)`, never `hsl(var(--border))`, and `color-mix(in oklab, var(--foreground) 60%, transparent)` for alpha.
+- **The desktop dev server is pinned to port 1420 with `strictPort`.** It must match `devUrl` in `tauri.conf.json`. On the default port Vite silently moves to the next free one while Tauri keeps loading the old address — which, with the web app running, meant the Tauri window rendered *the web app* and every desktop-only feature looked broken.
+- Tauri plugin crates and their npm packages share a version line and must match on major/minor. `tauri dev` only warns; `tauri build` hard-fails.
 - **PGlite data dir is `idb://haptic-v2`.** The pre-0.3 `idb://haptic` is deliberately left untouched for a future importer — never point the app back at it or delete it.
 - **The Tauri updater is removed on purpose.** The v1 config pointed at upstream's `haptic.md` endpoint with upstream's signing key. Re-add `tauri-plugin-updater` only alongside our own endpoint and keypair.
 - `tauri.conf.json` has no allowlist — Tauri 2 permissions live in `src-tauri/capabilities/default.json`. Filesystem access is scoped to `$HOME/**` and `$APPDATA`; new fs calls may need a new permission there.
@@ -63,5 +76,7 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 - **No CI runs automatically.** `ci.yml` and `desktop-build.yml` are `workflow_dispatch` only (triggers commented at the top of each, ready to restore), so `pnpm check`, `pnpm test`, and the builds are the real gate — run them before you claim a change works. Upstream's release/Docker/Tauri-1 workflows were deleted outright.
 
 ## Not yet built
+
+**Markdown tables are not supported and are destructive.** No table extension is registered, so the schema has no table nodes: `tiptap-markdown` parses a table correctly, then ProseMirror discards everything it can't map and only the cell text survives. Opening a note containing a table and letting auto-save fire rewrites the file without it. Needs `@tiptap/extension-table` + row/cell/header before any note with tables is opened.
 
 Haptic Sync is UI-only — every control in the settings pane is disabled ("Coming soon"); there is no sync of any kind between web and desktop. The legacy-PGlite importer is stubbed as a dismissible notice. Both are on the roadmap in `README.md`.

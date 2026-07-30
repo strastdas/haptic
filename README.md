@@ -65,7 +65,7 @@ Requires Node >= 22 and [pnpm](https://pnpm.io/). For the desktop app you also n
 pnpm install
 
 pnpm --filter=web dev          # web app on http://localhost:5173
-pnpm --filter=desktop dev:tauri # desktop app
+pnpm --filter=desktop dev:tauri # desktop app (its dev server is pinned to :1420)
 
 pnpm check                     # typecheck (svelte-check)
 pnpm test                      # unit + storage-adapter contract tests
@@ -73,7 +73,11 @@ pnpm --filter=web test:e2e     # Playwright smoke tests
 pnpm build                     # build everything
 ```
 
-The repo is a pnpm + Turborepo workspace: `apps/{web,desktop,homepage}` and `packages/{core,editor,app,ui}`. The two apps share all logic and UI and differ only in their storage adapter — see [`CLAUDE.md`](./CLAUDE.md) for the architecture and [`docs/quality.md`](./docs/quality.md) for tooling policy.
+The repo is a pnpm + Turborepo workspace: `apps/{web,desktop,homepage}` and `packages/{core,editor,app,ui}`. The two apps share all logic and UI and differ only in their storage adapter — see [`docs/architecture.md`](./docs/architecture.md) for how that works, [`CLAUDE.md`](./CLAUDE.md) for day-to-day conventions, [`docs/quality.md`](./docs/quality.md) for tooling policy, and [`docs/releasing.md`](./docs/releasing.md) for signing and notarizing a macOS build.
+
+## Desktop builds
+
+There are no published releases yet. Building locally produces an unsigned app; a distributable one needs an Apple Developer ID certificate and notarization — see [`docs/releasing.md`](./docs/releasing.md). Builds are currently **Apple Silicon only**.
 
 ## Self-hosting the web app
 
@@ -83,11 +87,13 @@ The repo is a pnpm + Turborepo workspace: `apps/{web,desktop,homepage}` and `pac
 
 ## Roadmap
 
+- [ ] Markdown tables — the editor has no table support today, and opening a note containing one will strip it on save
 - [ ] Haptic Sync — sync notes across devices (the settings pane exists but is a non-functional stub today)
 - [ ] Import notes from pre-0.3 web databases (old data is preserved, importer pending)
 - [ ] Note sharing — share single notes or entire collections via link
 - [ ] Mobile support for the web app — dependent on PGlite mobile support
 - [ ] Native mobile apps for iOS & Android
+- [ ] Universal (Intel + Apple Silicon) macOS builds
 - [ ] Windows & Linux support for the desktop app
 - [ ] App updater — removed during the Tauri 2 migration, pending our own release endpoint
 

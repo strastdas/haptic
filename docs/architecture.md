@@ -25,12 +25,17 @@ Each app builds its implementation from its `lib/api/*` modules and registers it
 
 ```ts
 // apps/*/src/lib/adapter.ts — imported for its side effect from routes/+layout.svelte
-setStorageAdapter({ ...notes, ...collection, ...folders, ...settings });
+setStorageAdapter({ ...notes, ...collection, ...folders, ...settings, searchEntries });
 ```
 
 Shared code imports the delegating free functions (`createNote`, `moveFolder`, `fetchCollectionEntries`, …) from `@haptic/core`. They throw a clear error if no adapter is registered, which surfaces bootstrap-order mistakes immediately instead of producing `undefined`.
 
-`PlatformActions` works the same way for capabilities that aren't storage: `setTheme`, `toggleTheme`, `openExternal`, `showInFolder`.
+`PlatformActions` works the same way for capabilities that aren't storage: `setTheme`, `toggleTheme`, `openExternal`, `showInFolder`. `showInFolder` is optional and no-ops on web, so shared components can call it unconditionally and gate only the *UI* on `isDesktopApp`.
+
+Two delegating functions do more than forward:
+
+- **`openNote`** clears any pending draft and resets `editorMode` to `'view'`, so every note opens read-only. It is hooked here rather than on `activeFile` because `renameNote` repoints that store too, and renaming shouldn't drop you out of the editor.
+- **`saveNote`** materializes a draft before writing. See *Drafts* below.
 
 For UI that only one platform can provide, the app passes a prop rather than the shared component reaching for a platform API — e.g. web's `<input webkitdirectory>` collection importer is injected into the command menu as `importCollection`.
 
@@ -42,6 +47,7 @@ For UI that only one platform can provide, the app passes a prop rather than the
 | Tree                   | `parent_path` column → `buildFileTree()`                              | `readDirTree()` walk (Tauri 2's `readDir` is not recursive)                              |
 | Change watching        | PGlite live queries                                                   | `watchImmediate` from `@tauri-apps/plugin-fs`                                            |
 | Search                 | `ILIKE` query + JS context extraction                                 | Rust `search_files` command                                                              |
+| Theme switching        | mode-watcher toggles `.dark` and persists to localStorage             | `lib/theme.ts` toggles `.dark`, persists to `theme_mode` in `settings.json`              |
 | Collections / settings | `collection` + `collection_settings` tables, localStorage             | `collections.json` / `settings.json` in app-data, `.haptic/settings.json` per collection |
 | Delete                 | row delete                                                            | OS trash, `.haptic/trash`, or hard delete (per setting)                                  |
 
@@ -52,6 +58,12 @@ Because the interface is shared, the same contract test suite (`packages/core/sr
 Global state is `svelte/store` writables in `packages/core/src/store.ts` — deliberately not migrated to runes: they are consumed across dozens of components, `svelte/store` is fully supported in Svelte 5, and one of them holds a TipTap editor instance. Components themselves use runes.
 
 Three stores carry platform context: `platform` (which OS, for shortcut glyphs), `isDesktopApp` (which shell, for genuine web-vs-desktop branches), and `appTheme`.
+
+Prefer a **prop** over `isDesktopApp` when the difference is about layout rather than capability — `<Header windowChrome />` is set by the desktop shell because its title bar doubles as window chrome, which keeps the component independent of bootstrap ordering.
+
+### Drafts
+
+`draftFile` holds the path of a note the editor is showing that does not exist in storage yet. The daily view opens one when you visit a date with no note, instead of creating an empty file just because you clicked a calendar cell. `saveNote` creates it on the first write, passing `open: false` to `createNote` so opening doesn't reset the editor and discard what was typed. `openNote` abandons an unwritten draft.
 
 ## Web data layer
 
@@ -68,3 +80,20 @@ The database name is `idb://haptic-v2` because PGlite 0.3 changed the on-disk Po
 Permissions are declared in `capabilities/default.json` — filesystem access is scoped to `$HOME/**` and `$APPDATA` rather than the v1 config's `allowlist: { all: true }`. New filesystem calls may require adding a permission there.
 
 The updater is intentionally absent; see the roadmap.
+
+## Theming
+
+The palette lives in `packages/ui/haptic.css` in the stock shadcn Tailwind-4 shape: complete `hsl()` colours on `:root`, overridden under `.dark`. **Both apps switch on the `.dark` class** — web through mode-watcher, desktop through `apps/desktop/src/lib/theme.ts` — so a stock shadcn theme is a straight drop-in.
+
+Desktop previously switched on `@media (prefers-color-scheme: dark)`, which ignored the user's own preference and, because the custom variant was declared with invalid syntax, meant no `dark:` utility ever compiled there.
+
+Two things a pasted theme won't include:
+
+- **`--secondary-background`** — Haptic's own token for the surface behind the editor and note panes. Raised (`--card`) in light, and derived *below* `--background` in dark so note text sits on the darkest surface.
+- **`--font-sans` / `--font-mono`**, declared in `theme.css`.
+
+`theme.css` also holds the `@theme inline` mappings that turn every token into a utility. A new token needs an entry there or `bg-*`/`text-*` won't generate.
+
+## Fonts
+
+LilGrotesk (sans) and Ioskeley Mono (mono). Web links them from `cdn.strast.dev` in `app.html`; desktop imports a local mirror from `app.desktop.css` so Vite bundles the woff2 files and the app works offline. The two must be kept in sync — see the comment at the top of `packages/ui/fonts/*.css`.

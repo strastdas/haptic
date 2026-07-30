@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "0.3.0"
 description = "Haptic — local-first markdown notes"
 authors = ["Alejandro (fork of chroxify/haptic)"]
 license = "AGPL-3.0"
