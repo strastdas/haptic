@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { fetchCollectionEntries } from '@/api/collection';
-	import { createNote, openNote } from '@/api/notes';
+	import { openNote } from '@/api/notes';
 	import { pgClient } from '@/database/client';
 	import {
 		activeFile,
 		collection,
+		draftFile,
 		collectionEntries,
 		editor,
 		isPageSidebarOpen,
@@ -12,6 +13,7 @@
 		resizingPageSidebar
 	} from '@/store';
 	import type { FileEntry } from '@/types';
+	import { setEditorContent } from '@/utils';
 	import { Calendar } from '@haptic/ui/components/calendar';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
@@ -33,6 +35,22 @@ import type { DateValue } from '@internationalized/date';
 		return dbWatcher.unsubscribe;
 	}
 
+	/**
+	 * Shows a daily note in the editor. Notes that don't exist yet are opened as
+	 * drafts rather than created: an empty file should never appear just because
+	 * a date was visited. saveNote writes the draft out on the first change.
+	 */
+	const showDailyNote = (path: string, exists: boolean) => {
+		if (exists) {
+			openNote(path, true);
+			return;
+		}
+		draftFile.set(null);
+		setEditorContent('');
+		activeFile.set(path);
+		draftFile.set(path);
+	};
+
 	const stopWatchingStore = collectionEntries.subscribe((value) => {
 		entries = value;
 	});
@@ -44,12 +62,8 @@ import type { DateValue } from '@internationalized/date';
 		const today = new Date().toISOString().split('T')[0];
 		const dailyExists = entries.some((entry) => entry.path.includes(today));
 
-		if (!dailyExists) {
-			await createNote(`${value  }/.haptic/daily`, `${today  }.md`);
-		}
-
-		// Open today's note
-		openNote(`${value  }/.haptic/daily/${  today  }.md`, true);
+		// Show today's note (created lazily, only once written to)
+		showDailyNote(`${value}/.haptic/daily/${today}.md`, dailyExists);
 
 		if (value) {
 			if (stopWatching) {stopWatching();}
@@ -124,12 +138,16 @@ import type { DateValue } from '@internationalized/date';
 		// Create the note name with padded month and day
 		const noteName = `${e.year}-${paddedMonth}-${paddedDay}.md`;
 
-		// Check if note exists, if not create it - else open it
-		if (entries.some((entry) => entry.path.includes(noteName))) {
-			openNote($collection + '/.haptic/daily/' + noteName, true);
-		} else {
-			createNote($collection + '/.haptic/daily', noteName);
-		}
+		const notePath = `${$collection}/.haptic/daily/${noteName}`;
+
+		// Open the note if it exists. If it doesn't, show an empty editor for that
+		// date instead of creating a file — clicking through the calendar should
+		// never leave a trail of empty notes. The draft is written to disk by
+		// saveNote the first time there's something in it.
+		showDailyNote(
+			notePath,
+			entries.some((entry) => entry.path.includes(noteName))
+		);
 
 		// Get note element by data-path
 		let noteElement = document.querySelector(

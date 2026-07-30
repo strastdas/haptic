@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 import { get } from 'svelte/store';
 
 // Create a new note
-export const createNote = async (dirPath: string, name?: string) => {
+export const createNote = async (dirPath: string, name?: string, open = true) => {
   const db = getDb();
 
   // Read the directory
@@ -42,8 +42,11 @@ export const createNote = async (dirPath: string, name?: string) => {
     collectionPath: get(collection)
   });
 
-  // Open the note
-  openNote(`${dirPath}/${name}`.replace('//', '/'));
+  // Open the note, unless the caller is materializing a draft the editor is
+  // already showing (opening would reset the editor and lose what was typed).
+  if (open) {
+    openNote(`${dirPath}/${name}`.replace('//', '/'));
+  }
 };
 
 // Open a note

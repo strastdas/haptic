@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { appTheme } from './store';
+import { appTheme, draftFile } from './store';
 import type {
   AppSettingsParams,
   AppTheme,
@@ -21,7 +21,11 @@ import type {
  */
 export interface StorageAdapter {
   // notes
-  createNote(dirPath: string, name?: string): Promise<unknown>;
+  /**
+   * Creates a note. `open` defaults to true; pass false to materialize a draft
+   * the editor is already showing, so opening doesn't wipe unsaved input.
+   */
+  createNote(dirPath: string, name?: string, open?: boolean): Promise<unknown>;
   openNote(path: string, skipHistory?: boolean): Promise<unknown>;
   deleteNote(path: string): Promise<unknown>;
   renameNote(path: string, name: string): Promise<unknown>;
@@ -77,10 +81,26 @@ function required(): StorageAdapter {
 
 // Delegating free functions — same names components have always imported.
 export const createNote: StorageAdapter['createNote'] = (...args) => required().createNote(...args);
-export const openNote: StorageAdapter['openNote'] = (...args) => required().openNote(...args);
+export const openNote: StorageAdapter['openNote'] = (...args) => {
+  // Navigating away abandons an unwritten draft.
+  draftFile.set(null);
+  return required().openNote(...args);
+};
 export const deleteNote: StorageAdapter['deleteNote'] = (...args) => required().deleteNote(...args);
 export const renameNote: StorageAdapter['renameNote'] = (...args) => required().renameNote(...args);
-export const saveNote: StorageAdapter['saveNote'] = (...args) => required().saveNote(...args);
+/**
+ * Saving is the moment a draft becomes real: clicking a date in the daily
+ * calendar shouldn't leave an empty file behind, so the note is only created
+ * once there is something to write into it.
+ */
+export const saveNote: StorageAdapter['saveNote'] = async (path) => {
+  if (get(draftFile) === path) {
+    const separator = path.lastIndexOf('/');
+    await required().createNote(path.slice(0, separator), path.slice(separator + 1), false);
+    draftFile.set(null);
+  }
+  return required().saveNote(path);
+};
 export const moveNote: StorageAdapter['moveNote'] = (...args) => required().moveNote(...args);
 export const duplicateNote: StorageAdapter['duplicateNote'] = (...args) =>
   required().duplicateNote(...args);

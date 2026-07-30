@@ -9,6 +9,11 @@ import type {
 } from './types';
 
 const activeFile = writable<string | null>(null);
+/**
+ * Path of a note the editor is showing that doesn't exist in storage yet.
+ * Created lazily on the first save — see `saveNote` in ./adapter.
+ */
+const draftFile = writable<string | null>(null);
 const noteHistory = writable<string[]>([]);
 const editorMode = writable<'edit' | 'view'>('edit');
 const editorSearchValue = writable<string>('');
@@ -49,6 +54,7 @@ const isDesktopApp = writable<boolean>(false);
 
 export {
   activeFile,
+  draftFile,
   appSettings,
   appTheme,
   collection,

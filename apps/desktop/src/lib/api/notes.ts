@@ -8,7 +8,7 @@ import { get } from 'svelte/store';
 import { readDirTree } from './fs';
 
 // Create a new note
-export const createNote = async (dirPath: string, name?: string) => {
+export const createNote = async (dirPath: string, name?: string, open = true) => {
   // Read the directory
   const files = await readDirTree(dirPath, false);
 
@@ -20,8 +20,11 @@ export const createNote = async (dirPath: string, name?: string) => {
   // Save the new note
   await writeTextFile(`${dirPath}/${name}`, '');
 
-  // Open the note
-  openNote(`${dirPath}/${name}`);
+  // Open the note, unless the caller is materializing a draft the editor is
+  // already showing (opening would reset the editor and lose what was typed).
+  if (open) {
+    openNote(`${dirPath}/${name}`);
+  }
 };
 
 // Open a note
