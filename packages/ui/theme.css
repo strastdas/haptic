@@ -53,4 +53,13 @@
   html {
     @apply font-sans;
   }
+  /* Ioskeley Mono sets wide by default — tighten it wherever it's used. Base
+     layer, so an explicit tracking-* utility still wins. */
+  code,
+  pre,
+  kbd,
+  samp,
+  .font-mono {
+    @apply tracking-tight;
+  }
 }
