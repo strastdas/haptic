@@ -1,6 +1,3 @@
-/** This fork's home. Upstream's go.haptic.md links are not ours to send users to. */
-export const REPO_URL = 'https://github.com/strastdas/haptic';
-
 import type { CollectionSettingsParams, ShortcutParams } from './types';
 
 export const SHORTCUTS: Record<string, ShortcutParams> = {
@@ -29,9 +26,9 @@ export const SHORTCUTS: Record<string, ShortcutParams> = {
   'folder:delete': { command: true, key: 'Backspace', hover: true },
   'app:settings': { command: true, key: ',' },
   'app:shortcuts': { command: true, key: '/' },
-  'app:help': { command: true, key: 'h', shift: true },
-  'app:share': { command: true, key: 'l', shift: true },
   'app:open-collection': { command: true, key: 'o' },
+  // Desktop-only binding; harmless on web (no component binds it there)
+  'app:open-file': { command: true, shift: true, key: 'o' },
   'settings:toggle-theme': { command: true, key: 't', shift: true }
 };
 
@@ -59,9 +56,7 @@ export const BASE_COLLECTION_SETTINGS: CollectionSettingsParams = {
   }
 };
 
-// Relative to the user's home directory (desktop only)
-export const OS_TRASH_DIR = {
-  darwin: '.trash/',
-  linux: '.local/share/Trash/files/',
-  windows: '$Recycle.Bin/'
-};
+// The OS trash location is no longer computed here — `$Recycle.Bin` is not in
+// the home directory on Windows, and the freedesktop spec needs a `.trashinfo`
+// sidecar on Linux, neither of which a path constant can express. The desktop
+// app now invokes the `move_to_trash` Tauri command (src-tauri/src/commands/trash.rs).

@@ -1,4 +1,5 @@
 import { activeFile, collection, noteHistory } from '@/store';
+import { basename, normalizeSeparators } from '@haptic/core/path';
 import { hideDotFiles, validateHapticFolder, sortFileEntry } from '@/utils';
 import { appDataDir } from '@tauri-apps/api/path';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -44,6 +45,12 @@ export const loadCollection = async (path?: string | undefined) => {
     return;
   }
 
+  // The single boundary where a native path enters the app. Windows hands back
+  // `C:\Users\…`; everything downstream assumes `/` (which Rust's std::path
+  // accepts on Windows too), so normalize once here rather than teaching every
+  // path helper about separators.
+  path = normalizeSeparators(path);
+
   // Set collection path
   collection.set(path);
 
@@ -57,7 +64,7 @@ export const loadCollection = async (path?: string | undefined) => {
   // Add collection to collections data
   const collectionObj = {
     path,
-    name: path.split('/').pop(),
+    name: basename(path),
     lastOpened: new Date().toISOString()
   };
 

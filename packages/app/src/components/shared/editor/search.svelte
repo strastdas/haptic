@@ -5,7 +5,6 @@
 	import Icon from '../icon.svelte';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { Button } from '@haptic/ui/components/button';
-	import { Replace, ReplaceAll, WholeWord, ALargeSmall } from '@lucide/svelte';
 	import {
 		collectionSettings,
 		editorSearchActive,
@@ -193,7 +192,7 @@
 							caseSensitive = !caseSensitive;
 						}}
 					>
-						<ALargeSmall
+						<Icon name="caseSensitive"
 							class={cn(
 								'w-18px] h-[18px] stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								caseSensitive ? 'stroke-foreground' : ''
@@ -211,7 +210,7 @@
 							wholeWord = !wholeWord;
 						}}
 					>
-						<WholeWord
+						<Icon name="wholeWord"
 							class={cn(
 								'w-4 h-4 stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								wholeWord ? 'stroke-foreground' : ''
@@ -282,7 +281,7 @@
 								goToSelection();
 							}}
 						>
-							<Replace
+							<Icon name="replace"
 								class="w-4 h-4 stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]"
 							/>
 						</Button>
@@ -298,7 +297,7 @@
 								goToSelection();
 							}}
 						>
-							<ReplaceAll
+							<Icon name="replaceAll"
 								class="w-4 h-4 stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]"
 							/>
 						</Button>

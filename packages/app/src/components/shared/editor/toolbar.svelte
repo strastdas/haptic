@@ -47,13 +47,7 @@
 				}}
 			>
 				<Shortcut options={SHORTCUTS['notes:toggle-sidebar']} />
-				<Icon
-					name="sidebarArrow"
-					class={cn(
-						'w-4 h-4 transform transition-transform',
-						$isPageSidebarOpen ? 'rotate-180' : ''
-					)}
-				/>
+				<Icon name="sidebarArrow" class={cn( 'w-4 h-4 transform transition-transform', $isPageSidebarOpen ? 'rotate-180' : '' )} />
 			</Button>
 		</Tooltip>
 		{#if !hideHistory}
@@ -180,13 +174,7 @@
 				}}
 			>
 				<Shortcut options={SHORTCUTS['notes:toggle-details']} />
-				<Icon
-					name="sidebarArrow"
-					class={cn(
-						'w-4 h-4 transform transition-transform',
-						$isNoteDetailSidebarOpen ? '' : 'rotate-180'
-					)}
-				/>
+				<Icon name="sidebarArrow" class={cn( 'w-4 h-4 transform transition-transform', $isNoteDetailSidebarOpen ? '' : 'rotate-180' )} />
 			</Button>
 		</Tooltip>
 	</div>

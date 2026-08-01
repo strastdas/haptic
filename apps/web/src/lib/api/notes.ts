@@ -1,58 +1,66 @@
-import { getDb } from '@/database/client';
-import { entry as entryTable } from '@/database/schema';
+import {
+  allEntries,
+  childEntries,
+  deleteEntry,
+  getEntry,
+  putEntry,
+  repathEntry,
+  type EntryRow
+} from '@/database/client';
 import { activeFile, collection, editor, noteHistory } from '@/store';
 import type { NoteMetadataParams } from '@/types';
 import { calculateReadingTime, getNextUntitledName, setEditorContent } from '@/utils';
-import { eq, and } from 'drizzle-orm';
+import { basename, dirname, extname, joinPath, stem } from '@haptic/core/path';
 import { get } from 'svelte/store';
+
+/**
+ * Siblings used for name-conflict and Untitled-numbering checks. A path that
+ * isn't itself a stored folder (the collection root) has no `parentPath` rows,
+ * so fall back to the whole collection — mirrors the previous SQL.
+ */
+async function siblingsOf(dirPath: string): Promise<EntryRow[]> {
+  const dir = await getEntry(dirPath);
+  return dir ? childEntries(dirPath) : allEntries(get(collection));
+}
+
+function newRow(path: string, name: string, parentPath: string, content = ''): EntryRow {
+  const now = new Date();
+  return {
+    path,
+    name,
+    parentPath,
+    collectionPath: get(collection),
+    content,
+    isFolder: false,
+    size: new TextEncoder().encode(content).length,
+    createdAt: now,
+    updatedAt: now
+  };
+}
 
 // Create a new note
 export const createNote = async (dirPath: string, name?: string, open = true) => {
-  const db = getDb();
+  const files = await siblingsOf(dirPath);
 
-  // Read the directory
-  const dirEntry = await db.select().from(entryTable).where(eq(entryTable.path, dirPath));
-
-  let files = [];
-  if (dirEntry.length === 0) {
-    files = await db
-      .select()
-      .from(entryTable)
-      .where(eq(entryTable.collectionPath, get(collection)));
-  } else {
-    files = await db
-      .select()
-      .from(entryTable)
-      .where(
-        and(eq(entryTable.parentPath, dirPath), eq(entryTable.collectionPath, get(collection)))
-      );
-  }
-
-  // Generate a new name (Untitled.md, if there are any exiting Untitled notes, increment the number by 1)
+  // Generate a new name (Untitled.md, if there are any existing Untitled notes, increment the number by 1)
   if (!name) {
     name = getNextUntitledName(files, 'Untitled', '.md');
   }
 
-  // Save the new note
-  await db.insert(entryTable).values({
-    name,
-    path: `${dirPath}/${name}`.replace('//', '/'),
-    content: '',
-    parentPath: dirPath,
-    collectionPath: get(collection)
-  });
+  const path = joinPath(dirPath, name);
+  await putEntry(newRow(path, name, dirPath));
 
   // Open the note, unless the caller is materializing a draft the editor is
   // already showing (opening would reset the editor and lose what was typed).
   if (open) {
-    openNote(`${dirPath}/${name}`.replace('//', '/'));
+    openNote(path);
   }
 };
 
 // Open a note
 export async function openNote(path: string, skipHistory = false) {
-  const file = await getDb().select().from(entryTable).where(eq(entryTable.path, path));
-  setEditorContent(file[0].content ?? '');
+  const entry = await getEntry(path);
+  setEditorContent(entry?.content ?? '');
   activeFile.set(path);
   if (!skipHistory) {
     noteHistory.update((history) => {
@@ -66,14 +74,12 @@ export async function openNote(path: string, skipHistory = false) {
 
 // Delete a note
 export const deleteNote = async (path: string) => {
-  await getDb().delete(entryTable).where(eq(entryTable.path, path));
+  await deleteEntry(path);
   activeFile.set(null);
 };
 
 // Rename a note
 export const renameNote = async (path: string, name: string) => {
-  const db = getDb();
-
   // Make sure file extension is included
   if (!name.endsWith('.md')) {
     name += '.md';
@@ -82,119 +88,98 @@ export const renameNote = async (path: string, name: string) => {
   // Remove breaking characters
   name = name.replaceAll(/[/\\?%*:|"<>]/g, '');
 
-  // Get the note
-  const entry = await db.select().from(entryTable).where(eq(entryTable.path, path));
-
-  // Get all files in the directory
-  const files = await db
-    .select()
-    .from(entryTable)
-    .where(eq(entryTable.parentPath, entry[0].parentPath!));
+  const row = await getEntry(path);
+  if (!row) {
+    return;
+  }
 
   // Make sure there are no name conflicts
-  if (files.some((file) => file.name?.toLowerCase() === name.toLowerCase() && !file.isFolder)) {
+  const siblings = await childEntries(row.parentPath);
+  if (siblings.some((file) => file.name?.toLowerCase() === name.toLowerCase() && !file.isFolder)) {
     throw new Error('Name conflict');
   }
 
-  // Rename the file
-  await db
-    .update(entryTable)
-    .set({ name, path: `${path.split('/').slice(0, -1).join('/')}/${name}` })
-    .where(eq(entryTable.path, path));
-  activeFile.set(`${path.split('/').slice(0, -1).join('/')}/${name}`);
+  const destination = joinPath(dirname(path), name);
+  await repathEntry(path, { ...row, path: destination, name, updatedAt: new Date() });
+  activeFile.set(destination);
+};
+
+// Read/write a note body by value, without going through the editor.
+export const readNoteContent = async (path: string): Promise<string> => {
+  return (await getEntry(path))?.content ?? '';
+};
+
+export const writeNoteContent = async (path: string, content: string): Promise<void> => {
+  const row = await getEntry(path);
+  if (!row) {
+    return;
+  }
+  await putEntry({
+    ...row,
+    content,
+    size: new TextEncoder().encode(content).length,
+    updatedAt: new Date()
+  });
 };
 
 // Save active note
 export const saveNote = async (path: string) => {
-  const db = getDb();
-
   // Get note content
   let content = get(editor).storage.markdown.getMarkdown();
 
   // Remove the first heading title
   content = content.replace(/^# .*\n/, '');
 
-  // Calculate file size in bytes
-  const size = new TextEncoder().encode(content).length;
-
-  await db
-    .update(entryTable)
-    .set({ content, updatedAt: new Date(), size })
-    .where(eq(entryTable.path, path));
+  await writeNoteContent(path, content);
 };
 
 export const moveNote = async (source: string, target: string) => {
-  const db = getDb();
-
-  // Get target directory
-  const targetDir = await db.select().from(entryTable).where(eq(entryTable.path, target));
-
-  let targetFiles = [];
-  if (targetDir.length === 0) {
-    targetFiles = await db.select().from(entryTable);
-  } else {
-    targetFiles = await db
-      .select()
-      .from(entryTable)
-      .where(eq(entryTable.parentPath, targetDir[0].path));
+  const row = await getEntry(source);
+  if (!row) {
+    return;
   }
 
   // Make sure there are no name conflicts
-  const noteName = source.split('/').pop()!;
-
-  if (
-    targetFiles.some(
-      (file) => file.name === noteName && !file.isFolder && file.parentPath === target
-    )
-  ) {
+  const noteName = basename(source);
+  const targetFiles = await childEntries(target);
+  if (targetFiles.some((file) => file.name === noteName && !file.isFolder)) {
     throw new Error('Name conflict');
   }
 
-  // Update the note
-  await db
-    .update(entryTable)
-    .set({ path: `${target}/${noteName}`.replace('//', '/'), parentPath: target })
-    .where(eq(entryTable.path, source));
+  const destination = joinPath(target, noteName);
+  await repathEntry(source, { ...row, path: destination, parentPath: target });
 
   // Open the note
-  openNote(`${target}/${noteName}`);
+  openNote(destination);
 };
 
 // Duplicate a note (format: "<name> (<number>).<ext>") - <number> is incremented if there are any existing notes with the same name
 export const duplicateNote = async (path: string) => {
-  const db = getDb();
+  const row = await getEntry(path);
+  if (!row) {
+    return;
+  }
 
-  // Fetch the content of the note
-  const entry = await db.select().from(entryTable).where(eq(entryTable.path, path));
-
-  // Extract the name and extension of the note
-  const ext = path.split('.').pop()!;
+  const ext = extname(path);
 
   // Get current index of the note
-  const files = await db
-    .select()
-    .from(entryTable)
-    .where(eq(entryTable.parentPath, entry[0].parentPath!));
-  const notes = files.filter((file) => file.name?.startsWith(entry[0].name!) && !file.isFolder);
+  const files = await childEntries(row.parentPath);
+  const notes = files.filter((file) => file.name?.startsWith(row.name!) && !file.isFolder);
 
   // Write the new note
-  const newName = `${entry[0].name?.replace(`.${ext}`, '')} (${notes.length}).${ext}`;
-  await db.insert(entryTable).values({
-    name: newName,
-    path: `${path.split('/').slice(0, -1).join('/')}/${newName}`,
-    parentPath: entry[0].parentPath,
-    collectionPath: entry[0].collectionPath,
-    content: entry[0].content
+  const newName = `${stem(path)} (${notes.length}).${ext}`;
+  const destination = joinPath(dirname(path), newName);
+  await putEntry({
+    ...newRow(destination, newName, row.parentPath, row.content ?? ''),
+    collectionPath: row.collectionPath
   });
 
   // Open the new note
-  openNote(`${path.split('/').slice(0, -1).join('/')}/${newName}`);
+  openNote(destination);
 };
 
 export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataParams> => {
-  // General file metadata
-  const db = getDb();
-  const fileMetadata = await db.select().from(entryTable).where(eq(entryTable.path, path));
+  const row = await getEntry(path);
 
   // Get editor metadata
   const editorWordCount = get(editor).storage.characterCount.words();
@@ -205,9 +190,9 @@ export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataP
 
   return {
     fileMetadata: {
-      createdAt: fileMetadata[0].createdAt,
-      modifiedAt: fileMetadata[0].updatedAt,
-      size: fileMetadata[0].size ?? 0
+      createdAt: row?.createdAt ?? new Date(0),
+      modifiedAt: row?.updatedAt ?? new Date(0),
+      size: row?.size ?? 0
     },
     editorMetadata: {
       words: editorWordCount,

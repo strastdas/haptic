@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchCollectionEntries } from '@/api/collection';
 	import { openNote } from '@/api/notes';
-	import { pgClient } from '@/database/client';
+	import { watchEntries } from '@/database/client';
 	import {
 		activeFile,
 		collection,
@@ -30,11 +30,11 @@ import type { DateValue } from '@internationalized/date';
 
 	// Watch for changes in the collection
 	async function watchCollection() {
-		const dbWatcher = await pgClient.live.query('SELECT * FROM entry', [], async () => {
+		// Was a PGlite live query on `entry`; the callback always refetched the
+		// whole tree, so a plain change signal is equivalent.
+		return watchEntries(async () => {
 			await fetchCollectionEntries(`${$collection  }/.haptic/daily`);
 		});
-
-		return dbWatcher.unsubscribe;
 	}
 
 	/*

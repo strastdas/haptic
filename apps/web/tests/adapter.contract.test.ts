@@ -19,26 +19,21 @@ import * as collectionApi from '@/api/collection';
 import * as foldersApi from '@/api/folders';
 import * as notesApi from '@/api/notes';
 import { initDatabase } from '@/database/client';
-import { runMigrations } from '@/database/migrations';
 import { searchEntries } from '@/utils';
 
 const COLLECTION_PATH = '/Contract';
 
 beforeAll(async () => {
-  const client = await initDatabase({ dataDir: 'memory://' });
-  await runMigrations(client);
+  await initDatabase({ dbName: 'contract-test' });
 });
 
-runStorageAdapterContract('web adapter (in-memory PGlite)', async () => {
-  const client = await initDatabase({ dataDir: 'memory://' });
-  // Fresh state per test: FK order matters (entry/settings reference collection)
-  await client.exec('DELETE FROM entry; DELETE FROM collection_settings; DELETE FROM collection;');
+runStorageAdapterContract('web adapter (IndexedDB)', async () => {
+  const db = await initDatabase({ dbName: 'contract-test' });
+  // Fresh state per test
+  await Promise.all([db.clear('entry'), db.clear('collectionSettings'), db.clear('collection')]);
   await collectionApi.loadCollection(COLLECTION_PATH);
   return {
     adapter: { ...notesApi, ...foldersApi, ...collectionApi, searchEntries },
-    collectionPath: COLLECTION_PATH,
-    writeContent: async (path: string, content: string) => {
-      await client.query('UPDATE entry SET content = $2 WHERE path = $1', [path, content]);
-    }
+    collectionPath: COLLECTION_PATH
   };
 });

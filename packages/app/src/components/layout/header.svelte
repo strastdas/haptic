@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { activeFile, collection, editorMode } from '@haptic/core/store';
+	import { basename } from '@haptic/core/path';
 	import { cn } from '@haptic/ui/lib/utils';
 
 	interface Props {
@@ -15,8 +16,8 @@
 
 	let { windowChrome = false }: Props = $props();
 
-	let collectionName = $derived($collection?.split('/').pop() || '');
-	let fileName = $derived($activeFile?.split('/').pop() || '');
+	let collectionName = $derived($collection ? basename($collection) : '');
+	let fileName = $derived($activeFile ? basename($activeFile) : '');
 </script>
 
 <header

@@ -1,2 +1,2 @@
-export { createEditorStore, editor, setEditorContent } from './editor-store';
+export { createEditorStore, editor, setEditorContent, whenEditorReady } from './editor-store';
 export * from './extensions';

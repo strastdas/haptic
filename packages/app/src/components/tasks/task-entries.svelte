@@ -1,7 +1,9 @@
 <script lang="ts">
+	import Icon from '../shared/icon.svelte';
 	import { run } from 'svelte/legacy';
 
 	import { openNote } from '@haptic/core/adapter';
+	import { basename } from '@haptic/core/path';
 	import { activeFile, collection, editorSearchActive, editorSearchValue } from '@haptic/core/store';
 	import { editor } from '@haptic/editor/store';
 	import type { SearchResultParams } from '@haptic/core/types';
@@ -9,7 +11,6 @@
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { ChevronDown, Loader } from '@lucide/svelte';
 	import markdownit from 'markdown-it';
 	import { onDestroy, onMount } from 'svelte';
 	import { get } from 'svelte/store';
@@ -129,13 +130,13 @@
 				class="text-[13px] w-full text-secondary-foreground flex items-center h-7 justify-start gap-1.5 group hover:text-foreground transition-all"
 				onclick={() => toggleOpen(path)}
 			>
-				<ChevronDown
+				<Icon name="chevronDown"
 					class={cn(
 						'w-3.5 h-3.5 transform transition-all shrink-0 text-muted-foreground group-hover:text-foreground',
 						!openState[path] ? '-rotate-90' : 'rotate-0'
 					)}
 				/>
-				<p class="truncate">{path.split('/').pop()}</p>
+				<p class="truncate">{basename(path)}</p>
 			</Collapsible.Trigger>
 			<Collapsible.Content class="mt-0.5 w-full gap-1.5 flex flex-col">
 				{#each groupedTasks[path] as result, index (result.context_preview)}
@@ -178,7 +179,7 @@
 
 {#if loading && tasks.length === 0}
 	<div class="w-full h-full flex flex-col gap-0.5 items-center justify-center">
-		<Loader class="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+		<Icon name="loader" class="w-3.5 h-3.5 animate-spin text-muted-foreground" />
 		<Label class="text-muted-foreground text-xs">Searching collection...</Label>
 	</div>
 {/if}

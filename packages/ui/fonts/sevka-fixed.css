@@ -1,0 +1,40 @@
+/*
+ * Sevka Fixed, self-hosted.
+ *
+ * Mirrors https://cdn.strast.dev/fonts/sevka-fixed.full.css, which the web app
+ * links directly. The desktop app has to work offline, so it imports this
+ * instead and Vite bundles the woff2 files into the Tauri binary.
+ * Keep the two in sync when the CDN stylesheet changes.
+ *
+ * The CDN stylesheet ships the full family (300-700, upright and italic) and
+ * offers ttf alongside woff2. Only the three upright weights the UI actually
+ * uses are mirrored, in woff2 only — the desktop webview supports it everywhere,
+ * and the ttf fallbacks would double the bundled size for nothing.
+ */
+
+@font-face {
+  font-family: 'sevka-fixed';
+  src: url('./sevka-fixed/SevkaFixed-Light.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'sevka-fixed';
+  src: url('./sevka-fixed/SevkaFixed-Regular.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+@font-face {
+  font-family: 'sevka-fixed';
+  src: url('./sevka-fixed/SevkaFixed-SemiBold.woff2') format('woff2');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+}

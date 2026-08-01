@@ -9,6 +9,7 @@
     "./constants": "./src/constants.ts",
     "./store": "./src/store.ts",
     "./utils": "./src/utils.ts",
+    "./path": "./src/path.ts",
     "./adapter": "./src/adapter.ts",
     "./adapter.contract": "./src/adapter.contract.ts"
   },

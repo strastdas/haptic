@@ -1,7 +1,7 @@
-import { OS_TRASH_DIR } from '@/constants';
-import { collection, collectionSettings, platform } from '@/store';
+import { basename, dirname, joinPath } from '@haptic/core/path';
+import { collection, collectionSettings } from '@/store';
 import { getNextUntitledName } from '@/utils';
-import { homeDir } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api/core';
 import { mkdir, remove, rename } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
 import { readDirTree } from './fs';
@@ -22,7 +22,7 @@ export const createFolder = async (dirPath: string) => {
 
 // Delete a folder
 export const deleteFolder = async (path: string, recursive = false) => {
-  const folderName = path.split('/').pop()!;
+  const folderName = basename(path);
 
   if (!recursive) {
     let children = await readDirTree(path, false);
@@ -38,11 +38,11 @@ export const deleteFolder = async (path: string, recursive = false) => {
 
   switch (get(collectionSettings).notes.trash_dir) {
     case 'system': {
-      await rename(path, `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${folderName}`);
+      await invoke('move_to_trash', { path });
       break;
     }
     case 'haptic': {
-      await rename(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
+      await rename(path, joinPath(get(collection), '.haptic/trash', basename(path)));
       break;
     }
     case 'delete': {
@@ -54,7 +54,7 @@ export const deleteFolder = async (path: string, recursive = false) => {
 
 // Rename a folder
 export const renameFolder = async (path: string, name: string) => {
-  await rename(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
+  await rename(path, joinPath(dirname(path), name));
 };
 
 // Move a folder
@@ -63,11 +63,11 @@ export const moveFolder = async (source: string, target: string) => {
   const files = await readDirTree(target, false);
 
   // Make sure there are no name conflicts
-  const folderName = source.split('/').pop()!;
+  const folderName = basename(source);
 
   if (files.some((file) => file.name === folderName && file.children !== undefined)) {
     throw new Error('Name conflict');
   }
 
-  await rename(source, `${target}/${folderName}`);
+  await rename(source, joinPath(target, folderName));
 };

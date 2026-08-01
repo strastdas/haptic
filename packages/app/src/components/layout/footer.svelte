@@ -7,13 +7,12 @@
 	import * as Sheet from '@haptic/ui/components/sheet';
 	import { Input } from '@haptic/ui/components/input';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
-	import { ChevronDown, Download } from '@lucide/svelte';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
 	import { openExternal, toggleTheme } from '@haptic/core/adapter';
 	import { shortcutToString } from '@haptic/core/utils';
 	import { activeFile, appTheme, isDesktopApp, settingsStore } from '@haptic/core/store';
-	import { REPO_URL, SHORTCUTS } from '@haptic/core/constants';
+	import { SHORTCUTS } from '@haptic/core/constants';
 	import Shortcut from '../shared/shortcut.svelte';
 	
 	let open = $state(false);
@@ -143,7 +142,7 @@
 									class="flex items-center gap-2 group w-full text-sm font-normal"
 								>
 									<!-- Chevron -->
-									<ChevronDown
+									<Icon name="chevronDown"
 										class={cn(
 											'w-4 h-4 transition-all text-muted-foreground group-hover:text-foreground',
 											collapsedCategories.includes(group.name) && 'transform -rotate-90'
@@ -173,7 +172,7 @@
 					<!-- Empty State -->
 					{#if filteredCommands.length === 0}
 						<div class="w-full h-full flex flex-col gap-1 items-center justify-center pt-14">
-							<Icon name="searchBars" class="w-5 h-5 fill-muted-foreground" />
+							<Icon name="searchBars" class="w-5 h-5 text-muted-foreground" />
 							<p class="text-muted-foreground text-sm">No shortcuts found</p>
 						</div>
 					{/if}
@@ -181,35 +180,5 @@
 			</Sheet.Content>
 		</Sheet.Root>
 
-		<Tooltip text="Share" shortcut={SHORTCUTS['app:share']}>
-			<Button
-				size="icon"
-				variant="ghost"
-				class="h-6 w-6 fill-muted-foreground hover:fill-foreground transition-all"
-				scale="md"
-				onclick={() => {
-					document.dispatchEvent(
-						new KeyboardEvent('keydown', { key: 'l', metaKey: true, shiftKey: true })
-					);
-				}}
-			>
-				<Icon name="share" class="w-4 h-4" />
-			</Button>
-		</Tooltip>
-
-		<!-- Web only: the desktop app IS the download. -->
-		{#if !$isDesktopApp}
-			<Tooltip text="Get the desktop app">
-				<Button
-					size="icon"
-					variant="ghost"
-					class="h-6 w-6 text-muted-foreground hover:text-foreground transition-all"
-					scale="md"
-					onclick={() => openExternal(`${REPO_URL}/releases`)}
-				>
-					<Download class="w-4 h-4" />
-				</Button>
-			</Tooltip>
-		{/if}
 	</div>
 </footer>

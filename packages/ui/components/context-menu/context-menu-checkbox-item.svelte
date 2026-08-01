@@ -2,7 +2,7 @@
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 	import { cn, type WithoutChildrenOrChild } from "@haptic/ui/lib/utils.js";
 	import type { Snippet } from "svelte";
-	import CheckIcon from '@lucide/svelte/icons/check';
+	import CheckIcon from '../icons/check.svelte';
 
 	let {
 		ref = $bindable(null),

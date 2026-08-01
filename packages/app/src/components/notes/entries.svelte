@@ -14,6 +14,7 @@
 	import Shortcut from '../shared/shortcut.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import { activeFile, collection, isDesktopApp, platform } from '@haptic/core/store';
+	import { dirname, joinPath, relativeDepth } from '@haptic/core/path';
 	import { editor } from '@haptic/editor/store';
 	import type { FileEntry } from '@haptic/core/types';
 	import { shortcutToString } from '@haptic/core/utils';
@@ -57,11 +58,11 @@
 		return entries.filter((entry) => entry.children);
 	}
 
-	// Root padding is 0.75rem
-	// Each level of nesting adds 0.75rem
-	// Subtract file path length from collection path length for relative path depth
+	// Root padding is 0.75rem, and each level of nesting adds 0.75rem.
+	// `relativeDepth` counts path segments rather than '/' characters, so a path
+	// that still carries native separators can't collapse every entry to depth 0.
 	function calculateDepth(path: string) {
-		return `${(path.split('/').length - $collection.split('/').length) * 0.75}rem`;
+		return `${relativeDepth(path, $collection) * 0.75}rem`;
 	}
 
 	// Exposed to the parent via the bindable `toggleFolderStates` prop
@@ -264,9 +265,8 @@
 			const firstChild = previousHighlightedElement.firstElementChild as HTMLElement | null;
 			// Check if the note is not being dropped in the same folder it's currently in
 			const isSameFolder =
-				previousHighlightedElement.dataset.path ===
-					path.split('/').slice(0, -1).join('/') ||
-				firstChild?.dataset.path === path.split('/').slice(0, -1).join('/');
+				previousHighlightedElement.dataset.path === dirname(path) ||
+				firstChild?.dataset.path === dirname(path);
 
 			if (!isSameFolder) {
 				// Move the note to the folder
@@ -346,14 +346,8 @@
 										/>
 									{/if}
 									<div class="flex items-center w-[calc(100%-20px)] gap-2">
-										<Icon
-											name="folder"
-											class={cn('w-[18px] h-[18px] shrink-0', folderOpenStates[i] && 'hidden')}
-										/>
-										<Icon
-											name="folderOpen"
-											class={cn('w-[18px] h-[18px] shrink-0', !folderOpenStates[i] && 'hidden')}
-										/>
+										<Icon name="folder" class={cn('w-[18px] h-[18px] shrink-0', folderOpenStates[i] && 'hidden')} />
+										<Icon name="folderOpen" class={cn('w-[18px] h-[18px] shrink-0', !folderOpenStates[i] && 'hidden')} />
 										<span class="text-xs truncate outline-none" autocorrect="off" spellcheck="false"
 											>{entry.name}</span
 										>
@@ -373,10 +367,7 @@
 							folderOpenStates[i] = true;
 						}}
 					>
-						<Icon
-							name="notePlus"
-							class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-						/>
+						<Icon name="notePlus" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 						New note
 						<ContextMenu.Shortcut
 							>{shortcutToString(SHORTCUTS['folder:create-note'])}</ContextMenu.Shortcut
@@ -389,10 +380,7 @@
 							folderOpenStates[i] = true;
 						}}
 					>
-						<Icon
-							name="folderPlus"
-							class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-						/>
+						<Icon name="folderPlus" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 						New folder
 						<ContextMenu.Shortcut
 							>{shortcutToString(SHORTCUTS['folder:create'])}</ContextMenu.Shortcut
@@ -405,17 +393,14 @@
 							handleRename(entry, 'folder');
 						}}
 					>
-						<Icon
-							name="editPencil"
-							class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-						/>
+						<Icon name="editPencil" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 						Rename
 						<ContextMenu.Shortcut>{shortcutToString(SHORTCUTS['note:rename'])}</ContextMenu.Shortcut
 						>
 					</ContextMenu.Item>
 					<ContextMenu.Sub>
 						<ContextMenu.SubTrigger class="flex items-center gap-2 font-base group">
-							<Icon name="motionCirclesLines" class="w-3.5 h-3.5 fill-foreground/70" />
+							<Icon name="motionCirclesLines" class="w-3.5 h-3.5 text-foreground/70" />
 							Move folder to...
 						</ContextMenu.SubTrigger>
 						<ContextMenu.SubContent class="w-40">
@@ -425,10 +410,7 @@
 										class="flex items-center gap-2 font-base group"
 										onclick={() => moveFolder(entry.path, directory.path)}
 									>
-										<Icon
-											name="folder"
-											class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-										/>
+										<Icon name="folder" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 										{directory.name}
 									</ContextMenu.Item>
 								{/if}
@@ -439,18 +421,13 @@
 									class="flex items-center gap-2 font-base group"
 									onclick={async () => {
 										// Create a new folder in parent directory
-										const dirPath = await createFolder(
-											entry.path.split('/').slice(0, -1).join('/')
-										);
+										const dirPath = await createFolder(dirname(entry.path));
 
 										// Move the folder to the new directory
 										moveFolder(entry.path, dirPath);
 									}}
 								>
-									<Icon
-										name="folderPlus"
-										class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-									/>
+									<Icon name="folderPlus" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 									New folder
 									<ContextMenu.Shortcut
 										>{shortcutToString(SHORTCUTS['folder:create'])}</ContextMenu.Shortcut
@@ -465,7 +442,7 @@
 							class="flex items-center gap-2 font-base group"
 							onclick={() => showInFolder(entry.path)}
 						>
-							<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+							<Icon name="eye" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 							Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
 							<ContextMenu.Shortcut
 								>{shortcutToString(SHORTCUTS['folder:show-in-folder'])}</ContextMenu.Shortcut
@@ -477,7 +454,7 @@
 						class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
 						onclick={() => deleteFolder(entry.path)}
 					>
-						<Icon name="bin" class="w-3.5 h-3.5 fill-destructive/70 group-hover:fill-destructive" />
+						<Icon name="bin" class="w-3.5 h-3.5 text-destructive/70 group-hover:text-destructive" />
 						Delete
 						<ContextMenu.Shortcut class="text-destructive/60"
 							>{shortcutToString(SHORTCUTS['folder:delete'])}</ContextMenu.Shortcut
@@ -544,10 +521,7 @@
 						handleRename(entry, 'note');
 					}}
 				>
-					<Icon
-						name="editPencil"
-						class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-					/>
+					<Icon name="editPencil" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 					Rename
 					<ContextMenu.Shortcut>{shortcutToString(SHORTCUTS['note:rename'])}</ContextMenu.Shortcut>
 				</ContextMenu.Item>
@@ -555,7 +529,7 @@
 					class="flex items-center gap-2 font-base group"
 					onclick={() => duplicateNote(entry.path)}
 				>
-					<Icon name="copy" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+					<Icon name="copy" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 					Duplicate
 					<ContextMenu.Shortcut
 						>{shortcutToString(SHORTCUTS['note:duplicate'])}</ContextMenu.Shortcut
@@ -564,7 +538,7 @@
 				<ContextMenu.Separator />
 				<ContextMenu.Sub>
 					<ContextMenu.SubTrigger class="flex items-center gap-2 font-base group">
-						<Icon name="motionCirclesLines" class="w-3.5 h-3.5 fill-foreground/70" />
+						<Icon name="motionCirclesLines" class="w-3.5 h-3.5 text-foreground/70" />
 
 						Move note to...
 					</ContextMenu.SubTrigger>
@@ -575,10 +549,7 @@
 									class="flex items-center gap-2 font-base group"
 									onclick={() => moveNote(entry.path, directory.path)}
 								>
-									<Icon
-										name="folder"
-										class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-									/>
+									<Icon name="folder" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 									{directory.name}
 								</ContextMenu.Item>
 							{/if}
@@ -589,16 +560,13 @@
 								class="flex items-center gap-2 font-base group"
 								onclick={async () => {
 									// Create a new folder in parent directory
-									await createFolder(entry.path.split('/').slice(0, -1).join('/'));
+									await createFolder(dirname(entry.path));
 
 									// Move the folder to the new folder
-									moveNote(entry.path, entry.path.split('/').slice(0, -1).join('/') + '/Untitled');
+									moveNote(entry.path, joinPath(dirname(entry.path), 'Untitled'));
 								}}
 							>
-								<Icon
-									name="folderPlus"
-									class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-								/>
+								<Icon name="folderPlus" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 								New folder
 								<ContextMenu.Shortcut
 									>{shortcutToString(SHORTCUTS['folder:create'])}</ContextMenu.Shortcut
@@ -613,7 +581,7 @@
 						class="flex items-center gap-2 font-base group"
 						onclick={() => showInFolder(entry.path)}
 					>
-						<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+						<Icon name="eye" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 						Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
 						<ContextMenu.Shortcut
 							>{shortcutToString(SHORTCUTS['note:show-in-folder'])}</ContextMenu.Shortcut
@@ -625,7 +593,7 @@
 					class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
 					onclick={() => deleteNote(entry.path)}
 				>
-					<Icon name="bin" class="w-3.5 h-3.5 fill-destructive/70 group-hover:fill-destructive" />
+					<Icon name="bin" class="w-3.5 h-3.5 text-destructive/70 group-hover:text-destructive" />
 					Delete
 					<ContextMenu.Shortcut class="text-destructive/60"
 						>{shortcutToString(SHORTCUTS['note:delete'])}</ContextMenu.Shortcut

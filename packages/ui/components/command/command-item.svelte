@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Command as CommandPrimitive } from "bits-ui";
 	import { cn } from "@haptic/ui/lib/utils.js";
-	import CheckIcon from '@lucide/svelte/icons/check';
+	import CheckIcon from '../icons/check.svelte';
 
 	let {
 		ref = $bindable(null),

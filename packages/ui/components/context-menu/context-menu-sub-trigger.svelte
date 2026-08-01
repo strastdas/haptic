@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 	import { cn, type WithoutChild } from "@haptic/ui/lib/utils.js";
-	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import ChevronRightIcon from '../icons/chevron-right.svelte';
 
 	let {
 		ref = $bindable(null),

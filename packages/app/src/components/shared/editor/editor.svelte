@@ -94,6 +94,12 @@
 				}, $collectionSettings.editor.auto_save_debounce);
 			}
 		});
+
+		// Publish the instance as soon as it exists. `onTransaction` above does not
+		// fire on construction, so until the user typed something the store stayed
+		// undefined — and anything reaching for it first (opening a standalone file
+		// before any note has been touched) died on `$editor.commands`.
+		editor.set(tiptapEditor);
 	});
 
 	// The store is the single source of truth for the mode — the toolbar pen and

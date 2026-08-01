@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // E2E smoke tests run against a production build served by vite preview —
-// no interactive dev server involved. PGlite persists to IndexedDB, so each
+// no interactive dev server involved. Storage persists to IndexedDB, so each
 // test uses a fresh browser context (Playwright default) for isolation.
 export default defineConfig({
   testDir: './e2e',

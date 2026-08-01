@@ -6,7 +6,7 @@
 	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import Tooltip from '@haptic/app/components/shared/tooltip.svelte';
 	import { SHORTCUTS } from '@/constants';
-	import { pgClient } from '@/database/client';
+	import { watchEntries } from '@/database/client';
 	import {
 		activeFile,
 		collection,
@@ -22,7 +22,6 @@
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';
-	import { ALargeSmall, WholeWord } from '@lucide/svelte';
 	import { onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
 	import Entries from '@haptic/app/components/notes/entries.svelte';
@@ -41,11 +40,11 @@
 
 	// Watch for changes in the collection
 	async function watchCollection() {
-		const dbWatcher = await pgClient.live.query(`SELECT * FROM entry`, [], async () => {
+		// Was a PGlite live query on `entry`; the callback always refetched the
+		// whole tree, so a plain change signal is equivalent.
+		return watchEntries(async () => {
 			await fetchCollectionEntries($collection);
 		});
-
-		return dbWatcher.unsubscribe;
 	}
 
 	const stopWatchingStore = collectionEntries.subscribe((value) => {
@@ -233,20 +232,8 @@
 						toggleFolderStates?.();
 					}}
 				>
-					<Icon
-						name="collapseCircle"
-						class={cn(
-							'w-[18px] h-[18px] transition-all transform',
-							folderToggleState === 'collapse' && 'hidden'
-						)}
-					/>
-					<Icon
-						name="expandCircle"
-						class={cn(
-							'w-[18px] h-[18px] transition-all transform',
-							folderToggleState === 'expand' && 'hidden'
-						)}
-					/>
+					<Icon name="collapseCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'collapse' && 'hidden' )} />
+					<Icon name="expandCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'expand' && 'hidden' )} />
 				</Button>
 			</Tooltip>
 			<Tooltip text="Search" side="bottom" shortcut={SHORTCUTS['notes:search']}>
@@ -313,7 +300,7 @@
 							searchCollection();
 						}}
 					>
-						<ALargeSmall
+						<Icon name="caseSensitive"
 							class={cn(
 								'w-18px] h-[18px] stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								caseSensitive ? 'stroke-foreground' : ''
@@ -332,7 +319,7 @@
 							searchCollection();
 						}}
 					>
-						<WholeWord
+						<Icon name="wholeWord"
 							class={cn(
 								'w-4 h-4 stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								wholeWord ? 'stroke-foreground' : ''

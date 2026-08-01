@@ -72,6 +72,15 @@ function createMockAdapter(): ContractAdapter {
   };
 
   const adapter: ContractAdapter = {
+    readNoteContent: async (path) => rows.get(path)?.content ?? '',
+
+    writeNoteContent: async (path, content) => {
+      const row = rows.get(path);
+      if (row) {
+        row.content = content;
+      }
+    },
+
     loadCollection: async (path) => {
       if (path) {
         collection.set(path);

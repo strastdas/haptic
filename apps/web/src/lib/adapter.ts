@@ -9,9 +9,10 @@ import { searchEntries } from './utils';
 
 /**
  * Registers the web (PGlite/drizzle) implementations behind @haptic/core's
- * StorageAdapter seam. Imported for its side effect from the root layout.
+ * StorageAdapter seam, under the `local` scope. Imported for its side effect
+ * from the root layout. The cloud adapter registers alongside it later.
  */
-setStorageAdapter({
+setStorageAdapter('local', {
   ...notes,
   ...collection,
   ...folders,

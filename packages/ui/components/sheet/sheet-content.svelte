@@ -8,7 +8,7 @@
 	import SheetPortal from "./sheet-portal.svelte";
 	import SheetOverlay from "./sheet-overlay.svelte";
 	import { Button } from "@haptic/ui/components/button/index.js";
-	import XIcon from '@lucide/svelte/icons/x';
+	import XIcon from '../icons/x.svelte';
 	import { cn, type WithoutChildrenOrChild } from "@haptic/ui/lib/utils.js";
 	import type { ComponentProps } from "svelte";
 

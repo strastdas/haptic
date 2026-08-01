@@ -6,12 +6,48 @@ export { setEditorContent } from '@haptic/editor/store';
 
 import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
+import { message, open } from '@tauri-apps/plugin-dialog';
 import { exists, mkdir } from '@tauri-apps/plugin-fs';
+import { normalizeSeparators } from '@haptic/core/path';
 import type { SearchResultParams } from '@haptic/core/types';
 
 // Show in folder
 export async function showInFolder(path: string) {
   await invoke('show_in_folder', { path });
+}
+
+/** PlatformActions.reportError — a native alert, since the app has no toasts. */
+export function reportError(text: string) {
+  message(text, { title: 'Haptic', kind: 'error' }).catch((error) => {
+    console.error('Failed to show error dialog:', error, text);
+  });
+}
+
+/**
+ * PlatformActions.pickFile — choose a single markdown note from the OS dialog.
+ *
+ * Returns the path, normalized to forward slashes as everywhere else, or null
+ * when the dialog is dismissed.
+ *
+ * The dialog plugin is documented to add the picked path to the filesystem
+ * scope itself, but the static scope is only `$HOME/**` and a silent denial here
+ * is invisible, so the grant is made explicitly too — it is idempotent and
+ * costs one IPC call.
+ */
+export async function pickFile(): Promise<string | null> {
+  const selected = await open({
+    multiple: false,
+    directory: false,
+    filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'mdx', 'txt'] }]
+  });
+
+  if (typeof selected !== 'string') {
+    return null;
+  }
+
+  const path = normalizeSeparators(selected);
+  await invoke('allow_file', { path });
+  return path;
 }
 
 /**

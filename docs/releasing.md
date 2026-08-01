@@ -11,6 +11,25 @@ They had drifted to three different values (`0.1.4` / `0.1.0` / `0.0.1`) because
 
 Upstream's last tag, `v0.2.0-beta`, shipped a bundle still labelled `0.1.4`; this fork restarted numbering at **0.3.0** to sit unambiguously ahead of both.
 
+## Why the `tauri` script sets `CI=true`
+
+`apps/desktop/package.json` runs the CLI as `cross-env CI=true tauri`. Tauri's DMG bundler
+drives **Finder over AppleScript** to lay out the disk-image window (icon positions, window
+size). That call is fragile — on this machine it fails with `AppleEvent timed out. (-1712)`
+even though AppleScript-to-Finder otherwise works, which killed `tauri build` after the
+`.app` had already built successfully.
+
+`CI=true` makes Tauri pass `--skip-jenkins` to `bundle_dmg.sh`, whose stated purpose is
+"skip Finder-prettifying AppleScript, useful in Sandbox and non-GUI environments". The build
+becomes deterministic and no longer depends on Finder being responsive.
+
+The cost is cosmetic: the DMG opens as a plain window with `Haptic.app` and the `Applications`
+symlink, without preset icon positions. Nothing about installation changes. `bundle.macOS.dmg`
+styling in `tauri.conf.json` would be ignored, so don't add a background image expecting it to
+appear. Drop the env var if you ever need the styled layout and Finder is cooperating.
+
+`dev:tauri` deliberately does **not** set it, so `tauri dev` is unaffected.
+
 ## macOS build
 
 ```fish

@@ -5,14 +5,15 @@ import * as collection from './api/collection';
 import * as folders from './api/folders';
 import * as notes from './api/notes';
 import * as settings from './api/settings';
-import { searchEntries, showInFolder } from './utils';
+import { pickFile, reportError, searchEntries, showInFolder } from './utils';
 
 /**
  * Registers the desktop (Tauri filesystem) implementations behind
- * @haptic/core's StorageAdapter seam. Imported for its side effect from the
- * root layout.
+ * @haptic/core's StorageAdapter seam, under the `local` scope. Imported for its
+ * side effect from the root layout. The cloud adapter registers alongside it
+ * later — desktop is the app that holds both at once.
  */
-setStorageAdapter({
+setStorageAdapter('local', {
   ...notes,
   ...collection,
   ...folders,
@@ -30,5 +31,7 @@ isDesktopApp.set(true);
  */
 setPlatformActions({
   openExternal: (url) => openUrl(url),
-  showInFolder
+  showInFolder,
+  pickFile,
+  reportError
 });

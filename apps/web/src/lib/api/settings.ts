@@ -1,8 +1,6 @@
 import { getDb } from '@/database/client';
-import { collectionSettings as collectionSettingsTable } from '@/database/schema';
 import { appSettings, collection, collectionSettings } from '@/store';
 import type { AppSettingsParams, CollectionSettingsParams } from '@/types';
-import { eq } from 'drizzle-orm';
 import { get } from 'svelte/store';
 
 export const loadSettings = async (loadApp: boolean, loadCollection: boolean) => {
@@ -17,17 +15,11 @@ export const loadSettings = async (loadApp: boolean, loadCollection: boolean) =>
   }
 
   if (loadCollection) {
-    const collectionSettingsData = await getDb()
-      .select()
-      .from(collectionSettingsTable)
-      .where(eq(collectionSettingsTable.collectionPath, get(collection)));
-    if (!collectionSettingsData || collectionSettingsData.length === 0) {
-      setSettings('collection');
+    const stored = await getDb().get('collectionSettings', get(collection));
+    if (stored) {
+      collectionSettings.set({ editor: stored.editor, notes: stored.notes });
     } else {
-      collectionSettings.set({
-        editor: collectionSettingsData[0].editor as CollectionSettingsParams['editor'],
-        notes: collectionSettingsData[0].notes as CollectionSettingsParams['notes']
-      });
+      setSettings('collection');
     }
   }
 };
@@ -42,19 +34,12 @@ export const setSettings = async (
   }
   if (settingsType === 'collection') {
     collectionSettings.set((value ?? get(collectionSettings)) as CollectionSettingsParams);
-    await getDb()
-      .insert(collectionSettingsTable)
-      .values({
-        collectionPath: get(collection),
-        editor: ((value ?? get(collectionSettings)) as CollectionSettingsParams).editor,
-        notes: ((value ?? get(collectionSettings)) as CollectionSettingsParams).notes
-      })
-      .onConflictDoUpdate({
-        target: collectionSettingsTable.collectionPath,
-        set: {
-          editor: ((value ?? get(collectionSettings)) as CollectionSettingsParams).editor,
-          notes: ((value ?? get(collectionSettings)) as CollectionSettingsParams).notes
-        }
-      });
+    const next = (value ?? get(collectionSettings)) as CollectionSettingsParams;
+    // `put` upserts on the keyPath, replacing the insert-on-conflict-update.
+    await getDb().put('collectionSettings', {
+      collectionPath: get(collection),
+      editor: next.editor,
+      notes: next.notes
+    });
   }
 };

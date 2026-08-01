@@ -1,12 +1,16 @@
 import {
+  canOpenFile,
   createFolder,
   createNote,
   deleteNote,
   duplicateNote,
+  openFile,
   saveNote,
   showInFolder
 } from '@haptic/core/adapter';
+import { goto } from '$app/navigation';
 import { SHORTCUTS } from '@haptic/core/constants';
+import { basename } from '@haptic/core/path';
 import {
   collection,
   collectionSearchActive,
@@ -19,15 +23,47 @@ import {
   settingsStore
 } from '@haptic/core/store';
 import type { ShortcutParams } from '@haptic/core/types';
-import { editor } from '@haptic/editor/store';
+import { editor, whenEditorReady } from '@haptic/editor/store';
 import { get } from 'svelte/store';
 import type { IconKey } from '../icon.svelte';
+
+/**
+ * Makes sure there is a mounted editor before content is pushed into it.
+ *
+ * Only the note/daily/task routes mount the editor, so opening a file from the
+ * empty landing page has to navigate first — and then *wait*, because `goto`
+ * resolves before the destination page's `onMount` has created the TipTap
+ * instance. A populated store means the current route already has one, so this
+ * won't drag you off daily or tasks.
+ */
+export async function ensureEditorReady() {
+  if (get(editor)) {
+    return;
+  }
+  await goto('/notes');
+  await whenEditorReady();
+}
+
+/** Opens a standalone file, in an editor guaranteed to exist. */
+export async function openFileInEditor() {
+  await ensureEditorReady();
+  await openFile();
+}
 
 interface Command {
   title: string;
   icon: IconKey | null;
   shortcut?: ShortcutParams;
   onSelect?: () => string | void;
+  /**
+   * Whether to show the command, evaluated when the menu renders.
+   *
+   * Must not be resolved here: this list is a module-level const, so anything
+   * read at construction time is captured before the app has registered its
+   * platform seams — the exact bootstrap-ordering trap the architecture doc
+   * warns about.
+   */
+  available?: () => boolean;
 }
 
 interface CommandGroup {
@@ -118,6 +154,17 @@ export const mainCommands: CommandGroup[] = [
         onSelect: () => 'open_collection'
       },
       {
+        // Desktop only — web has no way to reopen a picked file later, so the
+        // command is hidden rather than shown and failing.
+        title: 'Open file',
+        icon: 'note',
+        shortcut: SHORTCUTS['app:open-file'],
+        available: canOpenFile,
+        onSelect: () => {
+          openFileInEditor();
+        }
+      },
+      {
         title: 'Go to settings',
         icon: 'settings',
         shortcut: SHORTCUTS['app:settings'],
@@ -126,27 +173,9 @@ export const mainCommands: CommandGroup[] = [
         }
       },
       {
-        title: 'Go to help',
-        icon: 'lifebouy',
-        shortcut: SHORTCUTS['app:help'],
-        onSelect: () => 'help_and_feedback'
-      },
-      {
         title: 'View shortcuts',
         icon: 'bolt',
         shortcut: SHORTCUTS['app:shortcuts']
-      },
-      {
-        title: 'Send feedback',
-        icon: 'lifebouy',
-        shortcut: SHORTCUTS['app:help'],
-        onSelect: () => 'help_and_feedback'
-      },
-      {
-        title: 'Share with friends',
-        icon: 'share',
-        shortcut: SHORTCUTS['app:share'],
-        onSelect: () => 'share'
       }
     ]
   },
@@ -185,7 +214,7 @@ export const mainCommands: CommandGroup[] = [
 ];
 
 export const createNoteCommands = (notePath: string): CommandGroup => ({
-  name: notePath.split('/').pop() as string,
+  name: basename(notePath),
   commands: [
     {
       title: 'Save note',

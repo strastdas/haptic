@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // Standalone test config (no SvelteKit plugin): the tests exercise the plain
-// TypeScript storage layer (api modules + PGlite in-memory), not components.
+// TypeScript storage layer (api modules + IndexedDB), not components.
 export default defineConfig({
   resolve: {
     alias: {
@@ -14,6 +14,7 @@ export default defineConfig({
     name: 'web',
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['./tests/setup.ts'],
     testTimeout: 30_000,
     hookTimeout: 30_000
   }

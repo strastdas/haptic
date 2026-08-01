@@ -18,6 +18,9 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2", features = [] }
 regex = "1"
 hex_color = "3"
+# Correct OS trash semantics on all three platforms (Recycle Bin / freedesktop
+# .trashinfo / macOS Finder trash) — see commands/trash.rs.
+trash = "5"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-window-state = "2"
 tauri-plugin-dialog = "2"
@@ -28,6 +31,9 @@ tauri-plugin-os = "2"
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.26"
 objc = "0.2.7"
+
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = "2.4.3"
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]

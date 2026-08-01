@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     "./actions/shortcut": "./src/actions/shortcut.ts",
+    "./components/shared/command-menu/commands": "./src/components/shared/command-menu/commands.ts",
     "./*": "./src/*"
   },
   "peerDependencies": {
@@ -14,7 +15,6 @@
     "@haptic/core": "workspace:^",
     "@haptic/editor": "workspace:^",
     "@haptic/ui": "workspace:^",
-    "@lucide/svelte": "^1.27.0",
     "@tiptap/core": "^2.2.1",
     "@tiptap/extension-character-count": "^2.5.0",
     "@tiptap/extension-document": "^2.2.2",
@@ -27,6 +27,7 @@
     "tiptap-markdown": "^0.8.9"
   },
   "devDependencies": {
+    "@iconify-json/teenyicons": "^1.2.2",
     "@types/markdown-it": "^14.1.1",
     "svelte": "^5.56.8"
   }

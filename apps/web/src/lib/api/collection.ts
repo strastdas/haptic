@@ -1,9 +1,8 @@
-import { getDb } from '@/database/client';
-import { collection as collectionTable, entry as entryTable } from '@/database/schema';
+import { allEntries, childEntries, getDb, type CollectionRow } from '@/database/client';
 import { activeFile, collection, collectionEntries, noteHistory } from '@/store';
 import type { FileEntry } from '@/types';
 import { buildFileTree, sortFileEntry } from '@/utils';
-import { and, eq } from 'drizzle-orm';
+import { basename } from '@haptic/core/path';
 import { get } from 'svelte/store';
 
 // Fetch the collection entries
@@ -12,32 +11,22 @@ export const fetchCollectionEntries = async (
   sort: 'name' | 'date' = 'name',
   showDotfiles = false
 ): Promise<FileEntry[]> => {
-  const db = getDb();
   dirPath = dirPath || get(collection);
   if (!dirPath) {
     throw new Error('No directory path provided');
   }
 
   // Get collection by path
-  const collectionObj = await db
-    .select()
-    .from(collectionTable)
-    .where(eq(collectionTable.path, get(collection)));
-
-  if (collectionObj.length === 0) {
+  const collectionObj = await getDb().get('collection', get(collection));
+  if (!collectionObj) {
     throw new Error('Collection not found');
   }
 
-  // Read all entries linked to the collection
-  const entries = await db
-    .select()
-    .from(entryTable)
-    .where(
-      and(
-        eq(entryTable.collectionPath, get(collection)),
-        dirPath === get(collection) ? undefined : eq(entryTable.parentPath, dirPath)
-      )
-    );
+  // Read entries: the whole collection at the root, otherwise one directory
+  const entries =
+    dirPath === get(collection)
+      ? await allEntries(get(collection))
+      : (await childEntries(dirPath)).filter((row) => row.collectionPath === get(collection));
 
   // Convert entries to FileEntry[] format with recursive children
   const fileEntries = buildFileTree(entries, dirPath);
@@ -93,33 +82,17 @@ export const loadCollection = async (path?: string | undefined) => {
   noteHistory.set([]);
   activeFile.set(null);
 
-  const db = getDb();
-
-  // Add collection to collections data
-  const collectionObj = {
+  // Add (or touch) the collection. `put` is an upsert on the keyPath, so this
+  // replaces the previous exists-check-then-insert-or-update.
+  const existing = await getDb().get('collection', path);
+  await getDb().put('collection', {
     path,
-    name: path.split('/').pop()!,
+    name: existing?.name ?? basename(path),
     lastOpened: new Date()
-  };
-
-  // Check if collection already exists
-  const collections = await db.select().from(collectionTable).where(eq(collectionTable.path, path));
-
-  if (collections && collections.length > 0) {
-    // Update collection
-    await db
-      .update(collectionTable)
-      .set({ lastOpened: new Date() })
-      .where(eq(collectionTable.path, path));
-  } else {
-    // Insert collection
-    await db.insert(collectionTable).values(collectionObj);
-  }
+  });
 };
 
 // Get all collections
-export const getCollections = async (): Promise<(typeof collectionTable.$inferSelect)[]> => {
-  const collections = await getDb().select().from(collectionTable);
-
-  return collections;
+export const getCollections = async (): Promise<CollectionRow[]> => {
+  return getDb().getAll('collection');
 };

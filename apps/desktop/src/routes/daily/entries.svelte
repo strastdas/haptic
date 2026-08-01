@@ -128,10 +128,7 @@
 					</ContextMenu.Trigger>
 					<ContextMenu.Content class="w-44">
 						<ContextMenu.Item class="flex items-center gap-2 font-base group">
-							<Icon
-								name="editPencil"
-								class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground"
-							/>
+							<Icon name="editPencil" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 							Rename
 							<ContextMenu.Shortcut
 								>{shortcutToString(SHORTCUTS['note:rename'])}</ContextMenu.Shortcut
@@ -142,7 +139,7 @@
 							class="flex items-center gap-2 font-base group"
 							onclick={() => showInFolder(entry.path)}
 						>
-							<Icon name="eye" class="w-3.5 h-3.5 fill-foreground/70 group-hover:fill-foreground" />
+							<Icon name="eye" class="w-3.5 h-3.5 text-foreground/70 group-hover:text-foreground" />
 							Show in {#if $platform === 'darwin'}Finder{:else if $platform === 'linux'}Files{:else}Explorer{/if}
 							<ContextMenu.Shortcut
 								>{shortcutToString(SHORTCUTS['note:show-in-folder'])}</ContextMenu.Shortcut
@@ -153,10 +150,7 @@
 							class="flex text-destructive data-[highlighted]:bg-destructive/20 data-[highlighted]:text-destructive items-center gap-2 font-base group"
 							onclick={() => deleteNote(entry.path)}
 						>
-							<Icon
-								name="bin"
-								class="w-3.5 h-3.5 fill-destructive/70 group-hover:fill-destructive"
-							/>
+							<Icon name="bin" class="w-3.5 h-3.5 text-destructive/70 group-hover:text-destructive" />
 							Delete
 							<ContextMenu.Shortcut class="text-destructive/60"
 								>{shortcutToString(SHORTCUTS['note:delete'])}</ContextMenu.Shortcut

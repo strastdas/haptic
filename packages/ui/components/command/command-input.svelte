@@ -2,7 +2,7 @@
 	import { Command as CommandPrimitive } from "bits-ui";
 	import { cn } from "@haptic/ui/lib/utils.js";
 	import * as InputGroup from "@haptic/ui/components/input-group/index.js";
-	import SearchIcon from '@lucide/svelte/icons/search';
+	import SearchIcon from '../icons/search.svelte';
 
 	let {
 		ref = $bindable(null),

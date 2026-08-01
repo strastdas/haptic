@@ -1,4 +1,4 @@
-// Shared helpers live in @haptic/core; only web-specific (PGlite/DOM) helpers remain here.
+// Shared helpers live in @haptic/core; only web-specific (IndexedDB/DOM) helpers remain here.
 export * from '@haptic/core/utils';
 // Theme actions live behind @haptic/core's platform seam (registered in ./adapter).
 export { setTheme, toggleTheme } from '@haptic/core/adapter';
@@ -7,14 +7,10 @@ export { setEditorContent } from '@haptic/editor/store';
 import { collection } from '@haptic/core/store';
 import { escapeRegExp } from '@haptic/core/utils';
 import type { FileEntry, SearchResultParams } from '@haptic/core/types';
-import type { entry as entryTable } from '@/database/schema';
 import { get } from 'svelte/store';
-import { pgClient } from './database/client';
+import { allEntries, type EntryRow } from './database/client';
 
-export function buildFileTree(
-  entries: (typeof entryTable.$inferSelect)[],
-  rootPath?: string
-): FileEntry[] {
+export function buildFileTree(entries: EntryRow[], rootPath?: string): FileEntry[] {
   const entryMap = new Map<string, FileEntry>();
 
   // First pass: create FileEntry objects for all entries
@@ -51,27 +47,15 @@ export async function searchEntries(
   caseSensitive = false,
   matchWord = false
 ): Promise<SearchResultParams[]> {
-  // The query is passed as a bound parameter, so no manual quote-escaping:
-  // doubling quotes here would make apostrophe searches silently match nothing.
-  const likeOperator = caseSensitive ? 'LIKE' : 'ILIKE';
-  const wordBoundary = matchWord ? ' ' : '';
-  const searchPattern = `%${wordBoundary}${query}${wordBoundary}%`;
-  const sqlQuery = `
-    WITH matched_entries AS (
-      SELECT path, content
-      FROM entry
-      WHERE collection_path = $1
-        AND content ${likeOperator} $2
-    )
-    SELECT path, content
-    FROM matched_entries
-  `;
-  const results = await pgClient.query<{ path: string; content: string }>(sqlQuery, [
-    collectionPath,
-    searchPattern
-  ]);
+  // Was a SQL ILIKE over the entry table. `extractAllContexts` below already did
+  // the real work in JS — the query only ever selected candidate rows, which at
+  // browser scale (one person's own notes) is a plain filter.
+  const rows = await allEntries(collectionPath);
   const searchResults: SearchResultParams[] = [];
-  results.rows.forEach((row) => {
+  rows.forEach((row) => {
+    if (row.isFolder || !row.content) {
+      return;
+    }
     const contexts = extractAllContexts(row.content, query, caseSensitive, matchWord);
     contexts.forEach((context) => {
       searchResults.push({

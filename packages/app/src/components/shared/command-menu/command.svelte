@@ -8,14 +8,14 @@
 		openNote,
 		setTheme
 	} from '@haptic/core/adapter';
-	import { REPO_URL } from '@haptic/core/constants';
 	import { activeFile, appTheme, collection } from '@haptic/core/store';
 	import { formatTimeAgo, shortcutToString } from '@haptic/core/utils';
 	import * as Command from '@haptic/ui/components/command';
-	import Loader from '@lucide/svelte/icons/loader';
 	import { onMount } from 'svelte';
 	import Icon from '../icon.svelte';
-	import { mainCommands as commands, createNoteCommands } from './commands';
+	import { SHORTCUTS } from '@haptic/core/constants';
+	import Shortcut from '../shortcut.svelte';
+	import { mainCommands as commands, createNoteCommands, openFileInEditor } from './commands';
 	import { getAllItems } from './helpers';
 
 	interface Props {
@@ -43,9 +43,7 @@
 		'cmd+j': 'open_note',
 		'cmd+shift+m': 'move_note',
 		'cmd+shift+t': 'change_theme',
-		'cmd+o': 'open_collection',
-		'cmd+shift+h': 'help_and_feedback',
-		'cmd+shift+l': 'share'
+		'cmd+o': 'open_collection'
 	};
 
 	// If a page is provided, it opens that page, otherwise it closes the menu
@@ -144,6 +142,12 @@
 	});
 </script>
 
+<!--
+	`shortcutKeyMap` above only opens command-menu *pages*; a command that runs an
+	action needs its own binding, the same way the notes pane binds note:save.
+-->
+<Shortcut options={SHORTCUTS['app:open-file']} callback={() => openFileInEditor()} />
+
 <Command.Dialog
 	bind:open
 	bind:value
@@ -170,7 +174,7 @@
 		{#if page === 'default'}
 			{#each commands as group}
 				<Command.Group heading={group.name}>
-					{#each group.commands as command}
+					{#each group.commands.filter((command) => command.available?.() ?? true) as command}
 						<Command.Item
 							class="[&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
 							value={command.title}
@@ -298,7 +302,7 @@
 			{#if loadingCollection}
 				<Command.Empty class="text-foreground/60 font-light">
 					<div class="flex flex-col items-center gap-1.5">
-						<Loader class="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+						<Icon name="loader" class="w-3.5 h-3.5 animate-spin text-muted-foreground" />
 						<div class="flex flex-col gap-0.5">
 							Loading collection... ({loadingCollection.progress}%)
 							<span class="text-xs text-muted-foreground"
@@ -381,45 +385,6 @@
 					</Command.Group>
 				{/await}
 			{/if}
-		{:else if page === 'help_and_feedback'}
-			<Command.Group heading="Help & Support">
-				<Command.Item
-					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
-					value="help"
-					onSelect={() => {
-						openExternal(`${REPO_URL}/issues`);
-						handlePageState(undefined);
-					}}
-				>
-					<Icon name="lifebouy" />
-					Get help
-				</Command.Item>
-				<Command.Item
-					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
-					value="feedback"
-					onSelect={() => {
-						openExternal(`${REPO_URL}/issues/new`);
-						handlePageState(undefined);
-					}}
-				>
-					<Icon name="commentSquareText" />
-					Leave feedback
-				</Command.Item>
-			</Command.Group>
-		{:else if page === 'share'}
-			<Command.Group heading="Share">
-				<Command.Item
-					class="text-foreground/90 gap-3 [&>*]:text-foreground/90 [&>*]:aria-selected:text-foreground [&>*]:fill-foreground/50 [&>*]:aria-selected:fill-foreground"
-					value="copy_link"
-					onSelect={() => {
-						navigator.clipboard.writeText(REPO_URL);
-						handlePageState(undefined);
-					}}
-				>
-					<Icon name="browserUrl" />
-					Copy link
-				</Command.Item>
-			</Command.Group>
 		{/if}
 	</Command.List>
 </Command.Dialog>

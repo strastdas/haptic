@@ -21,10 +21,12 @@
 	import { cn } from '@haptic/ui/lib/utils';
 	import type { FileEntry } from '@/types';
 	import { invoke } from '@tauri-apps/api/core';
-	import { ALargeSmall, WholeWord } from '@lucide/svelte';
 	import { type UnwatchFn, watchImmediate } from '@tauri-apps/plugin-fs';
 	import Entries from '@haptic/app/components/notes/entries.svelte';
 	import SearchResults from '@haptic/app/components/notes/search-results.svelte';
+	import StandaloneFiles from '@haptic/app/components/notes/standalone-files.svelte';
+	import { openFile } from '@haptic/core/adapter';
+	import { standaloneFiles } from '@haptic/core/store';
 
 	let searchValue: string = $state('');
 	let searchDebounce: NodeJS.Timeout | undefined = $state();
@@ -107,22 +109,27 @@
 	}
 
 	collection.subscribe(async (value) => {
+		// No collection is a legitimate state now that a single file can be opened
+		// on its own. Reading the tree without one used to reject unhandled.
+		if (!value) {
+			entries = [];
+			return;
+		}
+
 		entries = await fetchCollectionEntries(value);
 
-		// Find first item that is a note (entry.children === undefined)
+		// Find first item that is a note (entry.children === undefined). Don't
+		// steal the editor from a standalone file the user already has open.
 		const firstNote = entries.find((entry) => !entry.children);
 
-		// Open the first note
-		if (firstNote) {
+		if (firstNote && !$activeFile) {
 			openNote(firstNote.path);
-		} else {
+		} else if (!firstNote && !$activeFile) {
 			activeFile.set(null);
 		}
 
-		if (value) {
-			if (stopWatching) {stopWatching();}
-			stopWatching = await watchCollection();
-		}
+		if (stopWatching) {stopWatching();}
+		stopWatching = await watchCollection();
 	});
 
 	collectionSearchActive.subscribe((value) => {
@@ -233,20 +240,8 @@
 						toggleFolderStates?.();
 					}}
 				>
-					<Icon
-						name="collapseCircle"
-						class={cn(
-							'w-[18px] h-[18px] transition-all transform',
-							folderToggleState === 'collapse' && 'hidden'
-						)}
-					/>
-					<Icon
-						name="expandCircle"
-						class={cn(
-							'w-[18px] h-[18px] transition-all transform',
-							folderToggleState === 'expand' && 'hidden'
-						)}
-					/>
+					<Icon name="collapseCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'collapse' && 'hidden' )} />
+					<Icon name="expandCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'expand' && 'hidden' )} />
 				</Button>
 			</Tooltip>
 			<Tooltip text="Search" side="bottom" shortcut={SHORTCUTS['notes:search']}>
@@ -313,7 +308,7 @@
 							searchCollection();
 						}}
 					>
-						<ALargeSmall
+						<Icon name="caseSensitive"
 							class={cn(
 								'w-18px] h-[18px] stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								caseSensitive ? 'stroke-foreground' : ''
@@ -332,7 +327,7 @@
 							searchCollection();
 						}}
 					>
-						<WholeWord
+						<Icon name="wholeWord"
 							class={cn(
 								'w-4 h-4 stroke-muted-foreground group-hover:stroke-foreground transition-all stroke-[1.5px]',
 								wholeWord ? 'stroke-foreground' : ''
@@ -372,9 +367,17 @@
 				loading={searchLoading}
 			/>
 		{:else}
-			{#if entries.length === 0}
+			<StandaloneFiles />
+			{#if entries.length === 0 && $standaloneFiles.length === 0}
 				<div class="w-full h-full flex flex-col gap-1 items-center justify-center">
-					<Label class="text-muted-foreground text-xs text-center">No notes found</Label>
+					<Label class="text-muted-foreground text-xs text-center">
+						{$collection ? 'No notes found' : 'No collection open'}
+					</Label>
+					{#if !$collection}
+						<Button variant="ghost" size="sm" scale="sm" onclick={() => openFile()}>
+							Open a file
+						</Button>
+					{/if}
 				</div>
 			{/if}
 			<Entries {entries} bind:toggleFolderStates bind:toggleState={folderToggleState} />

@@ -1,5 +1,6 @@
 import { get } from 'svelte/store';
-import { appTheme, draftFile, editorMode } from './store';
+import { basename, dirname, joinPath, parseScopedPath, sameScope, type StorageScope } from './path';
+import { activeFile, appTheme, collection, draftFile, editorMode, standaloneFiles } from './store';
 import type {
   AppSettingsParams,
   AppTheme,
@@ -11,15 +12,32 @@ import type {
 } from './types';
 
 /**
- * Platform storage seam. The web app implements this against PGlite/drizzle,
- * the desktop app against the Tauri filesystem. Each app registers its
- * implementation at boot via `setStorageAdapter()`; shared components call the
- * delegating free functions below so they stay platform-agnostic.
+ * Storage seam. Implementations are registered **per scope** at boot via
+ * `setStorageAdapter(scope, impl)`; shared components call the delegating free
+ * functions below, which route on the scope carried by the path argument (see
+ * ./path). One app can hold several adapters at once — desktop will own both
+ * the local filesystem and the cloud store.
+ *
+ * Today: web and desktop each register a `local` adapter (PGlite/drizzle and
+ * the Tauri filesystem respectively).
  *
  * The method set mirrors the (historically identical) exported signatures of
- * the apps' `lib/api/{notes,collection,folders,settings}.ts` modules.
+ * the apps' `lib/api/{notes,collection,folders,settings}.ts` modules, plus the
+ * content primitives below.
  */
 export interface StorageAdapter {
+  // content
+  /**
+   * Reads a note body by value.
+   *
+   * Note that `saveNote` writes whatever the shared TipTap editor is currently
+   * showing, so it cannot express "write this string to that path". These two
+   * are the only content primitives that work without the editor, and every
+   * cross-scope transfer is built on them.
+   */
+  readNoteContent(path: string): Promise<string>;
+  /** Writes a note body by value, without involving the editor. */
+  writeNoteContent(path: string, content: string): Promise<void>;
   // notes
   /**
    * Creates a note. `open` defaults to true; pass false to materialize a draft
@@ -66,65 +84,181 @@ export interface StorageAdapter {
   ): Promise<unknown>;
 }
 
-let adapter: StorageAdapter | null = null;
+const adapters = new Map<StorageScope, StorageAdapter>();
 
-export function setStorageAdapter(impl: StorageAdapter) {
-  adapter = impl;
+/**
+ * Scope used for operations that carry no path — app settings, and the
+ * collection list when nothing is open yet.
+ */
+let primaryScope: StorageScope = 'local';
+
+export function setStorageAdapter(scope: StorageScope, impl: StorageAdapter) {
+  adapters.set(scope, impl);
 }
 
-function required(): StorageAdapter {
-  if (!adapter) {
-    throw new Error('No StorageAdapter registered. Call setStorageAdapter() during app bootstrap.');
+/** Which adapter handles path-less operations. Defaults to `local`. */
+export function setPrimaryScope(scope: StorageScope) {
+  primaryScope = scope;
+}
+
+export function hasStorageAdapter(scope: StorageScope): boolean {
+  return adapters.has(scope);
+}
+
+/** Scopes with an adapter registered, in registration order. */
+export function registeredScopes(): StorageScope[] {
+  return [...adapters.keys()];
+}
+
+/** Test seam — drops all registrations. */
+export function clearStorageAdapters() {
+  adapters.clear();
+  primaryScope = 'local';
+}
+
+function forScope(scope: StorageScope): StorageAdapter {
+  const impl = adapters.get(scope);
+  if (!impl) {
+    throw new Error(
+      `No StorageAdapter registered for scope '${scope}'. Call setStorageAdapter('${scope}', …) during app bootstrap.`
+    );
   }
-  return adapter;
+  return impl;
+}
+
+/** Resolves the adapter that owns a path. */
+function required(path?: string): StorageAdapter {
+  return forScope(path === undefined ? primaryScope : parseScopedPath(path).scope);
 }
 
 // Delegating free functions — same names components have always imported.
-export const createNote: StorageAdapter['createNote'] = (...args) => required().createNote(...args);
-export const openNote: StorageAdapter['openNote'] = (...args) => {
+// Each routes on the scope of its path argument.
+/**
+ * Creating a note is already a deliberate act, so — unlike opening one — it
+ * drops straight into edit mode. `editorMode` defaults to 'view' and nothing
+ * else moved it, which left a freshly created note impossible to type into.
+ *
+ * Only when the note is actually opened: `open: false` is the draft/transfer
+ * path, which must not disturb what the editor is currently showing.
+ */
+export const createNote: StorageAdapter['createNote'] = async (dirPath, name, open = true) => {
+  const result = await required(dirPath).createNote(dirPath, name, open);
+  if (open) {
+    editorMode.set('edit');
+  }
+  return result;
+};
+export const openNote: StorageAdapter['openNote'] = (path, ...rest) => {
   // Navigating away abandons an unwritten draft.
   draftFile.set(null);
   // Every note opens read-only; editing is always re-entered deliberately.
   // Hooked here rather than on `activeFile` because renameNote repoints that
   // store too, and renaming shouldn't kick you out of the editor.
   editorMode.set('view');
-  return required().openNote(...args);
+  return required(path).openNote(path, ...rest);
 };
-export const deleteNote: StorageAdapter['deleteNote'] = (...args) => required().deleteNote(...args);
-export const renameNote: StorageAdapter['renameNote'] = (...args) => required().renameNote(...args);
+export const deleteNote: StorageAdapter['deleteNote'] = (path) => required(path).deleteNote(path);
+export const renameNote: StorageAdapter['renameNote'] = (path, name) =>
+  required(path).renameNote(path, name);
+export const readNoteContent: StorageAdapter['readNoteContent'] = (path) =>
+  required(path).readNoteContent(path);
+export const writeNoteContent: StorageAdapter['writeNoteContent'] = (path, content) =>
+  required(path).writeNoteContent(path, content);
 /**
  * Saving is the moment a draft becomes real: clicking a date in the daily
  * calendar shouldn't leave an empty file behind, so the note is only created
  * once there is something to write into it.
  */
 export const saveNote: StorageAdapter['saveNote'] = async (path) => {
+  const adapter = required(path);
   if (get(draftFile) === path) {
-    const separator = path.lastIndexOf('/');
-    await required().createNote(path.slice(0, separator), path.slice(separator + 1), false);
+    await adapter.createNote(dirname(path), basename(path), false);
     draftFile.set(null);
   }
-  return required().saveNote(path);
+  return adapter.saveNote(path);
 };
-export const moveNote: StorageAdapter['moveNote'] = (...args) => required().moveNote(...args);
-export const duplicateNote: StorageAdapter['duplicateNote'] = (...args) =>
-  required().duplicateNote(...args);
-export const getNoteMetadataParams: StorageAdapter['getNoteMetadataParams'] = (...args) =>
-  required().getNoteMetadataParams(...args);
-export const fetchCollectionEntries: StorageAdapter['fetchCollectionEntries'] = (...args) =>
-  required().fetchCollectionEntries(...args);
-export const loadCollection: StorageAdapter['loadCollection'] = (...args) =>
-  required().loadCollection(...args);
-export const getCollections: StorageAdapter['getCollections'] = (...args) =>
-  required().getCollections(...args);
-export const searchEntries: StorageAdapter['searchEntries'] = (...args) =>
-  required().searchEntries(...args);
-export const createFolder: StorageAdapter['createFolder'] = (...args) =>
-  required().createFolder(...args);
-export const deleteFolder: StorageAdapter['deleteFolder'] = (...args) =>
-  required().deleteFolder(...args);
-export const renameFolder: StorageAdapter['renameFolder'] = (...args) =>
-  required().renameFolder(...args);
-export const moveFolder: StorageAdapter['moveFolder'] = (...args) => required().moveFolder(...args);
+/**
+ * Moves a note. When source and target sit in different scopes this is not a
+ * single adapter's operation — it becomes a read-write-delete across two, which
+ * is exactly the local -> cloud sync path.
+ */
+export const moveNote: StorageAdapter['moveNote'] = async (source, target) => {
+  if (!sameScope(source, target)) {
+    return transferNote(source, target, { removeSource: true });
+  }
+  return required(source).moveNote(source, target);
+};
+export const duplicateNote: StorageAdapter['duplicateNote'] = (path) =>
+  required(path).duplicateNote(path);
+export const getNoteMetadataParams: StorageAdapter['getNoteMetadataParams'] = (path) =>
+  required(path).getNoteMetadataParams(path);
+export const fetchCollectionEntries: StorageAdapter['fetchCollectionEntries'] = (
+  dirPath,
+  ...rest
+) => required(dirPath).fetchCollectionEntries(dirPath, ...rest);
+export const loadCollection: StorageAdapter['loadCollection'] = (path) =>
+  required(path).loadCollection(path);
+/** Aggregates across every registered scope — local and cloud collections list together. */
+export const getCollections: StorageAdapter['getCollections'] = async () => {
+  const lists = await Promise.all([...adapters.values()].map((impl) => impl.getCollections()));
+  return lists.flat();
+};
+export const searchEntries: StorageAdapter['searchEntries'] = (collectionPath, ...rest) =>
+  required(collectionPath).searchEntries(collectionPath, ...rest);
+export const createFolder: StorageAdapter['createFolder'] = (dirPath) =>
+  required(dirPath).createFolder(dirPath);
+export const deleteFolder: StorageAdapter['deleteFolder'] = (path, ...rest) =>
+  required(path).deleteFolder(path, ...rest);
+export const renameFolder: StorageAdapter['renameFolder'] = (path, name) =>
+  required(path).renameFolder(path, name);
+export const moveFolder: StorageAdapter['moveFolder'] = (source, target) => {
+  if (!sameScope(source, target)) {
+    throw new Error(
+      'Cross-scope folder moves are not supported yet — move or sync notes individually.'
+    );
+  }
+  return required(source).moveFolder(source, target);
+};
+/**
+ * Copies a note into a directory that may be owned by a different adapter, and
+ * returns the new path.
+ *
+ * This is the one primitive behind every cross-space action: "sync to cloud"
+ * (local -> cloud, keeping the source), "download" (cloud -> local, keeping the
+ * source), and a cross-scope `moveNote` (removing it). No adapter can express
+ * this alone, which is why `readNoteContent`/`writeNoteContent` exist.
+ *
+ * Deliberately a copy, never a link: per the sync model a synced local file
+ * becomes a *new* cloud note, and the two are not tracked against each other
+ * afterwards.
+ */
+export async function transferNote(
+  source: string,
+  targetDir: string,
+  { removeSource = false }: { removeSource?: boolean } = {}
+): Promise<string> {
+  const from = required(source);
+  const to = required(targetDir);
+  const name = basename(source);
+
+  const siblings = await to.fetchCollectionEntries(targetDir, 'name', true);
+  if (siblings.some((entry) => entry.name === name && entry.children === undefined)) {
+    throw new Error('Name conflict');
+  }
+
+  const content = await from.readNoteContent(source);
+  const destination = joinPath(targetDir, name);
+  // `open: false` — the editor keeps showing whatever it had; a transfer is a
+  // background operation, unlike the interactive same-scope move.
+  await to.createNote(targetDir, name, false);
+  await to.writeNoteContent(destination, content);
+
+  if (removeSource) {
+    await from.deleteNote(source);
+  }
+  return destination;
+}
+
 export const loadSettings: StorageAdapter['loadSettings'] = (...args) =>
   required().loadSettings(...args);
 export const setSettings: StorageAdapter['setSettings'] = (...args) =>
@@ -149,6 +283,19 @@ export interface PlatformActions {
   openExternal(url: string): void | Promise<unknown>;
   /** Reveal a file in the OS file manager (desktop only). */
   showInFolder?(path: string): void | Promise<unknown>;
+  /**
+   * Pick a single note from the OS file dialog and open it (desktop only).
+   * Resolves to the chosen path, or null if the dialog was dismissed.
+   */
+  pickFile?(): Promise<string | null>;
+  /**
+   * Surface an error to the user in whatever way the platform can.
+   *
+   * Storage failures used to be swallowed: a denied filesystem scope or an
+   * unreadable file left the app looking like the click did nothing, which is
+   * indistinguishable from a broken feature.
+   */
+  reportError?(message: string): void;
 }
 
 let platformActions: PlatformActions | null = null;
@@ -179,4 +326,67 @@ export function openExternal(url: string) {
 
 export function showInFolder(path: string) {
   return platformActions?.showInFolder?.(path);
+}
+
+/** True when the platform can open a standalone file (desktop). */
+export function canOpenFile(): boolean {
+  return Boolean(platformActions?.pickFile);
+}
+
+/**
+ * A note is "standalone" when it sits outside the open collection — or when
+ * there is no collection at all. Those have no row in the tree, so they are
+ * tracked separately for the sidebar to render.
+ */
+export function isStandalone(path: string): boolean {
+  const root = get(collection);
+  return !root || !path.startsWith(`${root}/`);
+}
+
+/**
+ * Opens a single note from the OS file dialog, outside any collection.
+ *
+ * Storage needs no special case — the desktop adapter reads and writes absolute
+ * paths and never consults `collection` — so this only has to remember the file
+ * so the sidebar can list it.
+ */
+export async function openFile(): Promise<string | null> {
+  try {
+    const path = (await platformActions?.pickFile?.()) ?? null;
+    if (!path) {
+      return null;
+    }
+    trackStandaloneFile(path);
+    await openNote(path);
+    return path;
+  } catch (error) {
+    reportError(`Could not open that file.\n\n${error instanceof Error ? error.message : error}`);
+    return null;
+  }
+}
+
+/** Shows an error to the user; falls back to the console where the platform can't. */
+export function reportError(message: string) {
+  if (platformActions?.reportError) {
+    platformActions.reportError(message);
+  } else {
+    console.error(message);
+  }
+}
+
+/** Registers an externally opened file (dialog, OS "open with", drag-and-drop). */
+export function trackStandaloneFile(path: string) {
+  if (!isStandalone(path)) {
+    return;
+  }
+  standaloneFiles.update((files) => (files.includes(path) ? files : [...files, path]));
+}
+
+/** Removes a file from the standalone list, clearing the editor if it was open. */
+export function closeStandaloneFile(path: string) {
+  standaloneFiles.update((files) => files.filter((file) => file !== path));
+  if (get(activeFile) === path) {
+    activeFile.set(null);
+    draftFile.set(null);
+  }
 }

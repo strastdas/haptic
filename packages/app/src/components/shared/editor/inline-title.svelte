@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { renameNote } from '@haptic/core/adapter';
 	import { activeFile, collectionSettings, editorMode } from '@haptic/core/store';
+	import { stem } from '@haptic/core/path';
 	import { cn } from '@haptic/core/utils';
 	import { editor } from '@haptic/editor/store';
 
@@ -25,23 +26,23 @@
 
 		// Make sure file name is in date format year-month-day, else return
 		if (preCheckRegex && !preCheckRegex.test(value)) {
-			value = $activeFile.split('/').pop()!.split('.').slice(0, -1).join('.');
+			value = stem($activeFile);
 		}
 
 		if (
-			value !== $activeFile.split('/').pop()!.split('.').slice(0, -1).join('.') &&
+			value !== stem($activeFile) &&
 			value.trim() !== ''
 		) {
 			// Rename note
 			try {
 				await renameNote($activeFile, value);
 			} catch {
-				value = $activeFile.split('/').pop()!.split('.').slice(0, -1).join('.');
+				value = stem($activeFile);
 			}
 		}
 
 		if (value.trim() === '') {
-			value = $activeFile.split('/').pop()!.split('.').slice(0, -1).join('.');
+			value = stem($activeFile);
 		}
 
 		// Remove last extension
@@ -55,7 +56,7 @@
 
 	activeFile.subscribe((notePath) => {
 		// Set file name as value, remove extension
-		value = notePath ? notePath.split('/').pop()!.split('.').slice(0, -1).join('.') : '';
+		value = notePath ? stem(notePath) : '';
 	});
 </script>
 

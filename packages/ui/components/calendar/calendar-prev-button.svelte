@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Calendar as CalendarPrimitive } from "bits-ui";
-	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
+	import ChevronLeftIcon from '../icons/chevron-left.svelte';
 	import { buttonVariants, type ButtonVariant } from "@haptic/ui/components/button/index.js";
 	import { cn } from "@haptic/ui/lib/utils.js";
 

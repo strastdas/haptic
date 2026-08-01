@@ -7,10 +7,8 @@
 	import Command from '@haptic/app/components/shared/command-menu/command.svelte';
 	import { importCollection } from '@/import-collection';
 	import Icon from '@haptic/app/components/shared/icon.svelte';
-	import { getDb, initDatabase, legacyDatabaseExists } from '@/database/client';
-	import { runMigrations } from '@/database/migrations';
+	import { getDb, initDatabase } from '@/database/client';
 	import { seedIfFresh } from '@/database/seed';
-	import { collection as collectionTable } from '@/database/schema';
 	import { collection } from '@/store';
 	import { createDeviceDetector } from '@/utils';
 	import '@haptic/ui/app.web.css';
@@ -26,25 +24,15 @@
 	// Device detector
 	const device = createDeviceDetector();
 
-	// Storage boot gate: children may query the database synchronously via
-	// getDb(), so nothing that touches storage renders before init + migrations
-	// finished. Migration failures surface (no catch-and-ignore).
+	// Storage boot gate: children may read the database synchronously via
+	// getDb(), so nothing that touches storage renders before init finished.
 	let storageReady = $state(false);
-
-	// Upgrade notice for pre-0.3 PGlite data (lives under the old idb name).
-	const LEGACY_NOTICE_KEY = 'haptic-legacy-notice-dismissed';
-	let showLegacyNotice = $state(false);
-
-	function dismissLegacyNotice() {
-		window.localStorage.setItem(LEGACY_NOTICE_KEY, 'true');
-		showLegacyNotice = false;
-	}
 
 	// Load latest collection
 	async function loadLatestCollection() {
-		const collections = await getDb().select().from(collectionTable);
+		const collections = await getDb().getAll('collection');
 
-		if (!collections || collections.length === 0) {return;}
+		if (collections.length === 0) {return;}
 
 		// Get collection with latest lastOpened date
 		const latestCollection = collections.reduce((prev, current) =>
@@ -55,20 +43,11 @@
 	}
 
 	onMount(async () => {
-		// Boot the database and bring the schema up to date
-		const client = await initDatabase();
-		const migration = await runMigrations(client);
+		// Boot the browser store
+		await initDatabase();
 
-		// Seed the demo collection only on a genuinely fresh database
-		await seedIfFresh(client, migration);
-
-		// Offer the upgrade notice if a pre-0.3 database exists under the old idb name
-		if (
-			window.localStorage.getItem(LEGACY_NOTICE_KEY) !== 'true' &&
-			(await legacyDatabaseExists())
-		) {
-			showLegacyNotice = true;
-		}
+		// Seed the demo collection only on a genuinely empty database
+		await seedIfFresh();
 
 		// Load latest collection on mount
 		await loadLatestCollection();
@@ -128,23 +107,6 @@
 {#if $device.isDesktop}
 	<ModeWatcher />
 	{#if storageReady}
-		{#if showLegacyNotice}
-			<div
-				class="fixed bottom-12 left-1/2 z-50 flex w-fit max-w-[90vw] -translate-x-1/2 items-center gap-3 rounded-md border bg-secondary px-4 py-2.5 text-sm text-secondary-foreground shadow-md"
-				role="status"
-			>
-				<p>
-					Notes from a previous version were found. Import support is coming — your old data is
-					untouched.
-				</p>
-				<button
-					class="shrink-0 rounded-sm px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-					onclick={dismissLegacyNotice}
-				>
-					Dismiss
-				</button>
-			</div>
-		{/if}
 		<Command {importCollection} />
 		<Header />
 		<Sidebar />
@@ -155,7 +117,7 @@
 	{/if}
 {:else}
 	<main class="flex min-h-[100dvh] w-full flex-col items-center justify-center gap-5">
-		<Icon name="phoneOff" class="w-9 h-9 fill-none text-secondary-foreground" />
+		<Icon name="phoneOff" class="w-9 h-9 text-secondary-foreground" />
 		<div class="flex flex-col text-center gap-2">
 			<h1 class="text-secondary-foreground">Seems like you're on mobile</h1>
 			<p class="text-muted-foreground text-sm leading-relaxed">

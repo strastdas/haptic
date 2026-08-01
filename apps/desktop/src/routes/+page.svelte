@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { shortcutToString } from '@/utils';
-	import { REPO_URL, SHORTCUTS } from '@/constants';
-	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
+	import { SHORTCUTS } from '@/constants';
 	import { getCollections } from '$lib/api/collection';
-	import { openUrl as browserOpen } from '@tauri-apps/plugin-opener';
+	import { openFileInEditor } from '@haptic/app/components/shared/command-menu/commands';
 	import { onMount } from 'svelte';
-
-	let githubShortcut = { command: true, key: 'g' };
 
 	async function fetchCollections() {
 		const collections = await getCollections();
@@ -43,19 +40,15 @@
 			>
 			<button
 				class="text-sm gap-1.5 flex text-muted-foreground hover:text-secondary-foreground transition-colors items-center justify-center"
-				onclick={() => {
-					browserOpen(REPO_URL);
-				}}
+				onclick={() => openFileInEditor()}
 			>
-				<Shortcut options={githubShortcut} />
 				<span
 					class="pointer-events-none inline-flex h-[18px] pl-1.5 tracking-widest select-none items-center gap-1 rounded bg-secondary px-1 font-mono text-muted-foreground opacity-100"
 				>
-					{shortcutToString(githubShortcut)}
+					{shortcutToString(SHORTCUTS['app:open-file'])}
 				</span>
-				Star on GitHub
+				Open File
 			</button>
-
 		</div>
 	</div>
 </div>

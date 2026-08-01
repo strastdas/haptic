@@ -46,7 +46,7 @@ Haptic is a new local-first & privacy-focused, open-source home for your markdow
 
 - [Svelte 5](https://svelte.dev/) + [SvelteKit](https://kit.svelte.dev/) – Framework
 - [Tauri 2](https://tauri.app/) – Desktop app
-- [PGlite](https://pglite.dev/) + [Drizzle](https://orm.drizzle.team/) – Local database (web)
+- [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API) – Local storage (web)
 - [TipTap](https://tiptap.dev/) – Markdown editor
 - [Tailwind CSS 4](https://tailwindcss.com/) + [shadcn-svelte](https://www.shadcn-svelte.com/) – Styling & components
 - [Oxc](https://oxc.rs/) (oxlint + oxfmt) – Linting & formatting
@@ -55,7 +55,7 @@ Haptic is a new local-first & privacy-focused, open-source home for your markdow
 ## Where your notes live
 
 - **Desktop** — plain `.md` files in the folder you open ("collection"), with a `.haptic/` metadata folder inside it for daily notes, trash, and per-collection settings. Nothing is locked away; point any other editor at the same folder.
-- **Web** — in your browser only, in a Postgres database (PGlite) persisted to IndexedDB. Clearing site data clears your notes, and nothing syncs to the desktop app yet.
+- **Web** — in your browser only, in IndexedDB. Clearing site data clears your notes, and nothing syncs to the desktop app yet.
 
 ## Development
 
@@ -89,9 +89,8 @@ There are no published releases yet. Building locally produces an unsigned app; 
 
 - [ ] Markdown tables — the editor has no table support today, and opening a note containing one will strip it on save
 - [ ] Haptic Sync — sync notes across devices (the settings pane exists but is a non-functional stub today)
-- [ ] Import notes from pre-0.3 web databases (old data is preserved, importer pending)
 - [ ] Note sharing — share single notes or entire collections via link
-- [ ] Mobile support for the web app — dependent on PGlite mobile support
+- [ ] Mobile support for the web app
 - [ ] Native mobile apps for iOS & Android
 - [ ] Universal (Intel + Apple Silicon) macOS builds
 - [ ] Windows & Linux support for the desktop app

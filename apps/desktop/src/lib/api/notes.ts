@@ -1,9 +1,9 @@
-import { OS_TRASH_DIR } from '@/constants';
-import { activeFile, collection, collectionSettings, editor, noteHistory, platform } from '@/store';
+import { activeFile, collection, collectionSettings, editor, noteHistory } from '@/store';
 import type { NoteMetadataParams } from '@/types';
 import { calculateReadingTime, getNextUntitledName, setEditorContent } from '@/utils';
-import { homeDir } from '@tauri-apps/api/path';
+import { basename, dirname, extname, joinPath, stem } from '@haptic/core/path';
 import { readTextFile, remove, rename, stat, writeTextFile } from '@tauri-apps/plugin-fs';
+import { invoke } from '@tauri-apps/api/core';
 import { get } from 'svelte/store';
 import { readDirTree } from './fs';
 
@@ -18,12 +18,12 @@ export const createNote = async (dirPath: string, name?: string, open = true) =>
   }
 
   // Save the new note
-  await writeTextFile(`${dirPath}/${name}`, '');
+  await writeTextFile(joinPath(dirPath, name), '');
 
   // Open the note, unless the caller is materializing a draft the editor is
   // already showing (opening would reset the editor and lose what was typed).
   if (open) {
-    openNote(`${dirPath}/${name}`);
+    openNote(joinPath(dirPath, name));
   }
 };
 
@@ -46,14 +46,11 @@ export async function openNote(path: string, skipHistory = false) {
 export const deleteNote = async (path: string) => {
   switch (get(collectionSettings).notes.trash_dir) {
     case 'system': {
-      await rename(
-        path,
-        `${await homeDir()}${OS_TRASH_DIR[get(platform)]}${path.split('/').pop()!}`
-      );
+      await invoke('move_to_trash', { path });
       break;
     }
     case 'haptic': {
-      await rename(path, `${get(collection)}/.haptic/trash/${path.split('/').pop()!}`);
+      await rename(path, joinPath(get(collection), '.haptic/trash', basename(path)));
       break;
     }
     case 'delete': {
@@ -75,7 +72,7 @@ export const renameNote = async (path: string, name: string) => {
   name = name.replaceAll(/[/\\?%*:|"<>]/g, '');
 
   // Read the directory
-  const files = await readDirTree(path.split('/').slice(0, -1).join('/'), false);
+  const files = await readDirTree(dirname(path), false);
 
   // Make sure there are no name conflicts
   if (
@@ -87,11 +84,17 @@ export const renameNote = async (path: string, name: string) => {
   }
 
   // Rename the file
-  await rename(path, `${path.split('/').slice(0, -1).join('/')}/${name}`);
-  activeFile.set(`${path.split('/').slice(0, -1).join('/')}/${name}`);
+  const destination = joinPath(dirname(path), name);
+  await rename(path, destination);
+  activeFile.set(destination);
 };
 
-// Save active note
+// Read/write a note body by value, without going through the editor.
+export const readNoteContent = (path: string): Promise<string> => readTextFile(path);
+
+export const writeNoteContent = (path: string, content: string): Promise<void> =>
+  writeTextFile(path, content);
+
 export const saveNote = async (path: string) => {
   // Get note content
   let content = get(editor).storage.markdown.getMarkdown();
@@ -99,7 +102,7 @@ export const saveNote = async (path: string) => {
   // Remove the first heading title
   content = content.replace(/^# .*\n/, '');
 
-  await writeTextFile(path, content);
+  await writeNoteContent(path, content);
 };
 
 export const moveNote = async (source: string, target: string) => {
@@ -107,14 +110,15 @@ export const moveNote = async (source: string, target: string) => {
   const files = await readDirTree(target, false);
 
   // Make sure there are no name conflicts
-  const noteName = source.split('/').pop()!;
+  const noteName = basename(source);
 
   if (files.some((file) => file.name === noteName && file.children === undefined)) {
     throw new Error('Name conflict');
   }
 
-  await rename(source, `${target}/${noteName}`);
-  openNote(`${target}/${noteName}`);
+  const destination = joinPath(target, noteName);
+  await rename(source, destination);
+  openNote(destination);
 };
 
 // Duplicate a note (format: "<name> (<number>).<ext>") - <number> is incremented if there are any existing notes with the same name
@@ -123,24 +127,19 @@ export const duplicateNote = async (path: string) => {
   const content = await readTextFile(path);
 
   // Extract the name and extension of the note
-  const name = path
-    .split('/')
-    .pop()!
-    .split('.')
-    .shift()!
-    .replace(/\s\(\d+\)$/, '');
-  const ext = path.split('.').pop()!;
+  const name = stem(path).replace(/\s\(\d+\)$/, '');
+  const ext = extname(path);
 
   // Get current index of the note
-  const files = await readDirTree(path.split('/').slice(0, -1).join('/'), false);
+  const files = await readDirTree(dirname(path), false);
   const notes = files.filter((file) => file.name?.startsWith(name) && file.children === undefined);
 
   // Write the new note
-  const newName = `${name} (${notes.length}).${ext}`;
-  await writeTextFile(`${path.split('/').slice(0, -1).join('/')}/${newName}`, content);
+  const destination = joinPath(dirname(path), `${name} (${notes.length}).${ext}`);
+  await writeTextFile(destination, content);
 
   // Open the new note
-  openNote(`${path.split('/').slice(0, -1).join('/')}/${newName}`);
+  openNote(destination);
 };
 
 export const getNoteMetadataParams = async (path: string): Promise<NoteMetadataParams> => {

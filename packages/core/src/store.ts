@@ -23,6 +23,16 @@ const editorMode = writable<'edit' | 'view'>('view');
 const editorSearchValue = writable<string>('');
 const editorSearchActive = writable<boolean>(false);
 
+/**
+ * Notes opened on their own, outside any collection — "File → Open…" or a
+ * double-click in the OS file manager.
+ *
+ * Storage already supports these: the desktop adapter's note operations take an
+ * absolute path and never consult `collection`. This store exists so the UI can
+ * show them, since they have no place in the collection tree.
+ */
+const standaloneFiles = writable<string[]>([]);
+
 const collection = writable<string>();
 // File-tree cache; kept fresh by the web adapter's live query. Unused on desktop
 // (which re-reads the filesystem), but shared so components can converge on it.
@@ -77,5 +87,6 @@ export {
   platform,
   resizingNoteDetailSidebar,
   resizingPageSidebar,
+  standaloneFiles,
   tooltipsOpen
 };

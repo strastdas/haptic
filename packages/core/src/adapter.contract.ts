@@ -16,6 +16,8 @@ import type { FileEntry } from './types';
  */
 export type ContractAdapter = Pick<
   StorageAdapter,
+  | 'readNoteContent'
+  | 'writeNoteContent'
   | 'createNote'
   | 'deleteNote'
   | 'renameNote'
@@ -34,11 +36,6 @@ export interface ContractHarness {
   adapter: ContractAdapter;
   /** Path of a freshly loaded, EMPTY collection (also set as the active collection). */
   collectionPath: string;
-  /**
-   * Writes note content directly, bypassing the editor-coupled saveNote.
-   * Harnesses that can't do this simply skip the search tests.
-   */
-  writeContent?(path: string, content: string): Promise<void>;
 }
 
 export function runStorageAdapterContract(
@@ -48,13 +45,11 @@ export function runStorageAdapterContract(
   describe(`StorageAdapter contract (${name})`, () => {
     let adapter: ContractAdapter;
     let root: string;
-    let writeContent: ContractHarness['writeContent'];
 
     beforeEach(async () => {
       const harness = await makeHarness();
       adapter = harness.adapter;
       root = harness.collectionPath;
-      writeContent = harness.writeContent;
     });
 
     const tree = (showDotfiles = false) =>
@@ -189,13 +184,42 @@ export function runStorageAdapterContract(
       expect(findEntry(entries, 'b 2.md')?.children).toBeUndefined();
     });
 
+    // The only way to read or write a note body without the shared TipTap
+    // editor, and therefore the basis of every cross-scope transfer.
+    describe('note content', () => {
+      it('round-trips a note body', async () => {
+        await adapter.createNote(root, 'a.md');
+        await adapter.writeNoteContent(`${root}/a.md`, '# Hello\n\nbody');
+        expect(await adapter.readNoteContent(`${root}/a.md`)).toBe('# Hello\n\nbody');
+      });
+
+      it('reads an empty string from a freshly created note', async () => {
+        await adapter.createNote(root, 'a.md');
+        expect(await adapter.readNoteContent(`${root}/a.md`)).toBe('');
+      });
+
+      it('overwrites rather than appends', async () => {
+        await adapter.createNote(root, 'a.md');
+        await adapter.writeNoteContent(`${root}/a.md`, 'first');
+        await adapter.writeNoteContent(`${root}/a.md`, 'second');
+        expect(await adapter.readNoteContent(`${root}/a.md`)).toBe('second');
+      });
+
+      it('preserves content through a rename', async () => {
+        await adapter.createNote(root, 'a.md');
+        await adapter.writeNoteContent(`${root}/a.md`, 'kept');
+        await adapter.renameNote(`${root}/a.md`, 'b');
+        expect(await adapter.readNoteContent(`${root}/b.md`)).toBe('kept');
+      });
+    });
+
     describe('searchEntries', () => {
       // createNote doesn't return the path it created, so derive it the same
       // way every implementation builds it.
       const seed = async (name: string, content: string) => {
         await adapter.createNote(root, name);
         const path = `${root}/${name}`;
-        await writeContent!(path, content);
+        await adapter.writeNoteContent(path, content);
         return path;
       };
 
@@ -205,7 +229,7 @@ export function runStorageAdapterContract(
       };
 
       beforeEach(async (context) => {
-        if (!adapter.searchEntries || !writeContent) {
+        if (!adapter.searchEntries) {
           context.skip();
         }
       });

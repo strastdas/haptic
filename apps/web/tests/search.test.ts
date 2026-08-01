@@ -8,24 +8,25 @@ vi.mock('@haptic/editor/store', () => ({
 }));
 
 import { initDatabase } from '@/database/client';
-import { runMigrations } from '@/database/migrations';
 import { searchEntries } from '@/utils';
 
 const COLLECTION = '/Search';
 
 beforeAll(async () => {
-  const client = await initDatabase({ dataDir: 'memory://' });
-  await runMigrations(client);
-  await client.query(
-    "INSERT INTO collection (path, name, last_opened) VALUES ($1, 'Search', now())",
-    [COLLECTION]
-  );
+  const db = await initDatabase({ dbName: 'search-test' });
+  await db.put('collection', { path: COLLECTION, name: 'Search', lastOpened: new Date() });
   const insert = (path: string, content: string) =>
-    client.query(
-      `INSERT INTO entry (path, name, parent_path, collection_path, content)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [path, path.split('/').pop(), COLLECTION, COLLECTION, content]
-    );
+    db.put('entry', {
+      path,
+      name: path.split('/').pop()!,
+      parentPath: COLLECTION,
+      collectionPath: COLLECTION,
+      content,
+      isFolder: false,
+      size: content.length,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   await insert('/Search/notes.md', 'First line\nHaptic is a Markdown editor\nLast line');
   await insert('/Search/other.md', "Don't panic — it's fine\nnothing else");
   await insert('/Search/word.md', 'markdownish text\nplain markdown here');
