@@ -18,8 +18,9 @@ import type {
  * ./path). One app can hold several adapters at once — desktop will own both
  * the local filesystem and the cloud store.
  *
- * Today: web and desktop each register a `local` adapter (PGlite/drizzle and
- * the Tauri filesystem respectively).
+ * Today: web and desktop each register a `local` adapter (IndexedDB and the
+ * Tauri filesystem respectively). A cloud adapter will register alongside it
+ * once account-backed sync is implemented.
  *
  * The method set mirrors the (historically identical) exported signatures of
  * the apps' `lib/api/{notes,collection,folders,settings}.ts` modules, plus the
