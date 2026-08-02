@@ -42,3 +42,11 @@ export interface CloudNote {
   createdAt: string;
   updatedAt: string;
 }
+
+/** A collection-relative directory, persisted even when it contains no notes. */
+export interface CloudFolder {
+  id: string;
+  path: string;
+  createdAt: string;
+  updatedAt: string;
+}

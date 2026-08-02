@@ -33,7 +33,11 @@ function repository(): AuthRepository {
     findCloudNote: vi.fn(),
     createCloudNote: vi.fn(),
     updateCloudNote: vi.fn(),
-    deleteCloudNote: vi.fn()
+    deleteCloudNote: vi.fn(),
+    listCloudFolders: vi.fn(),
+    createCloudFolder: vi.fn(),
+    updateCloudFolderPath: vi.fn(),
+    deleteCloudFolder: vi.fn()
   };
 }
 
@@ -321,6 +325,30 @@ describe('Worker auth routes', () => {
     );
 
     expect(response.status).toBe(201);
+  });
+
+  it('persists an empty cloud folder for the authenticated user', async () => {
+    const repo = repository();
+    const collection = { createdAt, id: collectionId, name: 'Work', updatedAt: createdAt };
+    const folder = { createdAt, id: noteId, path: 'projects', updatedAt: createdAt };
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+    vi.mocked(repo.findCloudCollection).mockResolvedValue(collection);
+    vi.mocked(repo.createCloudFolder).mockResolvedValue(folder);
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}/folders`, {
+        body: JSON.stringify({ path: 'projects' }),
+        headers: { cookie: 'haptic_session=opaque-token', 'content-type': 'application/json' },
+        method: 'POST'
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ folder });
+    expect(repo.createCloudFolder).toHaveBeenCalledWith('user_123', collectionId, 'projects');
   });
 
   it('rejects every unsafe cross-origin cloud mutation', async () => {

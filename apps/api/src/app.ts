@@ -14,7 +14,7 @@ import {
   sessionCookie
 } from './cookie';
 import type { Config } from './config';
-import { DuplicateNotePathError, ReplayedHandoffError } from './errors';
+import { DuplicateNotePathError, FolderNotEmptyError, ReplayedHandoffError } from './errors';
 import type { AuthRepository } from './repository';
 import type { AuthUser } from './types';
 
@@ -25,6 +25,10 @@ const collectionPath = new RegExp(`^/api/sync/collections/(?<collectionId>${COLL
 const notesPath = new RegExp(`^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/notes$`);
 const notePath = new RegExp(
   `^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/notes/(?<noteId>${COLLECTION_ID})$`
+);
+const foldersPath = new RegExp(`^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/folders$`);
+const folderPath = new RegExp(
+  `^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/folders/(?<folderId>${COLLECTION_ID})$`
 );
 
 function json(body: unknown, status = 200, headers?: HeadersInit): Response {
@@ -104,6 +108,23 @@ function notePayload(
     return;
   }
   return { content, path };
+}
+
+function folderPayload(body: Record<string, unknown> | undefined): string | undefined {
+  const path = typeof body?.path === 'string' ? body.path : undefined;
+  if (!path || path.length > 1024) {
+    return;
+  }
+  const segments = path.split('/');
+  if (
+    path.startsWith('/') ||
+    path.includes('\\') ||
+    path.includes('\u0000') ||
+    segments.some((segment) => !segment || segment === '.' || segment === '..')
+  ) {
+    return;
+  }
+  return path;
 }
 
 function signIn(url: URL, config: Config, respond: Respond): Response {
@@ -348,6 +369,97 @@ async function noteRoute(
   }
 }
 
+async function foldersRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  const foldersMatch = url.pathname.match(foldersPath);
+  if (foldersMatch?.groups?.collectionId) {
+    const { collectionId } = foldersMatch.groups;
+    const collection = await repository.findCloudCollection(user.id, collectionId);
+    if (!collection) {
+      return respond(json({ error: 'Collection not found' }, 404));
+    }
+    if (request.method === 'GET') {
+      return respond(json({ folders: await repository.listCloudFolders(user.id, collectionId) }));
+    }
+    if (request.method === 'POST') {
+      const path = folderPayload(await jsonObject(request));
+      if (!path) {
+        return respond(json({ error: 'Folder path is invalid.' }, 400));
+      }
+      try {
+        const folder = await repository.createCloudFolder(user.id, collectionId, path);
+        return respond(
+          folder ? json({ folder }, 201) : json({ error: 'Collection not found' }, 404)
+        );
+      } catch (error) {
+        if (error instanceof DuplicateNotePathError) {
+          return respond(json({ error: error.message }, 409));
+        }
+        throw error;
+      }
+    }
+  }
+}
+
+async function folderRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  const folderMatch = url.pathname.match(folderPath);
+  if (folderMatch?.groups?.collectionId && folderMatch.groups.folderId) {
+    const { collectionId, folderId } = folderMatch.groups;
+    if (request.method === 'PUT') {
+      const path = folderPayload(await jsonObject(request));
+      if (!path) {
+        return respond(json({ error: 'Folder path is invalid.' }, 400));
+      }
+      try {
+        const folder = await repository.updateCloudFolderPath(
+          user.id,
+          collectionId,
+          folderId,
+          path
+        );
+        return respond(folder ? json({ folder }) : json({ error: 'Folder not found' }, 404));
+      } catch (error) {
+        if (error instanceof DuplicateNotePathError) {
+          return respond(json({ error: error.message }, 409));
+        }
+        if (error instanceof Error && error.message === 'A folder cannot be moved into itself.') {
+          return respond(json({ error: error.message }, 400));
+        }
+        throw error;
+      }
+    }
+    if (request.method === 'DELETE') {
+      try {
+        const deleted = await repository.deleteCloudFolder(
+          user.id,
+          collectionId,
+          folderId,
+          url.searchParams.get('recursive') === 'true'
+        );
+        return respond(
+          deleted ? new Response(null, { status: 204 }) : json({ error: 'Folder not found' }, 404)
+        );
+      } catch (error) {
+        if (error instanceof FolderNotEmptyError) {
+          return respond(json({ error: error.message }, 409));
+        }
+        throw error;
+      }
+    }
+  }
+}
+
 async function cloudRoute(
   request: Request,
   url: URL,
@@ -374,6 +486,14 @@ async function cloudRoute(
   const noteResponse = await noteRoute(request, url, user, repository, respond);
   if (noteResponse) {
     return noteResponse;
+  }
+  const foldersResponse = await foldersRoute(request, url, user, repository, respond);
+  if (foldersResponse) {
+    return foldersResponse;
+  }
+  const folderResponse = await folderRoute(request, url, user, repository, respond);
+  if (folderResponse) {
+    return folderResponse;
   }
   return respond(json({ error: 'Not found' }, 404));
 }

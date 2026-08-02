@@ -1,6 +1,6 @@
 import { Client } from 'pg';
-import { DuplicateNotePathError, ReplayedHandoffError } from './errors';
-import type { AuthUser, CloudCollection, CloudNote, VerifiedHandoff } from './types';
+import { DuplicateNotePathError, FolderNotEmptyError, ReplayedHandoffError } from './errors';
+import type { AuthUser, CloudCollection, CloudFolder, CloudNote, VerifiedHandoff } from './types';
 
 export interface AuthRepository {
   consumeHandoff: (
@@ -39,6 +39,24 @@ export interface AuthRepository {
     note: { content: string; path: string }
   ) => Promise<CloudNote | undefined>;
   deleteCloudNote: (userId: string, collectionId: string, noteId: string) => Promise<boolean>;
+  listCloudFolders: (userId: string, collectionId: string) => Promise<CloudFolder[]>;
+  createCloudFolder: (
+    userId: string,
+    collectionId: string,
+    path: string
+  ) => Promise<CloudFolder | undefined>;
+  updateCloudFolderPath: (
+    userId: string,
+    collectionId: string,
+    folderId: string,
+    path: string
+  ) => Promise<CloudFolder | undefined>;
+  deleteCloudFolder: (
+    userId: string,
+    collectionId: string,
+    folderId: string,
+    recursive: boolean
+  ) => Promise<boolean>;
 }
 
 interface CloudCollectionRow {
@@ -50,6 +68,13 @@ interface CloudCollectionRow {
 
 interface CloudNoteRow {
   content: string;
+  created_at: Date;
+  id: string;
+  path: string;
+  updated_at: Date;
+}
+
+interface CloudFolderRow {
   created_at: Date;
   id: string;
   path: string;
@@ -68,6 +93,15 @@ function cloudCollection(row: CloudCollectionRow): CloudCollection {
 function cloudNote(row: CloudNoteRow): CloudNote {
   return {
     content: row.content,
+    createdAt: row.created_at.toISOString(),
+    id: row.id,
+    path: row.path,
+    updatedAt: row.updated_at.toISOString()
+  };
+}
+
+function cloudFolder(row: CloudFolderRow): CloudFolder {
+  return {
     createdAt: row.created_at.toISOString(),
     id: row.id,
     path: row.path,
@@ -346,6 +380,165 @@ export class PgAuthRepository implements AuthRepository {
         [noteId, collectionId, userId]
       );
       return result.rowCount === 1;
+    });
+  }
+
+  async listCloudFolders(userId: string, collectionId: string): Promise<CloudFolder[]> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudFolderRow>(
+        `SELECT cloud_folder.id, cloud_folder.path, cloud_folder.created_at, cloud_folder.updated_at
+         FROM cloud_folder
+         JOIN cloud_collection ON cloud_collection.id = cloud_folder.collection_id
+         WHERE cloud_folder.collection_id = $1 AND cloud_collection.user_id = $2
+         ORDER BY cloud_folder.path ASC`,
+        [collectionId, userId]
+      );
+      return result.rows.map(cloudFolder);
+    });
+  }
+
+  async createCloudFolder(
+    userId: string,
+    collectionId: string,
+    path: string
+  ): Promise<CloudFolder | undefined> {
+    try {
+      return await this.withClient(async (client) => {
+        const result = await client.query<CloudFolderRow>(
+          `INSERT INTO cloud_folder (id, collection_id, path)
+           SELECT $1, $2, $3
+           WHERE EXISTS (
+             SELECT 1 FROM cloud_collection WHERE id = $2 AND user_id = $4
+           )
+           RETURNING id, path, created_at, updated_at`,
+          [crypto.randomUUID(), collectionId, path, userId]
+        );
+        const [created] = result.rows;
+        return created ? cloudFolder(created) : undefined;
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new DuplicateNotePathError('An entry already exists at that path.');
+      }
+      throw error;
+    }
+  }
+
+  async updateCloudFolderPath(
+    userId: string,
+    collectionId: string,
+    folderId: string,
+    path: string
+  ): Promise<CloudFolder | undefined> {
+    try {
+      return await this.withClient(async (client) => {
+        await client.query('BEGIN');
+        try {
+          const currentResult = await client.query<{ path: string }>(
+            `SELECT cloud_folder.path
+             FROM cloud_folder
+             JOIN cloud_collection ON cloud_collection.id = cloud_folder.collection_id
+             WHERE cloud_folder.id = $1
+               AND cloud_folder.collection_id = $2
+               AND cloud_collection.user_id = $3
+             FOR UPDATE`,
+            [folderId, collectionId, userId]
+          );
+          const [current] = currentResult.rows;
+          if (!current) {
+            await client.query('COMMIT');
+            return;
+          }
+          if (path.startsWith(`${current.path}/`)) {
+            throw new Error('A folder cannot be moved into itself.');
+          }
+          const suffixStart = current.path.length + 1;
+          await client.query(
+            `UPDATE cloud_note
+             SET path = $1 || substring(path FROM $2), updated_at = now()
+             WHERE collection_id = $3 AND path LIKE $4`,
+            [path, suffixStart, collectionId, `${current.path}/%`]
+          );
+          const result = await client.query<CloudFolderRow>(
+            `UPDATE cloud_folder
+             SET path = $1 || substring(path FROM $2), updated_at = now()
+             WHERE collection_id = $3 AND (path = $4 OR path LIKE $5)
+             RETURNING id, path, created_at, updated_at`,
+            [path, suffixStart, collectionId, current.path, `${current.path}/%`]
+          );
+          await client.query('COMMIT');
+          const updated = result.rows.find((folder) => folder.id === folderId);
+          return updated ? cloudFolder(updated) : undefined;
+        } catch (error) {
+          await client.query('ROLLBACK');
+          throw error;
+        }
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new DuplicateNotePathError('An entry already exists at that path.');
+      }
+      throw error;
+    }
+  }
+
+  async deleteCloudFolder(
+    userId: string,
+    collectionId: string,
+    folderId: string,
+    recursive: boolean
+  ): Promise<boolean> {
+    return await this.withClient(async (client) => {
+      await client.query('BEGIN');
+      try {
+        const currentResult = await client.query<{ path: string }>(
+          `SELECT cloud_folder.path
+           FROM cloud_folder
+           JOIN cloud_collection ON cloud_collection.id = cloud_folder.collection_id
+           WHERE cloud_folder.id = $1
+             AND cloud_folder.collection_id = $2
+             AND cloud_collection.user_id = $3
+           FOR UPDATE`,
+          [folderId, collectionId, userId]
+        );
+        const [current] = currentResult.rows;
+        if (!current) {
+          await client.query('COMMIT');
+          return false;
+        }
+        const descendantPath = `${current.path}/%`;
+        if (!recursive) {
+          const descendants = await client.query(
+            `SELECT 1
+             FROM cloud_folder
+             WHERE collection_id = $1 AND path LIKE $2
+             UNION ALL
+             SELECT 1 FROM cloud_note
+             WHERE collection_id = $1 AND path LIKE $2
+             LIMIT 1`,
+            [collectionId, descendantPath]
+          );
+          if (descendants.rowCount) {
+            throw new FolderNotEmptyError('Folder is not empty.');
+          }
+        }
+        if (recursive) {
+          await client.query(`DELETE FROM cloud_note WHERE collection_id = $1 AND path LIKE $2`, [
+            collectionId,
+            descendantPath
+          ]);
+          await client.query(`DELETE FROM cloud_folder WHERE collection_id = $1 AND path LIKE $2`, [
+            collectionId,
+            descendantPath
+          ]);
+        }
+        await client.query(`DELETE FROM cloud_folder WHERE id = $1`, [folderId]);
+        await client.query('COMMIT');
+        return true;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     });
   }
 }
