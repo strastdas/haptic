@@ -284,6 +284,10 @@ export interface PlatformActions {
   openExternal(url: string): void | Promise<unknown>;
   /** Begin the platform's account sign-in flow. */
   startSignIn?(): void | Promise<unknown>;
+  /** Read the authenticated account for the current device session. */
+  getAccount?(): Promise<Account | null>;
+  /** End the authenticated account session for the current device. */
+  signOut?(): void | Promise<unknown>;
   /** Reveal a file in the OS file manager (desktop only). */
   showInFolder?(path: string): void | Promise<unknown>;
   /**
@@ -299,6 +303,14 @@ export interface PlatformActions {
    * indistinguishable from a broken feature.
    */
   reportError?(message: string): void;
+}
+
+/** The small, platform-independent identity shape shared settings can render. */
+export interface Account {
+  id: string;
+  email?: string;
+  name?: string;
+  role?: string;
 }
 
 let platformActions: PlatformActions | null = null;
@@ -335,6 +347,26 @@ export function canStartSignIn(): boolean {
 /** Starts sign-in when the current platform supports it. */
 export function startSignIn() {
   return platformActions?.startSignIn?.();
+}
+
+/** True when this platform can read its current account session. */
+export function canGetAccount(): boolean {
+  return Boolean(platformActions?.getAccount);
+}
+
+/** Reads the current account, or null where sessions are not supported yet. */
+export function getAccount(): Promise<Account | null> {
+  return platformActions?.getAccount?.() ?? Promise.resolve(null);
+}
+
+/** True when this platform can end its current account session. */
+export function canSignOut(): boolean {
+  return Boolean(platformActions?.signOut);
+}
+
+/** Ends the current account session when the platform supports it. */
+export function signOut() {
+  return platformActions?.signOut?.();
 }
 
 export function showInFolder(path: string) {

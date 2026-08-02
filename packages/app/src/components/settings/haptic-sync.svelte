@@ -1,9 +1,18 @@
 <script lang="ts">
-	import { canStartSignIn, startSignIn } from '@haptic/core/adapter';
+	import {
+		canGetAccount,
+		canSignOut,
+		canStartSignIn,
+		getAccount,
+		signOut,
+		startSignIn,
+		type Account
+	} from '@haptic/core/adapter';
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import * as Select from '@haptic/ui/components/select';
 	import { Switch } from '@haptic/ui/components/switch';
+	import { onMount } from 'svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
 	const syncIntervalLabels: Record<string, string> = {
@@ -28,6 +37,42 @@
 	let autoBackup = $state(false);
 	let selectedSyncInterval = $state('5m');
 	let selectedBackupInterval = $state('1w');
+	let account = $state<Account | null>(null);
+	let accountError = $state(false);
+	let isLoadingAccount = $state(canGetAccount());
+	let isSigningOut = $state(false);
+
+	async function loadAccount() {
+		if (!canGetAccount()) {
+			isLoadingAccount = false;
+			return;
+		}
+
+		isLoadingAccount = true;
+		accountError = false;
+		try {
+			account = await getAccount();
+		} catch {
+			accountError = true;
+		} finally {
+			isLoadingAccount = false;
+		}
+	}
+
+	async function handleSignOut() {
+		isSigningOut = true;
+		accountError = false;
+		try {
+			await signOut();
+			account = null;
+		} catch {
+			accountError = true;
+		} finally {
+			isSigningOut = false;
+		}
+	}
+
+	onMount(loadAccount);
 </script>
 
 <div class="space-y-5">
@@ -36,20 +81,46 @@
 			<div class="flex items-center justify-between gap-4">
 				<div class="space-y-0.5">
 					<Label class="text-sm">Haptic account</Label>
-					<p class="text-muted-foreground text-xs">
-						Private beta access is required before Haptic Sync can connect this device.
-					</p>
+					{#if isLoadingAccount}
+						<p class="text-muted-foreground text-xs">Checking your account…</p>
+					{:else if account}
+						<p class="text-muted-foreground text-xs">
+							Signed in as {account.email ?? account.name ?? 'a Haptic beta member'}.
+						</p>
+					{:else if accountError}
+						<p class="text-destructive text-xs">Couldn’t check your account session.</p>
+					{:else}
+						<p class="text-muted-foreground text-xs">
+							Private beta access is required before Haptic Sync can connect this device.
+						</p>
+					{/if}
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					class="shrink-0 text-sm"
-					onclick={() => {
-						void startSignIn();
-					}}
-				>
-					Sign in
-				</Button>
+				{#if account && canSignOut()}
+					<Button
+						variant="outline"
+						size="sm"
+						class="shrink-0 text-sm"
+						disabled={isSigningOut}
+						onclick={() => void handleSignOut()}
+					>
+						{isSigningOut ? 'Signing out…' : 'Sign out'}
+					</Button>
+				{:else if accountError}
+					<Button variant="outline" size="sm" class="shrink-0 text-sm" onclick={() => void loadAccount()}>
+						Try again
+					</Button>
+				{:else if !isLoadingAccount}
+					<Button
+						variant="outline"
+						size="sm"
+						class="shrink-0 text-sm"
+						onclick={() => {
+							void startSignIn();
+						}}
+					>
+						Sign in
+					</Button>
+				{/if}
 			</div>
 		</section>
 	{/if}

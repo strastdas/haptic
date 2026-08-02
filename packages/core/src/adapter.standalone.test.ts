@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import {
+  canGetAccount,
   canStartSignIn,
+  canSignOut,
   canOpenFile,
   clearStorageAdapters,
   closeStandaloneFile,
+  getAccount,
   isStandalone,
   openFile,
+  signOut,
   startSignIn,
   setPlatformActions,
   setStorageAdapter,
@@ -156,5 +160,24 @@ describe('account platform action', () => {
 
     expect(canStartSignIn()).toBe(true);
     expect(signIn).toHaveBeenCalledOnce();
+  });
+
+  it('reads and signs out of the current account through the platform', async () => {
+    const account = { id: 'user_123', email: 'hello@example.com' };
+    const readAccount = vi.fn(async () => account);
+    const endSession = vi.fn();
+    setPlatformActions({
+      openExternal: () => {},
+      getAccount: readAccount,
+      signOut: endSession
+    });
+
+    await expect(getAccount()).resolves.toEqual(account);
+    signOut();
+
+    expect(canGetAccount()).toBe(true);
+    expect(readAccount).toHaveBeenCalledOnce();
+    expect(canSignOut()).toBe(true);
+    expect(endSession).toHaveBeenCalledOnce();
   });
 });
