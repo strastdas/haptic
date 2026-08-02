@@ -32,6 +32,14 @@ setPlatformActions({
   },
   openExternal: (url) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  },
+  startSignIn: () => {
+    const apiOrigin = import.meta.env.DEV
+      ? `${window.location.protocol}//${window.location.hostname}:8787`
+      : window.location.origin;
+    const signInUrl = new URL('/api/auth/sign-in', apiOrigin);
+    signInUrl.searchParams.set('returnTo', window.location.href);
+    window.location.assign(signInUrl);
   }
 });
 

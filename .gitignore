@@ -34,3 +34,4 @@ yarn-error.log*
 
 # worker builds
 apps/api/dist
+apps/api/.wrangler

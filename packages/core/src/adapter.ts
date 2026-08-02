@@ -282,6 +282,8 @@ export interface PlatformActions {
   applyTheme?(theme: AppTheme): void;
   /** Open a URL in the user's browser. */
   openExternal(url: string): void | Promise<unknown>;
+  /** Begin the platform's account sign-in flow. */
+  startSignIn?(): void | Promise<unknown>;
   /** Reveal a file in the OS file manager (desktop only). */
   showInFolder?(path: string): void | Promise<unknown>;
   /**
@@ -323,6 +325,16 @@ export function openExternal(url: string) {
     return platformActions.openExternal(url);
   }
   window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+/** True when this platform has an account sign-in flow. */
+export function canStartSignIn(): boolean {
+  return Boolean(platformActions?.startSignIn);
+}
+
+/** Starts sign-in when the current platform supports it. */
+export function startSignIn() {
+  return platformActions?.startSignIn?.();
 }
 
 export function showInFolder(path: string) {

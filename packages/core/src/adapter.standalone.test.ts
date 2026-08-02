@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import {
+  canStartSignIn,
   canOpenFile,
   clearStorageAdapters,
   closeStandaloneFile,
   isStandalone,
   openFile,
+  startSignIn,
   setPlatformActions,
   setStorageAdapter,
   trackStandaloneFile,
@@ -135,5 +137,24 @@ describe('standalone files', () => {
       expect(get(standaloneFiles)).toEqual([]);
       expect(opened).toEqual(['/Notes/inside.md']);
     });
+  });
+});
+
+describe('account platform action', () => {
+  it('is unavailable until the platform registers a sign-in action', () => {
+    setPlatformActions({ openExternal: () => {} });
+
+    expect(canStartSignIn()).toBe(false);
+    expect(startSignIn()).toBeUndefined();
+  });
+
+  it('delegates sign-in to the current platform', () => {
+    const signIn = vi.fn();
+    setPlatformActions({ openExternal: () => {}, startSignIn: signIn });
+
+    startSignIn();
+
+    expect(canStartSignIn()).toBe(true);
+    expect(signIn).toHaveBeenCalledOnce();
   });
 });

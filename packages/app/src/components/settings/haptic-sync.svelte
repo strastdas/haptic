@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { canStartSignIn, startSignIn } from '@haptic/core/adapter';
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import * as Select from '@haptic/ui/components/select';
@@ -30,6 +31,29 @@
 </script>
 
 <div class="space-y-5">
+	{#if canStartSignIn()}
+		<section class="rounded-lg border border-border/70 bg-muted/30 p-3">
+			<div class="flex items-center justify-between gap-4">
+				<div class="space-y-0.5">
+					<Label class="text-sm">Haptic account</Label>
+					<p class="text-muted-foreground text-xs">
+						Private beta access is required before Haptic Sync can connect this device.
+					</p>
+				</div>
+				<Button
+					variant="outline"
+					size="sm"
+					class="shrink-0 text-sm"
+					onclick={() => {
+						void startSignIn();
+					}}
+				>
+					Sign in
+				</Button>
+			</div>
+		</section>
+	{/if}
+
 	<div class="space-y-1">
 		<Label class="text-sm">Auto sync</Label>
 		<p class="text-muted-foreground text-xs">Automatically sync your notes.</p>
