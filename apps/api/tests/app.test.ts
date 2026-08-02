@@ -4,6 +4,10 @@ import { createApp } from '../src/app';
 import type { Config } from '../src/config';
 import type { AuthRepository } from '../src/repository';
 
+const collectionId = '11111111-1111-4111-8111-111111111111';
+const noteId = '22222222-2222-4222-8222-222222222222';
+const createdAt = '2026-08-02T00:00:00.000Z';
+
 const config: Config = {
   apiUrl: 'http://localhost:8787',
   appOrigins: new Set(['http://localhost:5173', 'https://haptic.strast.dev']),
@@ -19,7 +23,17 @@ function repository(): AuthRepository {
   return {
     consumeHandoff: vi.fn(),
     findSession: vi.fn(),
-    revokeSession: vi.fn()
+    revokeSession: vi.fn(),
+    listCloudCollections: vi.fn(),
+    findCloudCollection: vi.fn(),
+    createCloudCollection: vi.fn(),
+    renameCloudCollection: vi.fn(),
+    deleteCloudCollection: vi.fn(),
+    listCloudNotes: vi.fn(),
+    findCloudNote: vi.fn(),
+    createCloudNote: vi.fn(),
+    updateCloudNote: vi.fn(),
+    deleteCloudNote: vi.fn()
   };
 }
 
@@ -181,5 +195,152 @@ describe('Worker auth routes', () => {
 
     expect(response.status).toBe(403);
     expect(repo.revokeSession).not.toHaveBeenCalled();
+  });
+
+  it('requires an app session before listing cloud collections', async () => {
+    const repo = repository();
+    const response = await createApp(
+      config,
+      repo
+    )(new Request('http://localhost:8787/api/sync/collections'));
+
+    expect(response.status).toBe(401);
+    expect(repo.listCloudCollections).not.toHaveBeenCalled();
+  });
+
+  it('creates a cloud collection for the authenticated user', async () => {
+    const repo = repository();
+    const collection = { createdAt, id: collectionId, name: 'Work', updatedAt: createdAt };
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+    vi.mocked(repo.createCloudCollection).mockResolvedValue(collection);
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request('http://localhost:8787/api/sync/collections', {
+        body: JSON.stringify({ name: '  Work  ' }),
+        headers: { cookie: 'haptic_session=opaque-token', 'content-type': 'application/json' },
+        method: 'POST'
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ collection });
+    expect(repo.createCloudCollection).toHaveBeenCalledWith('user_123', 'Work');
+  });
+
+  it('creates a note only in a collection owned by the authenticated user', async () => {
+    const repo = repository();
+    const collection = { createdAt, id: collectionId, name: 'Work', updatedAt: createdAt };
+    const note = {
+      content: '# Today',
+      createdAt,
+      id: noteId,
+      path: 'daily/today.md',
+      updatedAt: createdAt
+    };
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+    vi.mocked(repo.findCloudCollection).mockResolvedValue(collection);
+    vi.mocked(repo.createCloudNote).mockResolvedValue(note);
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}/notes`, {
+        body: JSON.stringify({ content: '# Today', path: 'daily/today.md' }),
+        headers: { cookie: 'haptic_session=opaque-token', 'content-type': 'application/json' },
+        method: 'POST'
+      })
+    );
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ note });
+    expect(repo.createCloudNote).toHaveBeenCalledWith(
+      'user_123',
+      collectionId,
+      expect.objectContaining({ content: '# Today', path: 'daily/today.md' })
+    );
+  });
+
+  it('does not reveal another user’s cloud collection', async () => {
+    const repo = repository();
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}`, {
+        headers: { cookie: 'haptic_session=opaque-token' }
+      })
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it('rejects unsafe cloud note paths before reaching the repository', async () => {
+    const repo = repository();
+    const collection = { createdAt, id: collectionId, name: 'Work', updatedAt: createdAt };
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+    vi.mocked(repo.findCloudCollection).mockResolvedValue(collection);
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}/notes`, {
+        body: JSON.stringify({ content: 'Nope', path: '../private.md' }),
+        headers: { cookie: 'haptic_session=opaque-token', 'content-type': 'application/json' },
+        method: 'POST'
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(repo.createCloudNote).not.toHaveBeenCalled();
+  });
+
+  it('allows empty Markdown notes', async () => {
+    const repo = repository();
+    const collection = { createdAt, id: collectionId, name: 'Work', updatedAt: createdAt };
+    const note = { content: '', createdAt, id: noteId, path: 'empty.md', updatedAt: createdAt };
+    vi.mocked(repo.findSession).mockResolvedValue({ id: 'user_123' });
+    vi.mocked(repo.findCloudCollection).mockResolvedValue(collection);
+    vi.mocked(repo.createCloudNote).mockResolvedValue(note);
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}/notes`, {
+        body: JSON.stringify({ content: '', path: 'empty.md' }),
+        headers: { cookie: 'haptic_session=opaque-token', 'content-type': 'application/json' },
+        method: 'POST'
+      })
+    );
+
+    expect(response.status).toBe(201);
+  });
+
+  it('rejects every unsafe cross-origin cloud mutation', async () => {
+    const repo = repository();
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request(`http://localhost:8787/api/sync/collections/${collectionId}/notes/${noteId}`, {
+        body: JSON.stringify({ content: 'edited', path: 'edited.md' }),
+        headers: {
+          cookie: 'haptic_session=opaque-token',
+          origin: 'https://attacker.example'
+        },
+        method: 'PUT'
+      })
+    );
+
+    expect(response.status).toBe(403);
+    expect(repo.findSession).not.toHaveBeenCalled();
+    expect(repo.updateCloudNote).not.toHaveBeenCalled();
   });
 });

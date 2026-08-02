@@ -14,10 +14,18 @@ import {
   sessionCookie
 } from './cookie';
 import type { Config } from './config';
-import { ReplayedHandoffError } from './errors';
+import { DuplicateNotePathError, ReplayedHandoffError } from './errors';
 import type { AuthRepository } from './repository';
+import type { AuthUser } from './types';
 
 type Respond = (response: Response) => Response;
+
+const COLLECTION_ID = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+const collectionPath = new RegExp(`^/api/sync/collections/(?<collectionId>${COLLECTION_ID})$`);
+const notesPath = new RegExp(`^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/notes$`);
+const notePath = new RegExp(
+  `^/api/sync/collections/(?<collectionId>${COLLECTION_ID})/notes/(?<noteId>${COLLECTION_ID})$`
+);
 
 function json(body: unknown, status = 200, headers?: HeadersInit): Response {
   return Response.json(body, { status, headers });
@@ -51,6 +59,51 @@ async function sessionHash(request: Request): Promise<string | undefined> {
     return;
   }
   return await hashSessionToken(token);
+}
+
+async function authenticatedUser(
+  request: Request,
+  repository: AuthRepository
+): Promise<AuthUser | undefined> {
+  const tokenHash = await sessionHash(request);
+  return tokenHash ? await repository.findSession(tokenHash) : undefined;
+}
+
+async function jsonObject(request: Request): Promise<Record<string, unknown> | undefined> {
+  try {
+    const body: unknown = await request.json();
+    return body && typeof body === 'object' && !Array.isArray(body)
+      ? (body as Record<string, unknown>)
+      : undefined;
+  } catch {
+    // Invalid JSON is handled as a client input failure by the route.
+  }
+}
+
+function collectionName(body: Record<string, unknown> | undefined): string | undefined {
+  const name = typeof body?.name === 'string' ? body.name.trim() : undefined;
+  return name && name.length <= 120 ? name : undefined;
+}
+
+function notePayload(
+  body: Record<string, unknown> | undefined
+): { content: string; path: string } | undefined {
+  const content = typeof body?.content === 'string' ? body.content : undefined;
+  const path = typeof body?.path === 'string' ? body.path : undefined;
+  if (content === undefined || content.length > 2 * 1024 * 1024 || !path || path.length > 1024) {
+    return;
+  }
+  const segments = path.split('/');
+  if (
+    path.startsWith('/') ||
+    path.includes('\\') ||
+    path.includes('\u0000') ||
+    !path.endsWith('.md') ||
+    segments.some((segment) => !segment || segment === '.' || segment === '..')
+  ) {
+    return;
+  }
+  return { content, path };
 }
 
 function signIn(url: URL, config: Config, respond: Respond): Response {
@@ -160,6 +213,171 @@ async function signOut(
   );
 }
 
+async function collectionsRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  if (url.pathname === '/api/sync/collections') {
+    if (request.method === 'GET') {
+      return respond(json({ collections: await repository.listCloudCollections(user.id) }));
+    }
+    if (request.method === 'POST') {
+      const name = collectionName(await jsonObject(request));
+      if (!name) {
+        return respond(json({ error: 'Collection name must be 1–120 characters.' }, 400));
+      }
+      const collection = await repository.createCloudCollection(user.id, name);
+      return respond(json({ collection }, 201));
+    }
+  }
+}
+
+async function collectionRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  const collectionMatch = url.pathname.match(collectionPath);
+  if (collectionMatch?.groups?.collectionId) {
+    const { collectionId } = collectionMatch.groups;
+    if (request.method === 'GET') {
+      const collection = await repository.findCloudCollection(user.id, collectionId);
+      return respond(
+        collection ? json({ collection }) : json({ error: 'Collection not found' }, 404)
+      );
+    }
+    if (request.method === 'PATCH') {
+      const name = collectionName(await jsonObject(request));
+      if (!name) {
+        return respond(json({ error: 'Collection name must be 1–120 characters.' }, 400));
+      }
+      const collection = await repository.renameCloudCollection(user.id, collectionId, name);
+      return respond(
+        collection ? json({ collection }) : json({ error: 'Collection not found' }, 404)
+      );
+    }
+    if (request.method === 'DELETE') {
+      const deleted = await repository.deleteCloudCollection(user.id, collectionId);
+      return respond(
+        deleted ? new Response(null, { status: 204 }) : json({ error: 'Collection not found' }, 404)
+      );
+    }
+  }
+}
+
+async function notesRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  const notesMatch = url.pathname.match(notesPath);
+  if (notesMatch?.groups?.collectionId) {
+    const { collectionId } = notesMatch.groups;
+    const collection = await repository.findCloudCollection(user.id, collectionId);
+    if (!collection) {
+      return respond(json({ error: 'Collection not found' }, 404));
+    }
+    if (request.method === 'GET') {
+      return respond(json({ notes: await repository.listCloudNotes(user.id, collectionId) }));
+    }
+    if (request.method === 'POST') {
+      const note = notePayload(await jsonObject(request));
+      if (!note) {
+        return respond(json({ error: 'Note path or content is invalid.' }, 400));
+      }
+      try {
+        const created = await repository.createCloudNote(user.id, collectionId, {
+          ...note,
+          id: crypto.randomUUID()
+        });
+        return respond(
+          created ? json({ note: created }, 201) : json({ error: 'Collection not found' }, 404)
+        );
+      } catch (error) {
+        if (error instanceof DuplicateNotePathError) {
+          return respond(json({ error: error.message }, 409));
+        }
+        throw error;
+      }
+    }
+  }
+}
+
+async function noteRoute(
+  request: Request,
+  url: URL,
+  user: AuthUser,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response | undefined> {
+  const noteMatch = url.pathname.match(notePath);
+  if (noteMatch?.groups?.collectionId && noteMatch.groups.noteId) {
+    const { collectionId, noteId } = noteMatch.groups;
+    if (request.method === 'GET') {
+      const note = await repository.findCloudNote(user.id, collectionId, noteId);
+      return respond(note ? json({ note }) : json({ error: 'Note not found' }, 404));
+    }
+    if (request.method === 'PUT') {
+      const note = notePayload(await jsonObject(request));
+      if (!note) {
+        return respond(json({ error: 'Note path or content is invalid.' }, 400));
+      }
+      try {
+        const updated = await repository.updateCloudNote(user.id, collectionId, noteId, note);
+        return respond(updated ? json({ note: updated }) : json({ error: 'Note not found' }, 404));
+      } catch (error) {
+        if (error instanceof DuplicateNotePathError) {
+          return respond(json({ error: error.message }, 409));
+        }
+        throw error;
+      }
+    }
+    if (request.method === 'DELETE') {
+      const deleted = await repository.deleteCloudNote(user.id, collectionId, noteId);
+      return respond(
+        deleted ? new Response(null, { status: 204 }) : json({ error: 'Note not found' }, 404)
+      );
+    }
+  }
+}
+
+async function cloudRoute(
+  request: Request,
+  url: URL,
+  repository: AuthRepository,
+  respond: Respond
+): Promise<Response> {
+  const user = await authenticatedUser(request, repository);
+  if (!user) {
+    return respond(json({ error: 'Unauthorized' }, 401));
+  }
+
+  const collectionsResponse = await collectionsRoute(request, url, user, repository, respond);
+  if (collectionsResponse) {
+    return collectionsResponse;
+  }
+  const collectionResponse = await collectionRoute(request, url, user, repository, respond);
+  if (collectionResponse) {
+    return collectionResponse;
+  }
+  const notesResponse = await notesRoute(request, url, user, repository, respond);
+  if (notesResponse) {
+    return notesResponse;
+  }
+  const noteResponse = await noteRoute(request, url, user, repository, respond);
+  if (noteResponse) {
+    return noteResponse;
+  }
+  return respond(json({ error: 'Not found' }, 404));
+}
+
 function preflight(requestOrigin: string | null, config: Config, respond: Respond): Response {
   if (!requestOrigin || !config.appOrigins.has(requestOrigin)) {
     return json({ error: 'Origin not allowed' }, 403);
@@ -168,7 +386,7 @@ function preflight(requestOrigin: string | null, config: Config, respond: Respon
     new Response(null, {
       headers: {
         'access-control-allow-headers': 'Authorization, Content-Type',
-        'access-control-allow-methods': 'GET, POST, OPTIONS',
+        'access-control-allow-methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
         'access-control-max-age': '86400'
       },
       status: 204
@@ -183,6 +401,9 @@ function route(
   repository: AuthRepository,
   respond: Respond
 ): Response | Promise<Response> {
+  if (url.pathname.startsWith('/api/sync/')) {
+    return cloudRoute(request, url, repository, respond);
+  }
   switch (`${request.method} ${url.pathname}`) {
     case 'GET /health': {
       return respond(json({ status: 'ok' }));
@@ -212,7 +433,7 @@ export function createApp(config: Config, repository: AuthRepository) {
     const requestOrigin = request.headers.get('origin');
 
     if (
-      request.method === 'POST' &&
+      ['POST', 'PATCH', 'PUT', 'DELETE'].includes(request.method) &&
       url.pathname.startsWith('/api/') &&
       requestOrigin &&
       !config.appOrigins.has(requestOrigin)

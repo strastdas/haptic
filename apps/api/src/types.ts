@@ -25,3 +25,20 @@ export interface VerifiedHandoff {
   handoffId: string;
   user: AuthUser;
 }
+
+/** A user-owned collection that a cloud storage adapter can materialize. */
+export interface CloudCollection {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** One markdown note in a cloud collection. Paths are collection-relative. */
+export interface CloudNote {
+  id: string;
+  path: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}

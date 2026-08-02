@@ -1,6 +1,6 @@
 import { Client } from 'pg';
-import { ReplayedHandoffError } from './errors';
-import type { AuthUser, VerifiedHandoff } from './types';
+import { DuplicateNotePathError, ReplayedHandoffError } from './errors';
+import type { AuthUser, CloudCollection, CloudNote, VerifiedHandoff } from './types';
 
 export interface AuthRepository {
   consumeHandoff: (
@@ -9,6 +9,70 @@ export interface AuthRepository {
   ) => Promise<void>;
   findSession: (tokenHash: string) => Promise<AuthUser | undefined>;
   revokeSession: (tokenHash: string) => Promise<void>;
+  listCloudCollections: (userId: string) => Promise<CloudCollection[]>;
+  findCloudCollection: (
+    userId: string,
+    collectionId: string
+  ) => Promise<CloudCollection | undefined>;
+  createCloudCollection: (userId: string, name: string) => Promise<CloudCollection>;
+  renameCloudCollection: (
+    userId: string,
+    collectionId: string,
+    name: string
+  ) => Promise<CloudCollection | undefined>;
+  deleteCloudCollection: (userId: string, collectionId: string) => Promise<boolean>;
+  listCloudNotes: (userId: string, collectionId: string) => Promise<CloudNote[]>;
+  findCloudNote: (
+    userId: string,
+    collectionId: string,
+    noteId: string
+  ) => Promise<CloudNote | undefined>;
+  createCloudNote: (
+    userId: string,
+    collectionId: string,
+    note: { content: string; id: string; path: string }
+  ) => Promise<CloudNote | undefined>;
+  updateCloudNote: (
+    userId: string,
+    collectionId: string,
+    noteId: string,
+    note: { content: string; path: string }
+  ) => Promise<CloudNote | undefined>;
+  deleteCloudNote: (userId: string, collectionId: string, noteId: string) => Promise<boolean>;
+}
+
+interface CloudCollectionRow {
+  created_at: Date;
+  id: string;
+  name: string;
+  updated_at: Date;
+}
+
+interface CloudNoteRow {
+  content: string;
+  created_at: Date;
+  id: string;
+  path: string;
+  updated_at: Date;
+}
+
+function cloudCollection(row: CloudCollectionRow): CloudCollection {
+  return {
+    createdAt: row.created_at.toISOString(),
+    id: row.id,
+    name: row.name,
+    updatedAt: row.updated_at.toISOString()
+  };
+}
+
+function cloudNote(row: CloudNoteRow): CloudNote {
+  return {
+    content: row.content,
+    createdAt: row.created_at.toISOString(),
+    id: row.id,
+    path: row.path,
+    updatedAt: row.updated_at.toISOString()
+  };
 }
 
 export class PgAuthRepository implements AuthRepository {
@@ -105,6 +169,183 @@ export class PgAuthRepository implements AuthRepository {
          WHERE token_hash = $1 AND revoked_at IS NULL`,
         [tokenHash]
       );
+    });
+  }
+
+  async listCloudCollections(userId: string): Promise<CloudCollection[]> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudCollectionRow>(
+        `SELECT id, name, created_at, updated_at
+         FROM cloud_collection
+         WHERE user_id = $1
+         ORDER BY created_at ASC`,
+        [userId]
+      );
+      return result.rows.map(cloudCollection);
+    });
+  }
+
+  async findCloudCollection(
+    userId: string,
+    collectionId: string
+  ): Promise<CloudCollection | undefined> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudCollectionRow>(
+        `SELECT id, name, created_at, updated_at
+         FROM cloud_collection
+         WHERE id = $1 AND user_id = $2`,
+        [collectionId, userId]
+      );
+      const [collection] = result.rows;
+      return collection ? cloudCollection(collection) : undefined;
+    });
+  }
+
+  async createCloudCollection(userId: string, name: string): Promise<CloudCollection> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudCollectionRow>(
+        `INSERT INTO cloud_collection (id, user_id, name)
+         VALUES ($1, $2, $3)
+         RETURNING id, name, created_at, updated_at`,
+        [crypto.randomUUID(), userId, name]
+      );
+      return cloudCollection(result.rows[0]);
+    });
+  }
+
+  async renameCloudCollection(
+    userId: string,
+    collectionId: string,
+    name: string
+  ): Promise<CloudCollection | undefined> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudCollectionRow>(
+        `UPDATE cloud_collection
+         SET name = $3, updated_at = now()
+         WHERE id = $1 AND user_id = $2
+         RETURNING id, name, created_at, updated_at`,
+        [collectionId, userId, name]
+      );
+      const [collection] = result.rows;
+      return collection ? cloudCollection(collection) : undefined;
+    });
+  }
+
+  async deleteCloudCollection(userId: string, collectionId: string): Promise<boolean> {
+    return await this.withClient(async (client) => {
+      const result = await client.query(
+        `DELETE FROM cloud_collection WHERE id = $1 AND user_id = $2`,
+        [collectionId, userId]
+      );
+      return result.rowCount === 1;
+    });
+  }
+
+  async listCloudNotes(userId: string, collectionId: string): Promise<CloudNote[]> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudNoteRow>(
+        `SELECT cloud_note.id, cloud_note.path, cloud_note.content,
+                cloud_note.created_at, cloud_note.updated_at
+         FROM cloud_note
+         JOIN cloud_collection ON cloud_collection.id = cloud_note.collection_id
+         WHERE cloud_note.collection_id = $1 AND cloud_collection.user_id = $2
+         ORDER BY cloud_note.path ASC`,
+        [collectionId, userId]
+      );
+      return result.rows.map(cloudNote);
+    });
+  }
+
+  async findCloudNote(
+    userId: string,
+    collectionId: string,
+    noteId: string
+  ): Promise<CloudNote | undefined> {
+    return await this.withClient(async (client) => {
+      const result = await client.query<CloudNoteRow>(
+        `SELECT cloud_note.id, cloud_note.path, cloud_note.content,
+                cloud_note.created_at, cloud_note.updated_at
+         FROM cloud_note
+         JOIN cloud_collection ON cloud_collection.id = cloud_note.collection_id
+         WHERE cloud_note.id = $1
+           AND cloud_note.collection_id = $2
+           AND cloud_collection.user_id = $3`,
+        [noteId, collectionId, userId]
+      );
+      const [note] = result.rows;
+      return note ? cloudNote(note) : undefined;
+    });
+  }
+
+  async createCloudNote(
+    userId: string,
+    collectionId: string,
+    note: { content: string; id: string; path: string }
+  ): Promise<CloudNote | undefined> {
+    try {
+      return await this.withClient(async (client) => {
+        const result = await client.query<CloudNoteRow>(
+          `INSERT INTO cloud_note (id, collection_id, path, content)
+           SELECT $1, $2, $3, $4
+           WHERE EXISTS (
+             SELECT 1 FROM cloud_collection WHERE id = $2 AND user_id = $5
+           )
+           RETURNING id, path, content, created_at, updated_at`,
+          [note.id, collectionId, note.path, note.content, userId]
+        );
+        const [created] = result.rows;
+        return created ? cloudNote(created) : undefined;
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new DuplicateNotePathError('A note already exists at that path.');
+      }
+      throw error;
+    }
+  }
+
+  async updateCloudNote(
+    userId: string,
+    collectionId: string,
+    noteId: string,
+    note: { content: string; path: string }
+  ): Promise<CloudNote | undefined> {
+    try {
+      return await this.withClient(async (client) => {
+        const result = await client.query<CloudNoteRow>(
+          `UPDATE cloud_note
+           SET path = $4, content = $5, updated_at = now()
+           WHERE id = $1
+             AND collection_id = $2
+             AND EXISTS (
+               SELECT 1 FROM cloud_collection WHERE id = $2 AND user_id = $3
+             )
+           RETURNING id, path, content, created_at, updated_at`,
+          [noteId, collectionId, userId, note.path, note.content]
+        );
+        const [updated] = result.rows;
+        return updated ? cloudNote(updated) : undefined;
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new DuplicateNotePathError('A note already exists at that path.');
+      }
+      throw error;
+    }
+  }
+
+  async deleteCloudNote(userId: string, collectionId: string, noteId: string): Promise<boolean> {
+    return await this.withClient(async (client) => {
+      const result = await client.query(
+        `DELETE FROM cloud_note
+         WHERE id = $1
+           AND collection_id = $2
+           AND EXISTS (
+             SELECT 1 FROM cloud_collection WHERE id = $2 AND user_id = $3
+           )`,
+        [noteId, collectionId, userId]
+      );
+      return result.rowCount === 1;
     });
   }
 }

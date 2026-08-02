@@ -6,7 +6,7 @@
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist",
     "check": "tsc --noEmit",
-    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0001_auth.sql",
+    "db:migrate": "for migration in migrations/*.sql; do psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f \"$migration\"; done",
     "dev": "wrangler dev",
     "test": "vitest run",
     "typegen": "wrangler types"
