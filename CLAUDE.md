@@ -10,6 +10,7 @@ pnpm + Turborepo workspace (`apps/*`, `packages/*`).
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/web`        | SvelteKit SPA (`ssr = false`, adapter-static). Storage = IndexedDB (via `idb`).                                                                |
 | `apps/desktop`    | Same UI in Tauri 2. Storage = real `.md` files via the Tauri filesystem plugin.                                                                |
+| `apps/api`        | Cloudflare Worker shared by web and desktop. Central auth callbacks and PostgreSQL-backed application sessions live here.                      |
 | `apps/homepage`   | Marketing site. **Out of scope** — still Svelte 4 / Tailwind 3 with its own vendored UI and ESLint setup. Don't modernize it as a side effect. |
 | `packages/core`   | `@haptic/core` — types, stores, constants, pure utils, and the `StorageAdapter` seam.                                                          |
 | `packages/editor` | `@haptic/editor` — global TipTap instance store, `setEditorContent`, the `SearchAndReplace` extension.                                         |
@@ -36,6 +37,7 @@ Anything genuinely divergent stays app-local: routes (`src/routes/**`), `lib/api
 pnpm install
 pnpm dev                  # all apps; ASK before starting a dev server
 pnpm --filter=desktop dev:tauri   # desktop dev server is pinned to :1420, web to :5173
+pnpm --filter=api dev       # Worker on :8787; requires apps/api/.dev.vars
 pnpm check                # svelte-check — run after any code change
 pnpm test                 # vitest (unit + StorageAdapter contract)
 pnpm --filter=web test:e2e  # playwright (builds + previews; needs `playwright install chromium` once)
@@ -67,7 +69,7 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 
 - **Tailwind sees nothing by default.** The entry CSS lives in `packages/ui`, which every app resolves through a node_modules symlink, and Tailwind 4 skips node_modules when auto-detecting sources. Every directory containing markup is declared with `@source` in `theme.css` / `app.{web,desktop}.css`. **A new package with classes in it must be added there or its utilities silently won't generate.**
 - **Component CSS must use complete colours.** Tokens are full `hsl()` values, not Tailwind-3 bare channels — write `var(--border)`, never `hsl(var(--border))`, and `color-mix(in oklab, var(--foreground) 60%, transparent)` for alpha.
-- **The desktop dev server is pinned to port 1420 with `strictPort`.** It must match `devUrl` in `tauri.conf.json`. On the default port Vite silently moves to the next free one while Tauri keeps loading the old address — which, with the web app running, meant the Tauri window rendered *the web app* and every desktop-only feature looked broken.
+- **The desktop dev server is pinned to port 1420 with `strictPort`.** It must match `devUrl` in `tauri.conf.json`. On the default port Vite silently moves to the next free one while Tauri keeps loading the old address — which, with the web app running, meant the Tauri window rendered _the web app_ and every desktop-only feature looked broken.
 - Tauri plugin crates and their npm packages share a version line and must match on major/minor. `tauri dev` only warns; `tauri build` hard-fails.
 - **The desktop `tauri` script runs `cross-env CI=true tauri` on purpose.** Tauri's DMG bundler drives Finder over AppleScript to prettify the disk-image window, which times out (`-1712`) and fails the build after the `.app` is already built. `CI=true` makes it pass `--skip-jenkins` and skip that step; the DMG is plain but correct. Don't "clean this up" — see `docs/releasing.md`.
 - **The web store is IndexedDB, database `haptic-local`** (`apps/web/src/lib/database/client.ts`). PGlite/drizzle were removed: their only job was backing a tree of text files, the live queries were two `SELECT * FROM entry` refetch hooks, and search was one `ILIKE`. Object stores replace tables; `by-collection`/`by-parent` indexes replace the WHERE filters; `watchEntries` replaces live queries. IndexedDB keys are immutable, so rename/move is delete-then-put — use `repathEntry`.
@@ -81,4 +83,4 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 
 **Markdown tables are not supported and are destructive.** No table extension is registered, so the schema has no table nodes: `tiptap-markdown` parses a table correctly, then ProseMirror discards everything it can't map and only the cell text survives. Opening a note containing a table and letting auto-save fire rewrites the file without it. Needs `@tiptap/extension-table` + row/cell/header before any note with tables is opened.
 
-Haptic Sync is UI-only — every control in the settings pane is disabled ("Coming soon"); there is no sync of any kind between web and desktop. It is on the roadmap in `README.md`.
+Haptic Sync is UI-only — every control in the settings pane is disabled ("Coming soon"). The shared API has centralized-auth and PostgreSQL session foundations, but note sync between web and desktop is not implemented. It is on the roadmap in `README.md`.

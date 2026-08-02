@@ -1,0 +1,7 @@
+AUTH_URL=https://auth.strast.dev
+AUTH_AUDIENCE=https://haptic.strast.dev
+AUTH_SIGNING_SECRET=replace-with-the-provider-signing-secret
+API_URL=http://localhost:8787
+APP_ORIGINS=http://localhost:5173,https://haptic.strast.dev
+DATABASE_URL=postgresql://haptic_api:password@localhost:5432/haptic
+SESSION_TTL_SECONDS=604800

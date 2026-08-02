@@ -1,0 +1,25 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "check": "tsc --noEmit",
+    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0001_auth.sql",
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "typegen": "wrangler types"
+  },
+  "dependencies": {
+    "jose": "^6.2.7",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260801.1",
+    "@types/pg": "^8.20.3",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.118.0"
+  }
+}

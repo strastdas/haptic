@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "haptic-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  }
+  // Add the production Hyperdrive binding after creating it:
+  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<hyperdrive-id>" }]
+}
