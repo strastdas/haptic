@@ -22,7 +22,7 @@ There is no Neon, D1, or separately provisioned managed database in this archite
 4. Put the restricted `haptic_api` connection in `.dev.vars` for normal API requests.
 5. Start the Worker with `pnpm --filter=api dev` only when interactive local testing is needed.
 
-The auth server must allow `http://localhost:8787` as a development return origin. The JWT audience remains the registered production origin, `https://haptic.strast.dev`.
+The auth server must allow the Worker's development origin as a return origin. On the current LAN this is `http://192.168.1.217:8787`; update it if the machine's DHCP address changes. The JWT audience remains the registered production origin, `https://haptic.strast.dev`.
 
 ## Production setup
 
