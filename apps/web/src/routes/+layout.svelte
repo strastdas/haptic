@@ -9,6 +9,7 @@
 	import Icon from '@haptic/app/components/shared/icon.svelte';
 	import { getDb, initDatabase } from '@/database/client';
 	import { seedIfFresh } from '@/database/seed';
+	import { createCloudCollection, getAccount } from '@haptic/core/adapter';
 	import { collection } from '@/store';
 	import { createDeviceDetector } from '@/utils';
 	import '@haptic/ui/app.web.css';
@@ -42,6 +43,16 @@
 		collection.set(latestCollection.path);
 	}
 
+	async function openCloudCollectionForExistingSession() {
+		try {
+			if (await getAccount()) {
+				await createCloudCollection();
+			}
+		} catch {
+			// Startup remains usable offline: retain the local collection restored above.
+		}
+	}
+
 	onMount(async () => {
 		// Boot the browser store
 		await initDatabase();
@@ -54,6 +65,9 @@
 
 		// Load app & collection settings
 		loadSettings(true, true);
+
+		// An existing account session makes Haptic Sync the default workspace.
+		await openCloudCollectionForExistingSession();
 
 		storageReady = true;
 	});
