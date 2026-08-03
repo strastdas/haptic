@@ -367,7 +367,7 @@
 									<div class="flex w-full items-center justify-between">
 										<div class="flex items-center gap-1.5">
 											<Icon
-												name={scopeOf(collection.path) === 'cloud' ? 'cloudSolid' : 'folder'}
+												name={scopeOf(collection.path) === 'cloud' ? 'safe' : 'folder'}
 											/>
 											<span class="text-foreground/80 group:hover:text-foreground/100"></span>
 											{collection.name}

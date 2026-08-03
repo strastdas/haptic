@@ -38,7 +38,7 @@
 		Syncronization: [
 			{
 				name: 'Haptic Sync',
-				icon: 'cloudSolid',
+				icon: 'safe',
 				content: HapticSync
 			}
 		]

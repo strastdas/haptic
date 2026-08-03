@@ -106,7 +106,7 @@
 				}}
 			>
 				{#if $collection && scopeOf($collection) === 'cloud'}
-					<Icon name="cloudSolid" class="w-4 h-4 text-primary" />
+					<Icon name="safe" class="w-4 h-4 text-primary" />
 				{:else}
 					<Icon name="cloudX" class="w-4 h-4" />
 				{/if}
