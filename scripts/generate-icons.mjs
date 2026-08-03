@@ -43,6 +43,8 @@ const MAP = {
   chevron: 'right-outline',
   floppy: 'save-outline',
   cursorI: 'text-outline',
+  text: 'text-outline',
+  textDocument: 'text-document-outline',
   sidebarMenuLeft: 'view-column-outline',
   sidebarMenuRight: 'info-outline',
   x: 'x-outline',

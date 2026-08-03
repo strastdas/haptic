@@ -57,7 +57,7 @@
 				aria-pressed={$editorMode === 'view'}
 				onclick={() => editorMode.set('view')}
 			>
-				<Icon name="eye" class="w-4 h-4" aria-hidden="true" />
+				<Icon name="textDocument" class="w-4 h-4" aria-hidden="true" />
 			</Button>
 		</Tooltip>
 		<Tooltip text="Edit mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
@@ -73,7 +73,7 @@
 				aria-pressed={$editorMode === 'edit'}
 				onclick={() => editorMode.set('edit')}
 			>
-				<Icon name="editPencil" class="w-4 h-4" aria-hidden="true" />
+				<Icon name="text" class="w-4 h-4" aria-hidden="true" />
 			</Button>
 		</Tooltip>
 	</div>
