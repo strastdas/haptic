@@ -99,7 +99,7 @@ export const mainCommands: CommandGroup[] = [
       },
       {
         title: 'Search collection',
-        icon: 'searchDocument',
+        icon: 'search',
         shortcut: SHORTCUTS['notes:search'],
         onSelect: () => {
           collectionSearchActive.set(true);
@@ -116,7 +116,7 @@ export const mainCommands: CommandGroup[] = [
       },
       {
         title: 'Find in note',
-        icon: 'searchDocument',
+        icon: 'search',
         shortcut: SHORTCUTS['editor:search'],
         onSelect: () => {
           editorSearchActive.set(true);
@@ -237,17 +237,7 @@ export const createNoteCommands = (notePath: string): CommandGroup => ({
       icon: 'editPencil',
       shortcut: SHORTCUTS['note:rename'],
       onSelect: () => {
-        // Blur the editor
-        get(editor).commands.blur();
-
-        // Get the inline title input (#inline-title-input)
-        const inlineTitleInput = document.getElementById('inline-title-input') as HTMLInputElement;
-
-        // Focus the input and select all text
-        window.setTimeout(() => {
-          inlineTitleInput?.focus();
-          inlineTitleInput?.select();
-        }, 50);
+        document.dispatchEvent(new CustomEvent('haptic:rename-note', { detail: notePath }));
       }
     },
     {

@@ -31,7 +31,7 @@
 					)}
 					onclick={() => openNote(path)}
 				>
-					<Icon name="markdown" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+					<Icon name="noteOutline" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
 					<span class="truncate">{stem(path)}</span>
 				</Button>
 				<Tooltip text="Close file" side="right">

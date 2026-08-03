@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { openNote, setSettings } from '@haptic/core/adapter';
-	import { activeFile, collectionSettings } from '@haptic/core/store';
+	import { setSettings } from '@haptic/core/adapter';
+	import { collectionSettings } from '@haptic/core/store';
 	import { cn } from '@haptic/core/utils';
 	import { Label } from '@haptic/ui/components/label';
 	import * as Select from '@haptic/ui/components/select';
@@ -106,29 +105,6 @@
 		<Label class="text-sm">Additional settings</Label>
 		<p class="text-muted-foreground text-xs">Additional settings for the editor.</p>
 		<div class="flex flex-col items-start gap-2.5 pt-2">
-			<div class="flex items-center gap-2">
-				<Switch
-					checked={$collectionSettings.editor.show_inline_title}
-					onCheckedChange={(value) => {
-						setSettings('collection', {
-							...$collectionSettings,
-							editor: { ...$collectionSettings.editor, show_inline_title: value }
-						});
-						invalidateAll();
-						openNote($activeFile || '', true);
-					}}
-				/>
-				<Label
-					class={cn(
-						'text-sm font-normal transition-colors',
-						$collectionSettings.editor.show_inline_title
-							? 'text-foreground/90'
-							: 'text-foreground/60'
-					)}
-				>
-					Show inline title
-				</Label>
-			</div>
 			<div class="flex items-center gap-2">
 				<Switch
 					disabled

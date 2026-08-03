@@ -8,9 +8,9 @@ pnpm + Turborepo workspace (`apps/*`, `packages/*`).
 
 | Path              | What it is                                                                                                                                     |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/web`        | SvelteKit SPA (`ssr = false`, adapter-static). Storage = IndexedDB (via `idb`).                                                                |
-| `apps/desktop`    | Same UI in Tauri 2. Storage = real `.md` files via the Tauri filesystem plugin.                                                                |
-| `apps/api`        | Cloudflare Worker shared by web and desktop. Central auth callbacks and PostgreSQL-backed application sessions live here.                      |
+| `apps/web`        | SvelteKit SPA (`ssr = false`, adapter-static). Local storage = IndexedDB (via `idb`); authenticated cloud collections use the cloud adapter. |
+| `apps/desktop`    | Same UI in Tauri 2. Storage = real `.md` files via the Tauri filesystem plugin. Cloud sync is not wired into desktop yet.                     |
+| `apps/api`        | Cloudflare Worker. Central auth callbacks, PostgreSQL-backed sessions, and user-scoped cloud collections, notes, and folders live here.      |
 | `apps/homepage`   | Marketing site. **Out of scope** — still Svelte 4 / Tailwind 3 with its own vendored UI and ESLint setup. Don't modernize it as a side effect. |
 | `packages/core`   | `@haptic/core` — types, stores, constants, pure utils, and the `StorageAdapter` seam.                                                          |
 | `packages/editor` | `@haptic/editor` — global TipTap instance store, `setEditorContent`, the `SearchAndReplace` extension.                                         |
@@ -72,15 +72,26 @@ Package manager is **pnpm** (see `packageManager` in the root `package.json`). N
 - **The desktop dev server is pinned to port 1420 with `strictPort`.** It must match `devUrl` in `tauri.conf.json`. On the default port Vite silently moves to the next free one while Tauri keeps loading the old address — which, with the web app running, meant the Tauri window rendered _the web app_ and every desktop-only feature looked broken.
 - Tauri plugin crates and their npm packages share a version line and must match on major/minor. `tauri dev` only warns; `tauri build` hard-fails.
 - **The desktop `tauri` script runs `cross-env CI=true tauri` on purpose.** Tauri's DMG bundler drives Finder over AppleScript to prettify the disk-image window, which times out (`-1712`) and fails the build after the `.app` is already built. `CI=true` makes it pass `--skip-jenkins` and skip that step; the DMG is plain but correct. Don't "clean this up" — see `docs/releasing.md`.
-- **The web store is IndexedDB, database `haptic-local`** (`apps/web/src/lib/database/client.ts`). PGlite/drizzle were removed: their only job was backing a tree of text files, the live queries were two `SELECT * FROM entry` refetch hooks, and search was one `ILIKE`. Object stores replace tables; `by-collection`/`by-parent` indexes replace the WHERE filters; `watchEntries` replaces live queries. IndexedDB keys are immutable, so rename/move is delete-then-put — use `repathEntry`.
+- **The web local store is IndexedDB, database `haptic-local`** (`apps/web/src/lib/database/client.ts`). PGlite/drizzle were removed: their only job was backing a tree of text files, the live queries were two `SELECT * FROM entry` refetch hooks, and search was one `ILIKE`. Object stores replace tables; `by-collection`/`by-parent` indexes replace the WHERE filters; `watchEntries` replaces live queries. IndexedDB keys are immutable, so a local folder rename/move must repath every descendant atomically with `repathEntries`. Cloud collections are served through `apps/web/src/lib/api/cloud.ts`; do not mix their scoped `cloud:` paths with local IndexedDB paths.
 - **The Tauri updater is removed on purpose.** The v1 config pointed at upstream's `haptic.md` endpoint with upstream's signing key. Re-add `tauri-plugin-updater` only alongside our own endpoint and keypair.
 - `tauri.conf.json` has no allowlist — Tauri 2 permissions live in `src-tauri/capabilities/default.json`. Filesystem access is scoped to `$HOME/**` and `$APPDATA`; new fs calls may need a new permission there. **A standalone file opened outside `$HOME` is granted access one path at a time** via the `allow_file` command — don't widen the static scope to `**` instead.
 - **File associations only work in a bundled app.** `bundle.fileAssociations` registers `.md` with the OS, but `tauri dev` never registers them, so "open with" can only be tested from a real `tauri build` + install. macOS delivers these as `RunEvent::Opened`; Windows/Linux as argv through `tauri-plugin-single-instance`.
 - Tauri 2's `readDir` is **not recursive**; the desktop adapter rebuilds the tree via `readDirTree` in `apps/desktop/src/lib/api/fs.ts`.
 - **No CI runs automatically.** `ci.yml` and `desktop-build.yml` are `workflow_dispatch` only (triggers commented at the top of each, ready to restore), so `pnpm check`, `pnpm test`, and the builds are the real gate — run them before you claim a change works. Upstream's release/Docker/Tauri-1 workflows were deleted outright.
 
+## Haptic Sync beta
+
+The private-beta web flow is implemented:
+
+- Auth is delegated to `auth.strast.dev`; the Worker exchanges the handoff for an HttpOnly application session.
+- The Worker persists user-scoped cloud collections, notes, and folders in PostgreSQL. Folder rename/move repaths descendants in one transaction.
+- Signed-in web users open the default **Haptic Sync** cloud collection automatically. The web adapter supports note and folder CRUD, nested folder rename/move, and a ZIP download of the cloud collection.
+- Cloud collections are already a first-class API resource, so one account can own several. The beta UI still centers the default **Haptic Sync** collection: collection-management UI and a remembered active cloud collection are not built yet.
+
+This is **not** bidirectional synchronization yet: local IndexedDB collections and desktop filesystem collections are separate stores. Desktop has no cloud adapter, sign-in flow, background sync, conflict handling, or offline reconciliation. Do not describe the current feature as cross-device sync.
+
 ## Not yet built
 
 **Markdown tables are not supported and are destructive.** No table extension is registered, so the schema has no table nodes: `tiptap-markdown` parses a table correctly, then ProseMirror discards everything it can't map and only the cell text survives. Opening a note containing a table and letting auto-save fire rewrites the file without it. Needs `@tiptap/extension-table` + row/cell/header before any note with tables is opened.
 
-Haptic Sync is UI-only — every control in the settings pane is disabled ("Coming soon"). The shared API has centralized-auth and PostgreSQL session foundations, but note sync between web and desktop is not implemented. It is on the roadmap in `README.md`.
+Haptic Sync between the web and desktop apps — including conflict handling, background transfer, offline reconciliation, and desktop sign-in — remains on the roadmap in `README.md`.

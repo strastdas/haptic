@@ -152,7 +152,10 @@ describe('Worker auth routes', () => {
     const app = createApp(config, repository());
     const allowed = await app(
       new Request('http://localhost:8787/api/auth/session', {
-        headers: { origin: 'http://localhost:5173' }
+        headers: {
+          cookie: 'haptic_session=opaque-token',
+          origin: 'http://localhost:5173'
+        }
       })
     );
     const unlisted = await app(
@@ -164,6 +167,27 @@ describe('Worker auth routes', () => {
     expect(allowed.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
     expect(allowed.headers.get('access-control-allow-credentials')).toBe('true');
     expect(unlisted.headers.has('access-control-allow-origin')).toBe(false);
+  });
+
+  it('includes CORS headers when an allowed-origin request fails internally', async () => {
+    const repo = repository();
+    vi.mocked(repo.findSession).mockRejectedValue(new Error('Database unavailable'));
+
+    const response = await createApp(
+      config,
+      repo
+    )(
+      new Request('http://localhost:8787/api/auth/session', {
+        headers: {
+          cookie: 'haptic_session=opaque-token',
+          origin: 'http://localhost:5173'
+        }
+      })
+    );
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
+    expect(await response.json()).toEqual({ error: 'Internal server error' });
   });
 
   it('revokes the server-side session and expires the cookie', async () => {

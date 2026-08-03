@@ -240,8 +240,8 @@
 						toggleFolderStates?.();
 					}}
 				>
-					<Icon name="collapseCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'collapse' && 'hidden' )} />
-					<Icon name="expandCircle" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'expand' && 'hidden' )} />
+					<Icon name="expandAlt" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'collapse' && 'hidden' )} />
+					<Icon name="minimiseAlt" class={cn( 'w-[18px] h-[18px] transition-all transform', folderToggleState === 'expand' && 'hidden' )} />
 				</Button>
 			</Tooltip>
 			<Tooltip text="Search" side="bottom" shortcut={SHORTCUTS['notes:search']}>

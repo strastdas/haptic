@@ -3,7 +3,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { openNote } from '@haptic/core/adapter';
-	import { basename } from '@haptic/core/path';
+	import { stem } from '@haptic/core/path';
 	import { activeFile, collection, editorSearchActive, editorSearchValue } from '@haptic/core/store';
 	import { editor } from '@haptic/editor/store';
 	import type { SearchResultParams } from '@haptic/core/types';
@@ -136,7 +136,7 @@
 						!openState[path] ? '-rotate-90' : 'rotate-0'
 					)}
 				/>
-				<p class="truncate">{basename(path)}</p>
+				<p class="truncate">{stem(path)}</p>
 			</Collapsible.Trigger>
 			<Collapsible.Content class="mt-0.5 w-full gap-1.5 flex flex-col">
 				{#each groupedTasks[path] as result, index (result.context_preview)}

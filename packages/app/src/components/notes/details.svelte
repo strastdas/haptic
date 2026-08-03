@@ -179,7 +179,7 @@
 					tab = 'metadata';
 				}}
 			>
-				<Icon name="identityGhost" class="w-[18px] h-[18px]" />
+				<Icon name="infoCircle" class="w-[18px] h-[18px]" />
 			</Button>
 		</Tooltip>
 		<Tooltip text="Table of Contents" side="bottom">

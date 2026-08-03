@@ -563,6 +563,11 @@ export function createApp(config: Config, repository: AuthRepository) {
     if (request.method === 'OPTIONS' && url.pathname.startsWith('/api/')) {
       return preflight(requestOrigin, config, respond);
     }
-    return await route(request, url, config, repository, respond);
+    try {
+      return await route(request, url, config, repository, respond);
+    } catch (error) {
+      console.error(error);
+      return respond(json({ error: 'Internal server error' }, 500));
+    }
   };
 }

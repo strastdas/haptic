@@ -5,11 +5,13 @@
 	import Tooltip from '../tooltip.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import {
+		activeFile,
 		editorSearchActive,
 		isNoteDetailSidebarOpen,
 		isPageSidebarOpen,
 		noteHistory
 	} from '@haptic/core/store';
+	import { stem } from '@haptic/core/path';
 	import { editor } from '@haptic/editor/store';
 	import { Button } from '@haptic/ui/components/button';
 	import { cn } from '@haptic/ui/lib/utils';
@@ -21,6 +23,8 @@
 	let { hideHistory = false }: Props = $props();
 
 	let historyIndex: number = $state(0);
+	let fileName = $derived($activeFile ? stem($activeFile) : '');
+	let isDailyNote = $derived(Boolean($activeFile?.includes('/.haptic/daily/')));
 
 	noteHistory.subscribe((value) => {
 		historyIndex = value.length - 1;
@@ -30,7 +34,7 @@
 <div
 	class="sticky gap-2 min-h-10 top-0 px-3 z-50 flex items-center justify-between w-full bg-secondary-background"
 >
-	<div class="flex gap-1.5 select-none">
+	<div class="flex items-center gap-1.5 select-none">
 		<Tooltip
 			text={$isPageSidebarOpen ? 'Collapse' : 'Expand'}
 			side="bottom"
@@ -126,6 +130,25 @@
 			<div class="w-6"></div>
 			<div class="w-6"></div>
 		{/if}
+		{#if fileName && !isDailyNote}
+			<Tooltip text="Rename note" side="bottom">
+				<Button
+					size="xs"
+					variant="ghost"
+					class="max-w-56 px-1 text-sm leading-none uppercase text-muted-foreground"
+					aria-label={`Rename ${fileName}`}
+					onclick={() => {
+						if ($activeFile) {
+							document.dispatchEvent(
+								new CustomEvent('haptic:rename-note', { detail: $activeFile })
+							);
+						}
+					}}
+				>
+					<span class="truncate">{fileName}</span>
+				</Button>
+			</Tooltip>
+		{/if}
 	</div>
 	<div class="flex gap-1.5">
 		<Tooltip text="Search" side="bottom" shortcut={SHORTCUTS['editor:search']}>
@@ -138,7 +161,7 @@
 					editorSearchActive.set($editorSearchActive ? false : true);
 				}}
 			>
-				<Icon name="searchDocument" class={cn('w-4 h-4')} />
+				<Icon name="search" class={cn('w-4 h-4')} />
 			</Button>
 		</Tooltip>
 		<Tooltip text="Expand" side="bottom" shortcut={SHORTCUTS['notes:toggle-details']}>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import EditorInlineTitle from '../shared/editor/inline-title.svelte';
 	import EditorSearch from '../shared/editor/search.svelte';
 	import EditorToolbar from '../shared/editor/toolbar.svelte';
 	import Editor from '../shared/editor/editor.svelte';
@@ -46,7 +45,6 @@
 	</div>
 	<div class={cn('w-full h-full', $activeFile === null && 'hidden')}>
 		<EditorSearch />
-		<EditorInlineTitle />
 		<Editor />
 	</div>
 </div>

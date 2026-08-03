@@ -1,5 +1,4 @@
 <script lang="ts">
-	import EditorInlineTitle from '../shared/editor/inline-title.svelte';
 	import EditorSearch from '../shared/editor/search.svelte';
 	import EditorToolbar from '../shared/editor/toolbar.svelte';
 	import { createNote } from '@haptic/core/adapter';
@@ -65,7 +64,6 @@
 	</div>
 	<div class={cn('w-full h-full', $activeFile === null && 'hidden')}>
 		<EditorSearch />
-		<EditorInlineTitle preCheckRegex={/^\d{4}-\d{2}-\d{2}$/} />
 		<Editor />
 	</div>
 </div>

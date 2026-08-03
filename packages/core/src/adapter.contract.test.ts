@@ -173,11 +173,36 @@ function createMockAdapter(): ContractAdapter {
     },
 
     renameFolder: async (path, name) => {
-      const row = rows.get(path)!;
-      rows.delete(path);
-      row.name = name;
-      row.path = `${path.split('/').slice(0, -1).join('/')}/${name}`;
-      rows.set(row.path, row);
+      const destination = `${path.split('/').slice(0, -1).join('/')}/${name}`;
+      const affected = [...rows.values()].filter(
+        (row) => row.path === path || row.path.startsWith(`${path}/`)
+      );
+      const sourcePaths = new Set(affected.map((row) => row.path));
+      const destinationPaths = new Set(
+        affected.map((row) => `${destination}${row.path.slice(path.length)}`)
+      );
+      if (
+        [...rows.values()].some(
+          (row) => !sourcePaths.has(row.path) && destinationPaths.has(row.path)
+        )
+      ) {
+        throw new Error('Name conflict');
+      }
+      for (const row of affected) {
+        rows.delete(row.path);
+      }
+      for (const row of affected) {
+        const oldPath = row.path;
+        row.path = `${destination}${oldPath.slice(path.length)}`;
+        row.parentPath =
+          oldPath === path
+            ? destination.split('/').slice(0, -1).join('/')
+            : `${destination}${row.parentPath.slice(path.length)}`;
+        if (oldPath === path) {
+          row.name = name;
+        }
+        rows.set(row.path, row);
+      }
     },
 
     moveFolder,

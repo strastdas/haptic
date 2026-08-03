@@ -21,6 +21,12 @@
 	let tiptapEditor: Editor;
 	let timeout: NodeJS.Timeout;
 
+	function enterEditModeOnDoubleClick() {
+		if (get(editorMode) === 'view') {
+			editorMode.set('edit');
+		}
+	}
+
 	onMount(() => {
 		tiptapEditor = new Editor({
 			element: element!,
@@ -66,6 +72,10 @@
 			editorProps: {
 				attributes: {
 					class: 'prose prose-theme mx-auto focus:outline-none min-h-full pb-6 select-text'
+				},
+				handleDoubleClick: () => {
+					enterEditModeOnDoubleClick();
+					return false;
 				}
 			},
 			onTransaction: () => {

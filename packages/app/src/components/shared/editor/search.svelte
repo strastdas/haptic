@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { Input } from '@haptic/ui/components/input';
 	import Icon from '../icon.svelte';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
@@ -19,18 +17,21 @@
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import { escapeRegExp } from '@haptic/core/utils';
 	import Tooltip from '../tooltip.svelte';
+	import { get } from 'svelte/store';
 
 	let replaceValue = $state('');
 	let caseSensitive = $state(false);
 	let wholeWord = $state(false);
 	let expanded = $state(false);
 
-	run(() => {
-		if ($editor) {
-			$editor.commands.setReplaceTerm(replaceValue);
-			$editor.commands.setCaseSensitive(caseSensitive);
+	function updateReplaceOptions() {
+		const editorInstance = get(editor);
+		if (!editorInstance) {
+			return;
 		}
-	});
+		editorInstance.commands.setReplaceTerm(replaceValue);
+		editorInstance.commands.setCaseSensitive(caseSensitive);
+	}
 
 	const goToSelection = () => {
 		if (!$editor) {return;}
@@ -70,6 +71,7 @@
 		editorSearchValue.set('');
 		replaceValue = '';
 		caseSensitive = false;
+		updateReplaceOptions();
 		wholeWord = false;
 		expanded = false;
 		$editor.commands.resetIndex();
@@ -190,6 +192,7 @@
 						class={cn('h-7 w-7 group', caseSensitive ? 'bg-accent' : '')}
 						onclick={() => {
 							caseSensitive = !caseSensitive;
+							updateReplaceOptions();
 						}}
 					>
 						<Icon name="caseSensitive"
@@ -265,9 +268,13 @@
 			<div class="flex flex-row items-center justify-between h-full w-full gap-1">
 				<Input
 					class="w-full h-7"
-					placeholder="Replace"
-					spellcheck="false"
-					bind:value={replaceValue}
+				placeholder="Replace"
+				spellcheck="false"
+				value={replaceValue}
+				oninput={(event) => {
+					replaceValue = event.currentTarget.value;
+					updateReplaceOptions();
+				}}
 				/>
 				<div class="flex items-center h-full pr-[90px] gap-0.5">
 					<Tooltip text="Replace" side="bottom">

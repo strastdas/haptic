@@ -49,7 +49,7 @@
 				scale="md"
 				onclick={() => navigateTo('/notes')}
 			>
-				<Icon name="inboxFull" class="w-[18px] h-[18px]" />
+				<Icon name="home" class="w-[18px] h-[18px]" />
 			</Button>
 		</Tooltip>
 		<Tooltip text="Daily desk" side="right">

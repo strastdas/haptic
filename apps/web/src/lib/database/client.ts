@@ -154,3 +154,12 @@ export async function repathEntry(from: string, row: EntryRow): Promise<void> {
   await tx.done;
   notifyEntriesChanged();
 }
+
+/** Atomically moves a folder row and every descendant to their new paths. */
+export async function repathEntries(entries: { from: string; row: EntryRow }[]): Promise<void> {
+  const tx = getDb().transaction('entry', 'readwrite');
+  await Promise.all(entries.map(({ from }) => tx.store.delete(from)));
+  await Promise.all(entries.map(({ row }) => tx.store.put(row)));
+  await tx.done;
+  notifyEntriesChanged();
+}

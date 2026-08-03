@@ -27,6 +27,7 @@
 		return scopeOf($collection) === 'cloud' ? 'Haptic Sync' : basename($collection);
 	});
 	let fileName = $derived($activeFile ? stem($activeFile) : '');
+	let isDailyNote = $derived(Boolean($activeFile?.includes('/.haptic/daily/')));
 </script>
 
 <header
@@ -38,7 +39,7 @@
 >
 	<div class="pointer-events-none flex min-w-0 items-center gap-1.5 text-sm cursor-default outline-none">
 		<span class="text-foreground/85 shrink-0">{collectionName}</span>
-		{#if fileName}
+		{#if fileName && isDailyNote}
 			<span class="text-foreground/35 shrink-0" aria-hidden="true">/</span>
 			<span class="text-foreground/60 truncate">{fileName}</span>
 		{/if}

@@ -1,7 +1,5 @@
 <script lang="ts">
 	import Entries from './entries.svelte';
-	import { run } from 'svelte/legacy';
-
 	import {
 		createFolder,
 		deleteFolder,
@@ -9,7 +7,14 @@
 		renameFolder,
 		showInFolder
 	} from '@haptic/core/adapter';
-	import { createNote, deleteNote, duplicateNote, moveNote, openNote } from '@haptic/core/adapter';
+	import {
+		createNote,
+		deleteNote,
+		duplicateNote,
+		moveNote,
+		openNote,
+		renameNote
+	} from '@haptic/core/adapter';
 	import Icon from '../shared/icon.svelte';
 	import Shortcut from '../shared/shortcut.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
@@ -21,6 +26,8 @@
 	import { Button } from '@haptic/ui/components/button';
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import * as ContextMenu from '@haptic/ui/components/context-menu';
+	import * as Dialog from '@haptic/ui/components/dialog';
+	import { Input } from '@haptic/ui/components/input';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { get } from 'svelte/store';
 
@@ -29,6 +36,8 @@
 		toggleState?: 'collapse' | 'expand';
 		toggleFolderStates?: () => void;
 	}
+
+	type RenameTarget = { entry: FileEntry; type: 'folder' | 'note' };
 
 	let {
 		entries,
@@ -40,14 +49,23 @@
 	let dragPreviewItem: HTMLElement | null = null; // Reference to the custom drag preview element
 	let previousHighlightedElement: HTMLElement | null = null;
 	let isRenaming = $state(false);
+	let renameError = $state('');
+	let renameOpen = $state(false);
+	let renameTarget = $state<RenameTarget | null>(null);
+	let renameValue = $state('');
 
-	run(() => {
-		toggleState = folderOpenStates.every((state) => state === false) ? 'expand' : 'collapse';
+	$effect(() => {
+		const nextToggleState = folderOpenStates.every((state) => state === false)
+			? 'expand'
+			: 'collapse';
+		if (toggleState !== nextToggleState) {
+			toggleState = nextToggleState;
+		}
 	});
 
 	// Watch for entries changes and update folderOpenStates array
 	// This is necessary as the folderOpenStates array would be empty until collapsible is used to set the initial state
-	run(() => {
+	$effect(() => {
 		if (folderOpenStates.length !== entries.length) {
 			folderOpenStates = new Array(entries.length).fill(false);
 		}
@@ -70,6 +88,54 @@
 		folderOpenStates = folderOpenStates.map(() => (toggleState === 'expand' ? true : false));
 	};
 
+	function closeRename() {
+		renameOpen = false;
+		renameTarget = null;
+		renameError = '';
+		renameValue = '';
+		isRenaming = false;
+	}
+
+	function openRename(entry: FileEntry, type: RenameTarget['type']) {
+		renameTarget = { entry, type };
+		renameError = '';
+		renameValue = type === 'note' ? stem(entry.name ?? '') : (entry.name ?? '');
+		renameOpen = true;
+		isRenaming = true;
+	}
+
+	async function submitRename() {
+		if (!renameTarget) {
+			return;
+		}
+
+		const name = renameValue.trim();
+		if (!name) {
+			renameError = `Enter a ${renameTarget.type} name.`;
+			return;
+		}
+
+		const currentName =
+			renameTarget.type === 'note'
+				? stem(renameTarget.entry.name ?? '')
+				: (renameTarget.entry.name ?? '');
+		if (name === currentName) {
+			closeRename();
+			return;
+		}
+
+		try {
+			if (renameTarget.type === 'folder') {
+				await renameFolder(renameTarget.entry.path, name);
+			} else {
+				await renameNote(renameTarget.entry.path, name);
+			}
+			closeRename();
+		} catch (error) {
+			renameError = error instanceof Error ? error.message : `Could not rename this ${renameTarget.type}.`;
+		}
+	}
+
 	// Rename note
 	// BUG: Currently shortcuts prevent from typing when ur on hover fix that
 	async function handleRename(entry: FileEntry, type: 'note' | 'folder') {
@@ -82,91 +148,24 @@
 
 			// Blur the editor
 			get(editor).commands.blur();
-
-			// Get the inline title input (#inline-title-input)
-			const inlineTitleInput = document.querySelector('#inline-title-input') as HTMLInputElement;
-
-			// Focus the input and select all text
-			window.setTimeout(() => {
-				inlineTitleInput?.focus();
-				inlineTitleInput?.select();
-			}, 50);
-
-			// Add blur event listener to the input
-			inlineTitleInput?.addEventListener('blur', async () => {
-				// Set the isRenaming variable to false
-				isRenaming = false;
-
-				// Remove the blur event listener
-				inlineTitleInput?.removeEventListener('blur', () => {});
-			});
+			openRename(entry, 'note');
 		} else {
-			// Get the element with the same data-path attribute as the current entry
-			const element = document.querySelector(`[data-path="${entry.path}"]`);
-
-			// Get the span within the div > button > div
-			const span = element?.querySelector('span');
-
-			// Set the contenteditable attribute to true
-			window.setTimeout(() => {
-				span?.setAttribute('contenteditable', 'true');
-
-				// Focus the span
-				span?.focus();
-
-				// Select all text
-				document.execCommand('selectAll');
-			}, 100);
-
-			// Add blur event listener to the span
-			span?.addEventListener('blur', () => {
-				// Set the contenteditable attribute to false
-				span?.setAttribute('contenteditable', 'false');
-
-				// Rename the folder
-				if (isRenaming) {
-					renameFolder(entry.path, span?.textContent || '');
-				}
-
-				// Set the isRenaming variable to false
-				isRenaming = false;
-
-				// Remove the blur event listener
-				span?.removeEventListener('blur', () => {});
-			});
-
-			// Add keydown event listener to the span
-			span?.addEventListener('keydown', (event) => {
-				// Check if the key pressed is the Enter key
-				if (event.key === 'Enter') {
-					// Prevent the default action
-					event.preventDefault();
-
-					// Remove the focus from the span
-					span?.blur();
-				} else if (event.key === 'Escape') {
-					// Prevent the default action
-					event.preventDefault();
-
-					// Set the contenteditable attribute to false
-					span?.setAttribute('contenteditable', 'false');
-
-					// Set the isRenaming variable to false
-					isRenaming = false;
-
-					// Reset the text content of the span
-					span.textContent = entry.name ?? '';
-
-					// Remove the blur event listener
-					span?.removeEventListener('blur', () => {});
-				} else if (event.key === 'Space') {
-					// Prevent the default action
-					event.preventDefault();
-					event.stopPropagation();
-				}
-			});
+			openRename(entry, 'folder');
 		}
 	}
+
+	$effect(() => {
+		function handleCommandRename(event: Event) {
+			const notePath = (event as CustomEvent<string>).detail;
+			const entry = entries.find((item) => item.path === notePath && !item.children);
+			if (entry && !isRenaming) {
+				void handleRename(entry, 'note');
+			}
+		}
+
+		document.addEventListener('haptic:rename-note', handleCommandRename);
+		return () => document.removeEventListener('haptic:rename-note', handleCommandRename);
+	});
 
 	// Function to handle drag start
 	function handleDragStart(event: DragEvent, filename: string) {
@@ -295,9 +294,52 @@
 	}
 </script>
 
+<Dialog.Root
+	open={renameOpen}
+	onOpenChange={(open) => {
+		if (!open) {
+			closeRename();
+		}
+	}}
+>
+	<Dialog.Content class="gap-4 sm:max-w-sm" showCloseButton={false}>
+		<Dialog.Header>
+			<Dialog.Title>Rename {renameTarget?.type ?? 'item'}</Dialog.Title>
+			<Dialog.Description>Choose a new name.</Dialog.Description>
+		</Dialog.Header>
+		<form
+			class="grid gap-3"
+			onsubmit={(event) => {
+				event.preventDefault();
+				void submitRename();
+			}}
+		>
+			<Input
+				aria-describedby={renameError ? 'rename-error' : undefined}
+				aria-invalid={Boolean(renameError)}
+				autocomplete="off"
+				bind:value={renameValue}
+			/>
+			{#if renameError}
+				<p id="rename-error" class="text-sm text-destructive">{renameError}</p>
+			{/if}
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={closeRename}>Cancel</Button>
+				<Button type="submit">Rename</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
 {#each entries as entry, i}
 	{#if entry.children}
-		<Collapsible.Root class="w-full" bind:open={folderOpenStates[i]}>
+		<Collapsible.Root
+			class="w-full"
+			open={folderOpenStates[i] ?? false}
+			onOpenChange={(open) => {
+				folderOpenStates[i] = open;
+			}}
+		>
 			<ContextMenu.Root>
 				<ContextMenu.Trigger data-path={entry.path}>
 					<div
@@ -510,7 +552,7 @@
 								callback={() => !isRenaming && showInFolder(entry.path)}
 							/>
 						{/if}
-						<Icon name="markdown" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+						<Icon name="noteOutline" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
 						<span class="text-xs truncate" autocorrect="off" spellcheck="false"
 							>{entry.name ? stem(entry.name) : ''}</span
 						>

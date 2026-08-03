@@ -147,6 +147,19 @@ export function runStorageAdapterContract(
       expect(await names()).toEqual(['Projects']);
     });
 
+    it('renames a folder with nested contents', async () => {
+      const folderPath = await adapter.createFolder(root);
+      const childFolderPath = await adapter.createFolder(folderPath);
+      await adapter.createNote(childFolderPath, 'Plan.md');
+
+      await adapter.renameFolder(folderPath, 'Projects');
+
+      const projects = findEntry(await tree(), 'Projects');
+      const nested = projects?.children?.[0];
+      expect(nested?.name).toBe('Untitled');
+      expect(nested?.children?.map((entry) => entry.name)).toEqual(['Plan.md']);
+    });
+
     it('moves a folder with its children into another folder', async () => {
       const source = await adapter.createFolder(root); // Untitled
       const target = await adapter.createFolder(root); // Untitled 1

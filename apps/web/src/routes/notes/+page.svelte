@@ -1,5 +1,4 @@
 <script lang="ts">
-	import EditorInlineTitle from '@haptic/app/components/shared/editor/inline-title.svelte';
 	import EditorSearch from '@haptic/app/components/shared/editor/search.svelte';
 	import EditorToolbar from '@haptic/app/components/shared/editor/toolbar.svelte';
 	import { createNote } from '@/api/notes';
@@ -60,7 +59,6 @@
 	</div>
 	<div class={cn('w-full h-full', $activeFile === null && 'hidden')}>
 		<EditorSearch />
-		<EditorInlineTitle />
 		<Editor />
 	</div>
 </div>

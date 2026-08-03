@@ -1,10 +1,17 @@
 import { basename, dirname, joinPath } from '@haptic/core/path';
-import { collection, collectionSettings } from '@/store';
+import { activeFile, collection, collectionSettings } from '@/store';
 import { getNextUntitledName } from '@/utils';
 import { invoke } from '@tauri-apps/api/core';
 import { mkdir, remove, rename } from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
 import { readDirTree } from './fs';
+
+function updateActiveFilePath(source: string, destination: string) {
+  const current = get(activeFile);
+  if (current?.startsWith(`${source}/`)) {
+    activeFile.set(`${destination}${current.slice(source.length)}`);
+  }
+}
 
 // Create a new folder
 export const createFolder = async (dirPath: string) => {
@@ -54,7 +61,9 @@ export const deleteFolder = async (path: string, recursive = false) => {
 
 // Rename a folder
 export const renameFolder = async (path: string, name: string) => {
-  await rename(path, joinPath(dirname(path), name));
+  const destination = joinPath(dirname(path), name);
+  await rename(path, destination);
+  updateActiveFilePath(path, destination);
 };
 
 // Move a folder
@@ -69,5 +78,7 @@ export const moveFolder = async (source: string, target: string) => {
     throw new Error('Name conflict');
   }
 
-  await rename(source, joinPath(target, folderName));
+  const destination = joinPath(target, folderName);
+  await rename(source, destination);
+  updateActiveFilePath(source, destination);
 };

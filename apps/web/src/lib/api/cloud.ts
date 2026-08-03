@@ -476,12 +476,18 @@ async function updateFolder(path: string, destination: string): Promise<void> {
   await refreshCurrentCollection(collectionId);
 }
 
+function updateActiveFilePath(source: string, destination: string) {
+  const current = get(activeFile);
+  if (current?.startsWith(`${source}/`)) {
+    activeFile.set(`${destination}${current.slice(source.length)}`);
+  }
+}
+
 export async function renameFolder(path: string, name: string): Promise<void> {
   const { collectionId, relativePath } = location(path);
-  await updateFolder(path, joinPath(dirname(relativePath), name));
-  if (get(activeFile)?.startsWith(`${path}/`)) {
-    activeFile.set(cloudPath(collectionId, joinPath(dirname(relativePath), name)));
-  }
+  const destination = cloudPath(collectionId, joinPath(dirname(relativePath), name));
+  await updateFolder(path, location(destination).relativePath);
+  updateActiveFilePath(path, destination);
 }
 
 export async function moveFolder(source: string, target: string): Promise<void> {
@@ -490,10 +496,12 @@ export async function moveFolder(source: string, target: string): Promise<void> 
   if (sourceLocation.collectionId !== targetLocation.collectionId) {
     throw new Error('Cloud folder must stay in its collection.');
   }
-  await updateFolder(
-    source,
+  const destination = cloudPath(
+    sourceLocation.collectionId,
     joinPath(targetLocation.relativePath, basename(sourceLocation.relativePath))
   );
+  await updateFolder(source, location(destination).relativePath);
+  updateActiveFilePath(source, destination);
 }
 
 export async function getNoteMetadataParams(path: string): Promise<NoteMetadataParams> {

@@ -4,14 +4,13 @@ import {
   deleteEntry,
   getEntry,
   putEntry,
-  repathEntry,
+  repathEntries,
   type EntryRow
 } from '@/database/client';
-import { collection } from '@/store';
+import { activeFile, collection } from '@/store';
 import { getNextUntitledName } from '@/utils';
 import { basename, dirname, joinPath } from '@haptic/core/path';
 import { get } from 'svelte/store';
-import { moveNote } from './notes';
 
 // Create a new folder
 export const createFolder = async (dirPath: string) => {
@@ -58,41 +57,67 @@ export const deleteFolder = async (path: string, recursive = false) => {
   await deleteEntry(path);
 };
 
-// Rename a folder
-export const renameFolder = async (path: string, name: string) => {
-  const row = await getEntry(path);
-  if (!row) {
+function isWithinFolder(path: string, folderPath: string): boolean {
+  return path === folderPath || path.startsWith(`${folderPath}/`);
+}
+
+function repath(path: string, from: string, to: string): string {
+  return `${to}${path.slice(from.length)}`;
+}
+
+async function repathFolderTree(source: string, destination: string): Promise<void> {
+  const entries = await allEntries(get(collection));
+  const affected = entries.filter((entry) => isWithinFolder(entry.path, source));
+  if (affected.length === 0) {
     return;
   }
-  await repathEntry(path, { ...row, name, path: joinPath(dirname(path), name) });
+
+  const sourcePaths = new Set(affected.map((entry) => entry.path));
+  const destinationPaths = new Set(
+    affected.map((entry) => repath(entry.path, source, destination))
+  );
+  if (destinationPaths.size !== affected.length) {
+    throw new Error('Name conflict');
+  }
+  if (entries.some((entry) => !sourcePaths.has(entry.path) && destinationPaths.has(entry.path))) {
+    throw new Error('Name conflict');
+  }
+
+  const now = new Date();
+  await repathEntries(
+    affected.map((entry) => {
+      const path = repath(entry.path, source, destination);
+      return {
+        from: entry.path,
+        row: {
+          ...entry,
+          name: entry.path === source ? basename(destination) : entry.name,
+          parentPath:
+            entry.path === source
+              ? dirname(destination)
+              : repath(entry.parentPath, source, destination),
+          path,
+          updatedAt: now
+        }
+      };
+    })
+  );
+
+  const current = get(activeFile);
+  if (current && isWithinFolder(current, source)) {
+    activeFile.set(repath(current, source, destination));
+  }
+}
+
+// Rename a folder and every nested file/folder.
+export const renameFolder = async (path: string, name: string) => {
+  await repathFolderTree(path, joinPath(dirname(path), name));
 };
 
 // Move a folder
 export const moveFolder = async (source: string, target: string) => {
-  const row = await getEntry(source);
-  if (!row) {
-    return;
+  if (target === source || target.startsWith(`${source}/`)) {
+    throw new Error('A folder cannot be moved into itself.');
   }
-
-  // Make sure there are no name conflicts
-  const folderName = basename(source);
-  const targetFiles = await childEntries(target);
-
-  if (targetFiles.some((file) => file.name === folderName && file.isFolder)) {
-    throw new Error('Name conflict');
-  }
-
-  const destination = joinPath(target, folderName);
-
-  // Move all children first — each child's own move re-reads its parent, so the
-  // folder row has to stay put until they are done.
-  for (const file of await childEntries(source)) {
-    if (file.isFolder) {
-      await moveFolder(file.path, destination);
-    } else {
-      await moveNote(file.path, destination);
-    }
-  }
-
-  await repathEntry(source, { ...row, path: destination, parentPath: target });
+  await repathFolderTree(source, joinPath(target, basename(source)));
 };

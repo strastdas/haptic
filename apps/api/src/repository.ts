@@ -452,19 +452,18 @@ export class PgAuthRepository implements AuthRepository {
           if (path.startsWith(`${current.path}/`)) {
             throw new Error('A folder cannot be moved into itself.');
           }
-          const suffixStart = current.path.length + 1;
           await client.query(
             `UPDATE cloud_note
-             SET path = $1 || substring(path FROM $2), updated_at = now()
+             SET path = overlay(path placing $1 FROM 1 FOR char_length($2)), updated_at = now()
              WHERE collection_id = $3 AND path LIKE $4`,
-            [path, suffixStart, collectionId, `${current.path}/%`]
+            [path, current.path, collectionId, `${current.path}/%`]
           );
           const result = await client.query<CloudFolderRow>(
             `UPDATE cloud_folder
-             SET path = $1 || substring(path FROM $2), updated_at = now()
+             SET path = overlay(path placing $1 FROM 1 FOR char_length($2)), updated_at = now()
              WHERE collection_id = $3 AND (path = $4 OR path LIKE $5)
              RETURNING id, path, created_at, updated_at`,
-            [path, suffixStart, collectionId, current.path, `${current.path}/%`]
+            [path, current.path, collectionId, current.path, `${current.path}/%`]
           );
           await client.query('COMMIT');
           const updated = result.rows.find((folder) => folder.id === folderId);
