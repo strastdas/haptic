@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { activeFile, collection, editorMode } from '@haptic/core/store';
-	import { basename } from '@haptic/core/path';
+	import { basename, scopeOf } from '@haptic/core/path';
 	import { cn } from '@haptic/ui/lib/utils';
 
 	interface Props {
@@ -16,7 +16,12 @@
 
 	let { windowChrome = false }: Props = $props();
 
-	let collectionName = $derived($collection ? basename($collection) : '');
+	let collectionName = $derived.by(() => {
+		if (!$collection) {
+			return '';
+		}
+		return scopeOf($collection) === 'cloud' ? 'Haptic Sync' : basename($collection);
+	});
 	let fileName = $derived($activeFile ? basename($activeFile) : '');
 </script>
 
