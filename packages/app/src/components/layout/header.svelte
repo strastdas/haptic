@@ -36,49 +36,45 @@
 	)}
 	data-tauri-drag-region
 >
-	<div class="flex min-w-0 items-center gap-1.5 text-sm">
-		<div
-			class="pointer-events-none flex min-w-0 items-center gap-1.5 cursor-default outline-none"
-		>
-			<span class="text-foreground/85 shrink-0">{collectionName}</span>
-			{#if fileName}
-				<span class="text-foreground/35 shrink-0" aria-hidden="true">/</span>
-				<span class="text-foreground/60 truncate">{fileName}</span>
-			{/if}
-		</div>
-		<div class="ml-1 flex rounded-md border border-border/70 bg-muted/30 p-0.5" role="group" aria-label="Editor mode">
-			<Tooltip text="View mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
-				<Button
-					size="icon"
-					variant="ghost"
-					scale="md"
-					class={cn(
-						'h-6 w-6 text-muted-foreground hover:bg-accent hover:text-foreground',
-						$editorMode === 'view' && 'bg-accent text-foreground'
-					)}
-					aria-label="View mode"
-					aria-pressed={$editorMode === 'view'}
-					onclick={() => editorMode.set('view')}
-				>
-					<Icon name="eye" class="w-4 h-4" aria-hidden="true" />
-				</Button>
-			</Tooltip>
-			<Tooltip text="Edit mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
-				<Button
-					size="icon"
-					variant="ghost"
-					scale="md"
-					class={cn(
-						'h-6 w-6 text-muted-foreground hover:bg-accent hover:text-foreground',
-						$editorMode === 'edit' && 'bg-accent text-foreground'
-					)}
-					aria-label="Edit mode"
-					aria-pressed={$editorMode === 'edit'}
-					onclick={() => editorMode.set('edit')}
-				>
-					<Icon name="editPencil" class="w-4 h-4" aria-hidden="true" />
-				</Button>
-			</Tooltip>
-		</div>
+	<div class="pointer-events-none flex min-w-0 items-center gap-1.5 text-sm cursor-default outline-none">
+		<span class="text-foreground/85 shrink-0">{collectionName}</span>
+		{#if fileName}
+			<span class="text-foreground/35 shrink-0" aria-hidden="true">/</span>
+			<span class="text-foreground/60 truncate">{fileName}</span>
+		{/if}
+	</div>
+	<div class="absolute right-3 flex rounded-md border border-border/70 bg-muted/30 p-0.5" role="group" aria-label="Editor mode">
+		<Tooltip text="View mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
+			<Button
+				size="icon"
+				variant="ghost"
+				scale="md"
+				class={cn(
+					'h-6 w-6 text-muted-foreground hover:bg-accent hover:text-foreground',
+					$editorMode === 'view' && 'bg-accent text-foreground'
+				)}
+				aria-label="View mode"
+				aria-pressed={$editorMode === 'view'}
+				onclick={() => editorMode.set('view')}
+			>
+				<Icon name="eye" class="w-4 h-4" aria-hidden="true" />
+			</Button>
+		</Tooltip>
+		<Tooltip text="Edit mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
+			<Button
+				size="icon"
+				variant="ghost"
+				scale="md"
+				class={cn(
+					'h-6 w-6 text-muted-foreground hover:bg-accent hover:text-foreground',
+					$editorMode === 'edit' && 'bg-accent text-foreground'
+				)}
+				aria-label="Edit mode"
+				aria-pressed={$editorMode === 'edit'}
+				onclick={() => editorMode.set('edit')}
+			>
+				<Icon name="editPencil" class="w-4 h-4" aria-hidden="true" />
+			</Button>
+		</Tooltip>
 	</div>
 </header>
