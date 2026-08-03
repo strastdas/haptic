@@ -1,7 +1,11 @@
 <script lang="ts">
-	import { fetchCollectionEntries } from '@/api/collection';
-	import { createFolder } from '@/api/folders';
-	import { createNote, openNote } from '@/api/notes';
+	import {
+		createFolder,
+		createNote,
+		fetchCollectionEntries,
+		openNote,
+		searchEntries
+	} from '@haptic/core/adapter';
 	import Icon from '@haptic/app/components/shared/icon.svelte';
 	import Shortcut from '@haptic/app/components/shared/shortcut.svelte';
 	import Tooltip from '@haptic/app/components/shared/tooltip.svelte';
@@ -18,7 +22,6 @@
 		resizingPageSidebar
 	} from '@/store';
 	import type { FileEntry, SearchResultParams } from '@/types';
-	import { searchEntries } from '@/utils';
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import { cn } from '@haptic/ui/lib/utils';

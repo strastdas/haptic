@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { fetchCollectionEntries } from '@/api/collection';
-	import { openNote } from '@/api/notes';
+	import { fetchCollectionEntries, openNote } from '@haptic/core/adapter';
 	import { watchEntries } from '@/database/client';
 	import {
 		activeFile,

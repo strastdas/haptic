@@ -1,7 +1,12 @@
-import { setPlatformActions, setStorageAdapter } from '@haptic/core/adapter';
+import {
+  loadCollection as openCollection,
+  setPlatformActions,
+  setStorageAdapter
+} from '@haptic/core/adapter';
 import { appTheme } from '@haptic/core/store';
 import { setMode, userPrefersMode } from 'mode-watcher';
 import * as collection from './api/collection';
+import * as cloud from './api/cloud';
 import * as folders from './api/folders';
 import * as notes from './api/notes';
 import * as settings from './api/settings';
@@ -24,6 +29,14 @@ setStorageAdapter('local', {
   ...folders,
   ...settings,
   searchEntries
+});
+
+// Cloud storage is registered beside local IndexedDB. It remains invisible to
+// unsigned visitors because its collection list resolves to an empty list on
+// 401; signed-in users can create a collection from Haptic Sync settings.
+setStorageAdapter('cloud', {
+  ...cloud,
+  ...settings
 });
 
 /**
@@ -67,6 +80,10 @@ setPlatformActions({
     if (!response.ok) {
       throw new Error('Could not sign out of Haptic.');
     }
+  },
+  createCloudCollection: async () => {
+    const path = await cloud.createCloudCollection();
+    await openCollection(path);
   }
 });
 

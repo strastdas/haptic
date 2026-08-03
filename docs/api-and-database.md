@@ -54,7 +54,7 @@ Use distinct credentials even though all roles connect to the same database serv
 - `haptic_api`: restricted application reads and writes used through Hyperdrive.
 - `haptic_electric`: logical replication and table reads for Electric.
 
-Electric runs against the local PostgreSQL database during development and the VPS PostgreSQL database in production. It is the read-path sync service; writes continue to go through the Worker API. The initial collection and note schema is present; Electric configuration and sync rules are the next slice.
+Electric runs against the local PostgreSQL database during development and the VPS PostgreSQL database in production. It is the read-path sync service; writes continue to go through the Worker API. The initial collection, folder, and note schema is present; Electric configuration and sync rules are the next slice.
 
 ## Implemented auth endpoints
 
@@ -74,5 +74,7 @@ All cloud routes require a valid web session cookie or native bearer token. Ever
 - `GET` / `PATCH` / `DELETE /api/sync/collections/:collectionId` — read, rename, or delete one collection.
 - `GET` / `POST /api/sync/collections/:collectionId/notes` — list notes or create a Markdown note.
 - `GET` / `PUT` / `DELETE /api/sync/collections/:collectionId/notes/:noteId` — read, replace, or delete one note.
+- `GET` / `POST /api/sync/collections/:collectionId/folders` — list or create persistent folders.
+- `PUT` / `DELETE /api/sync/collections/:collectionId/folders/:folderId` — rename/move or delete one folder; folder operations update descendant paths.
 
 Note paths are collection-relative Markdown paths (for example, `daily/2026-08-02.md`). The Worker rejects absolute and traversing paths, and collection deletion cascades to its notes.

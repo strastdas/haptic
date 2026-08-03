@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import {
   canGetAccount,
+  canCreateCloudCollection,
   canStartSignIn,
   canSignOut,
   canOpenFile,
   clearStorageAdapters,
   closeStandaloneFile,
+  createCloudCollection,
   getAccount,
   isStandalone,
   openFile,
@@ -179,5 +181,15 @@ describe('account platform action', () => {
     expect(readAccount).toHaveBeenCalledOnce();
     expect(canSignOut()).toBe(true);
     expect(endSession).toHaveBeenCalledOnce();
+  });
+
+  it('delegates cloud collection creation to the current platform', () => {
+    const create = vi.fn();
+    setPlatformActions({ openExternal: () => {}, createCloudCollection: create });
+
+    createCloudCollection();
+
+    expect(canCreateCloudCollection()).toBe(true);
+    expect(create).toHaveBeenCalledOnce();
   });
 });

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import {
 		canGetAccount,
+		canCreateCloudCollection,
 		canSignOut,
 		canStartSignIn,
 		getAccount,
+		createCloudCollection,
 		signOut,
 		startSignIn,
 		type Account
@@ -41,6 +43,7 @@
 	let accountError = $state(false);
 	let isLoadingAccount = $state(canGetAccount());
 	let isSigningOut = $state(false);
+	let isCreatingCloudCollection = $state(false);
 
 	async function loadAccount() {
 		if (!canGetAccount()) {
@@ -72,6 +75,18 @@
 		}
 	}
 
+	async function handleCreateCloudCollection() {
+		isCreatingCloudCollection = true;
+		accountError = false;
+		try {
+			await createCloudCollection();
+		} catch {
+			accountError = true;
+		} finally {
+			isCreatingCloudCollection = false;
+		}
+	}
+
 	onMount(loadAccount);
 </script>
 
@@ -95,16 +110,31 @@
 						</p>
 					{/if}
 				</div>
-				{#if account && canSignOut()}
-					<Button
-						variant="outline"
-						size="sm"
-						class="shrink-0 text-sm"
-						disabled={isSigningOut}
-						onclick={() => void handleSignOut()}
-					>
-						{isSigningOut ? 'Signing out…' : 'Sign out'}
-					</Button>
+				{#if account}
+					<div class="flex shrink-0 gap-2">
+						{#if canCreateCloudCollection()}
+							<Button
+								variant="outline"
+								size="sm"
+								class="text-sm"
+								disabled={isCreatingCloudCollection}
+								onclick={() => void handleCreateCloudCollection()}
+							>
+								{isCreatingCloudCollection ? 'Opening…' : 'Open Haptic Sync'}
+							</Button>
+						{/if}
+						{#if canSignOut()}
+							<Button
+								variant="outline"
+								size="sm"
+								class="text-sm"
+								disabled={isSigningOut}
+								onclick={() => void handleSignOut()}
+							>
+								{isSigningOut ? 'Signing out…' : 'Sign out'}
+							</Button>
+						{/if}
+					</div>
 				{:else if accountError}
 					<Button variant="outline" size="sm" class="shrink-0 text-sm" onclick={() => void loadAccount()}>
 						Try again

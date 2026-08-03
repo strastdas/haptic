@@ -288,6 +288,8 @@ export interface PlatformActions {
   getAccount?(): Promise<Account | null>;
   /** End the authenticated account session for the current device. */
   signOut?(): void | Promise<unknown>;
+  /** Create and open the platform's first cloud collection. */
+  createCloudCollection?(): void | Promise<unknown>;
   /** Reveal a file in the OS file manager (desktop only). */
   showInFolder?(path: string): void | Promise<unknown>;
   /**
@@ -367,6 +369,16 @@ export function canSignOut(): boolean {
 /** Ends the current account session when the platform supports it. */
 export function signOut() {
   return platformActions?.signOut?.();
+}
+
+/** True when this platform can create a cloud collection. */
+export function canCreateCloudCollection(): boolean {
+  return Boolean(platformActions?.createCloudCollection);
+}
+
+/** Creates and opens a cloud collection when the platform supports it. */
+export function createCloudCollection() {
+  return platformActions?.createCloudCollection?.();
 }
 
 export function showInFolder(path: string) {
