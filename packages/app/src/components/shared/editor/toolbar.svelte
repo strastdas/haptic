@@ -5,7 +5,6 @@
 	import Tooltip from '../tooltip.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import {
-		editorMode,
 		editorSearchActive,
 		isNoteDetailSidebarOpen,
 		isPageSidebarOpen,
@@ -129,27 +128,6 @@
 		{/if}
 	</div>
 	<div class="flex gap-1.5">
-		<Tooltip
-			text={$editorMode === 'edit' ? 'View mode' : 'Edit mode'}
-			side="bottom"
-			shortcut={SHORTCUTS['editor:toggle-mode']}
-		>
-			<Button
-				size="icon"
-				variant="ghost"
-				scale="md"
-				class="h-6 w-6 fill-muted-foreground hover:fill-foreground transition-all"
-				onclick={() => {
-					// TODO: Implement source mode in future
-					// editor.svelte applies this to the TipTap instance.
-					editorMode.set($editorMode === 'edit' ? 'view' : 'edit');
-				}}
-			>
-				<Shortcut options={SHORTCUTS['editor:toggle-mode']} />
-				<Icon name="editPencil" class={cn('w-4 h-4', $editorMode === 'edit' && 'hidden')} />
-				<Icon name="glasses" class={cn('w-4 h-4', $editorMode === 'view' && 'hidden')} />
-			</Button>
-		</Tooltip>
 		<Tooltip text="Search" side="bottom" shortcut={SHORTCUTS['editor:search']}>
 			<Button
 				size="icon"
