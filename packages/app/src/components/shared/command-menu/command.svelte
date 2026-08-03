@@ -8,6 +8,7 @@
 		openNote,
 		setTheme
 	} from '@haptic/core/adapter';
+	import { scopeOf } from '@haptic/core/path';
 	import { activeFile, appTheme, collection } from '@haptic/core/store';
 	import { formatTimeAgo, shortcutToString } from '@haptic/core/utils';
 	import * as Command from '@haptic/ui/components/command';
@@ -365,7 +366,9 @@
 								>
 									<div class="flex w-full items-center justify-between">
 										<div class="flex items-center gap-1.5">
-											<Icon name="folder" />
+											<Icon
+												name={scopeOf(collection.path) === 'cloud' ? 'cloudSolid' : 'folder'}
+											/>
 											<span class="text-foreground/80 group:hover:text-foreground/100"></span>
 											{collection.name}
 										</div>
