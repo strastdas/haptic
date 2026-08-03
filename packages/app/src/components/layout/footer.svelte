@@ -11,7 +11,8 @@
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
 	import { openExternal, toggleTheme } from '@haptic/core/adapter';
 	import { shortcutToString } from '@haptic/core/utils';
-	import { activeFile, appTheme, isDesktopApp, settingsStore } from '@haptic/core/store';
+	import { activeFile, appTheme, collection, isDesktopApp, settingsStore } from '@haptic/core/store';
+	import { scopeOf } from '@haptic/core/path';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import Shortcut from '../shared/shortcut.svelte';
 	
@@ -67,7 +68,7 @@
 			</Button>
 		</Tooltip>
 
-		<Tooltip text="Haptic Sync">
+		<Tooltip text={$collection && scopeOf($collection) === 'cloud' ? 'Haptic Sync is on' : 'Haptic Sync'}>
 			<Button
 				size="icon"
 				variant="ghost"
@@ -77,7 +78,11 @@
 					settingsStore.set({ isOpen: true, activePage: 'haptic sync' });
 				}}
 			>
-				<Icon name="cloudX" class="w-4 h-4" />
+				{#if $collection && scopeOf($collection) === 'cloud'}
+					<Icon name="cloudSolid" class="w-4 h-4 text-primary" />
+				{:else}
+					<Icon name="cloudX" class="w-4 h-4" />
+				{/if}
 			</Button>
 		</Tooltip>
 	</div>
