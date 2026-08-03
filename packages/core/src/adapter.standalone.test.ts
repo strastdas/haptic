@@ -3,12 +3,16 @@ import { get } from 'svelte/store';
 import {
   canGetAccount,
   canCreateCloudCollection,
+  canDownloadCloudNote,
+  canDownloadCloudNotes,
   canStartSignIn,
   canSignOut,
   canOpenFile,
   clearStorageAdapters,
   closeStandaloneFile,
   createCloudCollection,
+  downloadCloudNote,
+  downloadCloudNotes,
   getAccount,
   isStandalone,
   openFile,
@@ -191,5 +195,25 @@ describe('account platform action', () => {
 
     expect(canCreateCloudCollection()).toBe(true);
     expect(create).toHaveBeenCalledOnce();
+  });
+
+  it('delegates cloud note downloads to the current platform', () => {
+    const download = vi.fn();
+    setPlatformActions({ openExternal: () => {}, downloadCloudNotes: download });
+
+    downloadCloudNotes();
+
+    expect(canDownloadCloudNotes()).toBe(true);
+    expect(download).toHaveBeenCalledOnce();
+  });
+
+  it('delegates individual cloud note downloads to the current platform', () => {
+    const download = vi.fn();
+    setPlatformActions({ openExternal: () => {}, downloadCloudNote: download });
+
+    downloadCloudNote('cloud:/collection/note.md');
+
+    expect(canDownloadCloudNote()).toBe(true);
+    expect(download).toHaveBeenCalledWith('cloud:/collection/note.md');
   });
 });

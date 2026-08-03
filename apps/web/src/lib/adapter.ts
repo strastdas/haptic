@@ -84,7 +84,9 @@ setPlatformActions({
   createCloudCollection: async () => {
     const path = await cloud.createCloudCollection();
     await openCollection(path);
-  }
+  },
+  downloadCloudNotes: () => cloud.downloadCloudNotes(),
+  downloadCloudNote: (path) => cloud.downloadCloudNote(path)
 });
 
 // Initialize the shared store from mode-watcher's persisted preference.

@@ -14,7 +14,7 @@
 	import Shortcut from '../shared/shortcut.svelte';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import { activeFile, collection, isDesktopApp, platform } from '@haptic/core/store';
-	import { dirname, joinPath, relativeDepth } from '@haptic/core/path';
+	import { dirname, joinPath, relativeDepth, stem } from '@haptic/core/path';
 	import { editor } from '@haptic/editor/store';
 	import type { FileEntry } from '@haptic/core/types';
 	import { shortcutToString } from '@haptic/core/utils';
@@ -510,7 +510,9 @@
 								callback={() => !isRenaming && showInFolder(entry.path)}
 							/>
 						{/if}
-						<span class="text-xs truncate" autocorrect="off" spellcheck="false">{entry.name}</span>
+						<span class="text-xs truncate" autocorrect="off" spellcheck="false"
+							>{entry.name ? stem(entry.name) : ''}</span
+						>
 					</Button>
 				</div>
 			</ContextMenu.Trigger>

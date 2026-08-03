@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { closeStandaloneFile, openNote } from '@haptic/core/adapter';
-	import { basename } from '@haptic/core/path';
+	import { basename, stem } from '@haptic/core/path';
 	import { activeFile, standaloneFiles } from '@haptic/core/store';
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
@@ -32,7 +32,7 @@
 					onclick={() => openNote(path)}
 				>
 					<Icon name="note" class="w-3.5 h-3.5 shrink-0" />
-					<span class="truncate">{basename(path)}</span>
+					<span class="truncate">{stem(path)}</span>
 				</Button>
 				<Tooltip text="Close file" side="right">
 					<button

@@ -2,19 +2,22 @@
 	import {
 		canGetAccount,
 		canCreateCloudCollection,
+		canDownloadCloudNotes,
 		canSignOut,
 		canStartSignIn,
-		getAccount,
 		createCloudCollection,
+		downloadCloudNotes,
+		getAccount,
 		signOut,
-		startSignIn,
-		type Account
+		startSignIn
 	} from '@haptic/core/adapter';
+	import type { Account } from '@haptic/core/adapter';
 	import { Button } from '@haptic/ui/components/button';
 	import { Label } from '@haptic/ui/components/label';
 	import * as Select from '@haptic/ui/components/select';
 	import { Switch } from '@haptic/ui/components/switch';
 	import { onMount } from 'svelte';
+	import Icon from '../shared/icon.svelte';
 	import Tooltip from '../shared/tooltip.svelte';
 
 	const syncIntervalLabels: Record<string, string> = {
@@ -44,6 +47,8 @@
 	let isLoadingAccount = $state(canGetAccount());
 	let isSigningOut = $state(false);
 	let isCreatingCloudCollection = $state(false);
+	let isDownloadingCloudNotes = $state(false);
+	let downloadError = $state<string | null>(null);
 
 	async function loadAccount() {
 		if (!canGetAccount()) {
@@ -87,6 +92,18 @@
 		}
 	}
 
+	async function handleDownloadCloudNotes() {
+		isDownloadingCloudNotes = true;
+		downloadError = null;
+		try {
+			await downloadCloudNotes();
+		} catch {
+			downloadError = 'Couldn’t download your cloud notes. Try again.';
+		} finally {
+			isDownloadingCloudNotes = false;
+		}
+	}
+
 	onMount(loadAccount);
 </script>
 
@@ -109,6 +126,9 @@
 							Private beta access is required before Haptic Sync can connect this device.
 						</p>
 					{/if}
+					{#if downloadError}
+						<p class="text-destructive text-xs" role="status">{downloadError}</p>
+					{/if}
 				</div>
 				{#if account}
 					<div class="flex shrink-0 gap-2">
@@ -121,6 +141,18 @@
 								onclick={() => void handleCreateCloudCollection()}
 							>
 								{isCreatingCloudCollection ? 'Opening…' : 'Open Haptic Sync'}
+							</Button>
+						{/if}
+						{#if canDownloadCloudNotes()}
+							<Button
+								variant="outline"
+								size="sm"
+								class="text-sm"
+								disabled={isDownloadingCloudNotes}
+								onclick={() => void handleDownloadCloudNotes()}
+							>
+								<Icon name="download" class="size-3.5" aria-hidden="true" />
+								{isDownloadingCloudNotes ? 'Preparing…' : 'Download notes'}
 							</Button>
 						{/if}
 						{#if canSignOut()}

@@ -44,6 +44,7 @@
     "@tiptap/pm": "^2.2.1",
     "@tiptap/starter-kit": "^2.2.1",
     "clsx": "^2.1.0",
+    "fflate": "^0.8.3",
     "idb": "^8.0.3",
     "markdown-it": "^14.1.0",
     "mode-watcher": "^1.1.0",

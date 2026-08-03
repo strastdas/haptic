@@ -1,4 +1,5 @@
 import { activeFile, collection, collectionEntries, editor, noteHistory } from '@/store';
+import { strToU8, zipSync } from 'fflate';
 import { calculateReadingTime, getNextUntitledName, setEditorContent } from '@/utils';
 import {
   basename,
@@ -179,6 +180,50 @@ export async function createCloudCollection(name = 'Haptic Sync'): Promise<strin
     }
   );
   return cloudPath(created.id);
+}
+
+/** Downloads the Haptic Sync collection as a zip archive, preserving folders. */
+export async function downloadCloudNotes(): Promise<void> {
+  const collections = await getCollections();
+  const cloudCollection = collections.find((item) => item.name === 'Haptic Sync');
+  if (!cloudCollection) {
+    throw new Error('No Haptic Sync collection is available to download.');
+  }
+
+  const { collectionId } = location(cloudCollection.path);
+  const { notes } = await request<{ notes: CloudNote[] }>(
+    `/api/sync/collections/${collectionId}/notes`
+  );
+  const archive = zipSync(
+    Object.fromEntries(notes.map((note) => [note.path, strToU8(note.content)]))
+  );
+  const url = URL.createObjectURL(new Blob([archive], { type: 'application/zip' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'haptic-sync-notes.zip';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Downloads one cloud note as its original Markdown file. */
+export async function downloadCloudNote(path: string): Promise<void> {
+  const { collectionId, relativePath } = location(path);
+  const response = await request<{ notes: CloudNote[] }>(
+    `/api/sync/collections/${collectionId}/notes`
+  );
+  const note = response.notes.find((candidate) => candidate.path === relativePath);
+  if (!note) {
+    throw new Error('The cloud note could not be found.');
+  }
+
+  const url = URL.createObjectURL(
+    new Blob([note.content], { type: 'text/markdown;charset=utf-8' })
+  );
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = entryName(note.path);
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function loadCollection(path?: string): Promise<void> {

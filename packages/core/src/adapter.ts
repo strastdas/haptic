@@ -290,6 +290,10 @@ export interface PlatformActions {
   signOut?(): void | Promise<unknown>;
   /** Create and open the platform's first cloud collection. */
   createCloudCollection?(): void | Promise<unknown>;
+  /** Export the signed-in user's cloud collection as a local download. */
+  downloadCloudNotes?(): void | Promise<unknown>;
+  /** Export one cloud note as a local Markdown file. */
+  downloadCloudNote?(path: string): void | Promise<unknown>;
   /** Reveal a file in the OS file manager (desktop only). */
   showInFolder?(path: string): void | Promise<unknown>;
   /**
@@ -379,6 +383,26 @@ export function canCreateCloudCollection(): boolean {
 /** Creates and opens a cloud collection when the platform supports it. */
 export function createCloudCollection() {
   return platformActions?.createCloudCollection?.();
+}
+
+/** True when this platform can export cloud notes. */
+export function canDownloadCloudNotes(): boolean {
+  return Boolean(platformActions?.downloadCloudNotes);
+}
+
+/** Downloads the signed-in user's cloud notes when the platform supports it. */
+export function downloadCloudNotes() {
+  return platformActions?.downloadCloudNotes?.();
+}
+
+/** True when this platform can export an individual cloud note. */
+export function canDownloadCloudNote(): boolean {
+  return Boolean(platformActions?.downloadCloudNote);
+}
+
+/** Downloads one cloud note when the platform supports it. */
+export function downloadCloudNote(path: string) {
+  return platformActions?.downloadCloudNote?.(path);
 }
 
 export function showInFolder(path: string) {
