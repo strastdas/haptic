@@ -42,6 +42,13 @@
 			<span class="text-foreground/35 shrink-0" aria-hidden="true">/</span>
 			<span class="text-foreground/60 truncate">{fileName}</span>
 		{/if}
+		{#if $editorMode === 'edit'}
+			<span
+				class="ml-1 inline-flex h-[18px] shrink-0 items-center rounded bg-accent px-1.5 text-[11px] font-medium text-foreground/80"
+			>
+				Editing
+			</span>
+		{/if}
 	</div>
 	<div class="absolute right-3 flex rounded-md border border-border/70 bg-muted/30 p-0.5" role="group" aria-label="Editor mode">
 		<Tooltip text="View mode" shortcut={SHORTCUTS['editor:toggle-mode']}>
