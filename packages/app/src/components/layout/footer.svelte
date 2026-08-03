@@ -9,10 +9,15 @@
 	import * as Collapsible from '@haptic/ui/components/collapsible';
 	import { cn } from '@haptic/ui/lib/utils';
 	import { mainCommands as commands, createNoteCommands } from '../shared/command-menu/commands';
-	import { openExternal, toggleTheme } from '@haptic/core/adapter';
+	import {
+		canDownloadCloudNote,
+		downloadCloudNote,
+		openExternal,
+		toggleTheme
+	} from '@haptic/core/adapter';
 	import { shortcutToString } from '@haptic/core/utils';
 	import { activeFile, appTheme, collection, isDesktopApp, settingsStore } from '@haptic/core/store';
-	import { scopeOf } from '@haptic/core/path';
+	import { scopeOf, stem } from '@haptic/core/path';
 	import { SHORTCUTS } from '@haptic/core/constants';
 	import Shortcut from '../shared/shortcut.svelte';
 	
@@ -20,6 +25,28 @@
 	let searchValue = $state('');
 	let collapsedCategories: string[] = $state([]);
 	let filteredCommands = $state([...commands]);
+	let isDownloadingCloudNote = $state(false);
+	let downloadError = $state(false);
+	let canDownloadActiveCloudNote = $derived(
+		Boolean($activeFile && scopeOf($activeFile) === 'cloud' && canDownloadCloudNote())
+	);
+	let downloadLabel = $derived($activeFile ? `Download ${stem($activeFile)}` : 'Download note');
+
+	async function handleDownloadCloudNote() {
+		if (!$activeFile) {
+			return;
+		}
+
+		isDownloadingCloudNote = true;
+		downloadError = false;
+		try {
+			await downloadCloudNote($activeFile);
+		} catch {
+			downloadError = true;
+		} finally {
+			isDownloadingCloudNote = false;
+		}
+	}
 
 	activeFile.subscribe((notePath) => {
 		// Remove last note specific commands
@@ -85,6 +112,24 @@
 				{/if}
 			</Button>
 		</Tooltip>
+		{#if canDownloadActiveCloudNote}
+			<Tooltip text={downloadLabel}>
+				<Button
+					size="icon"
+					variant="ghost"
+					class="h-6 w-6 fill-muted-foreground hover:fill-foreground transition-all"
+					scale="md"
+					aria-label={downloadLabel}
+					disabled={isDownloadingCloudNote}
+					onclick={() => void handleDownloadCloudNote()}
+				>
+					<Icon name="download" class="w-4 h-4" />
+				</Button>
+			</Tooltip>
+		{/if}
+		{#if downloadError}
+			<span class="text-destructive text-xs" role="status">Couldn’t download note.</span>
+		{/if}
 	</div>
 
 	<div class="cursor-default space-x-0.5">
