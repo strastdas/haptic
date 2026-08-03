@@ -510,6 +510,7 @@
 								callback={() => !isRenaming && showInFolder(entry.path)}
 							/>
 						{/if}
+						<Icon name="markdown" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
 						<span class="text-xs truncate" autocorrect="off" spellcheck="false"
 							>{entry.name ? stem(entry.name) : ''}</span
 						>

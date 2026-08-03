@@ -20,6 +20,7 @@ const MAP = {
   folderPlus: 'folder-plus-outline',
   note: 'file-outline',
   notePlus: 'file-plus-outline',
+  markdown: 'markdown-outline',
   searchBars: 'search-outline',
   searchDocument: 'search-property-outline',
   calendarEdit: 'calendar-outline',

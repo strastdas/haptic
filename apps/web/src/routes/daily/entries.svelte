@@ -120,6 +120,7 @@
 									options={SHORTCUTS['note:delete']}
 									callback={() => deleteNote(entry.path)}
 								/>
+								<Icon name="markdown" class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
 								<span class="text-xs truncate">{entry.name ? stem(entry.name) : ''}</span>
 							</Button>
 						</div>
